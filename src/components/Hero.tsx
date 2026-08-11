@@ -1,0 +1,316 @@
+import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const heroSlides = [
+  {
+    eyebrow: 'Woven Since 1962 — Kanchipuram, Banaras, Bengal',
+    headline: ['Six yards,', 'one lifetime of moments.'],
+    description:
+      'Each Resham saree is handwoven to order by a named weaving house — every zari thread, every border motif, chosen the way it has been for generations.',
+    cta: { label: 'Shop the Weave', to: '/shop' },
+    ctaSecondary: { label: 'Bridal Edit', to: '/shop?category=Bridal' },
+    image: 'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg?w=1920&h=1080&fit=crop',
+  },
+  {
+    eyebrow: 'New Arrivals — Just Off the Loom',
+    headline: ['Fresh weaves,', 'crafted this season.'],
+    description:
+      'Discover the latest additions to our collection — handwoven silks and cottons that just arrived from the weaving houses of Kanchipuram and Banaras.',
+    cta: { label: 'New Arrivals', to: '/shop' },
+    ctaSecondary: { label: 'Silk Sarees', to: '/shop?category=Silk%20Sarees' },
+    image: 'https://images.pexels.com/photos/1446161/pexels-photo-1446161.jpeg?w=1920&h=1080&fit=crop',
+  },
+  {
+    eyebrow: 'The Bridal Edit — Banarasi Heritage',
+    headline: ['Woven for the', 'day you remember.'],
+    description:
+      'Banarasi brocade and temple-motif silk, chosen for the one day you want no compromises. Each piece is a family heirloom in the making.',
+    cta: { label: 'Explore Bridal', to: '/shop?category=Bridal' },
+    ctaSecondary: { label: 'All Collections', to: '/shop' },
+    image: 'https://images.pexels.com/photos/3594582/pexels-photo-3594582.jpeg?w=1920&h=1080&fit=crop',
+  },
+];
+
+function FloatingParticle({ delay, x, size }: { delay: number; x: number; size: number }) {
+  return (
+    <motion.div
+      initial={{ y: '100vh', opacity: 0 }}
+      animate={{ y: '-10vh', opacity: [0, 0.5, 0.5, 0] }}
+      transition={{
+        duration: 8 + Math.random() * 4,
+        delay,
+        repeat: Infinity,
+        ease: 'linear',
+      }}
+      style={{
+        position: 'absolute',
+        left: `${x}%`,
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: 'var(--gold)',
+        pointerEvents: 'none',
+      }}
+    />
+  );
+}
+
+function CharReveal({ text, delay = 0 }: { text: string; delay?: number }) {
+  return (
+    <span style={{ display: 'inline-block', overflow: 'hidden' }}>
+      {text.split('').map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ y: '100%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: delay + i * 0.02, ease: [0.22, 1, 0.36, 1] }}
+          style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : undefined }}
+        >
+          {char}
+        </motion.span>
+      ))}
+    </span>
+  );
+}
+
+export default function Hero() {
+  const [current, setCurrent] = useState(0);
+  const [direction, setDirection] = useState(1);
+
+  const goTo = useCallback(
+    (idx: number) => {
+      setDirection(idx > current ? 1 : -1);
+      setCurrent(idx);
+    },
+    [current],
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDirection(1);
+      setCurrent((prev) => (prev + 1) % heroSlides.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const slide = heroSlides[current];
+
+  const textVariants = {
+    enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 40 : -40 }),
+    center: { opacity: 1, x: 0 },
+    exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -40 : 40 }),
+  };
+
+  return (
+    <section
+      style={{
+        position: 'relative',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Full background image */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, scale: 1.08 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `url(${slide.image})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+      </AnimatePresence>
+
+      {/* Dark overlay for text readability */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(90deg, rgba(36,27,21,0.85) 0%, rgba(36,27,21,0.5) 50%, rgba(36,27,21,0.2) 100%)',
+        }}
+      />
+
+      {/* Bottom gradient fade */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(180deg, transparent 55%, rgba(36,27,21,0.45) 100%)',
+        }}
+      />
+
+      {/* Floating gold particles */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }}>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <FloatingParticle
+            key={i}
+            delay={i * 0.8}
+            x={10 + i * 7}
+            size={2 + (i % 3) * 1.2}
+          />
+        ))}
+      </div>
+
+      {/* Text content — left aligned */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          padding: 'clamp(7rem, 14vh, 11rem) clamp(2rem, 6vw, 6rem)',
+          maxWidth: 700,
+          textAlign: 'left',
+        }}
+      >
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={current}
+            custom={direction}
+            variants={textVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+          >
+            <motion.span
+              initial={{ opacity: 0, y: 12, letterSpacing: '0.5em' }}
+              animate={{ opacity: 1, y: 0, letterSpacing: '0.3em' }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.68rem',
+                textTransform: 'uppercase',
+                color: 'var(--gold-soft)',
+                fontWeight: 500,
+              }}
+            >
+              {slide.eyebrow}
+            </motion.span>
+
+            <h1
+              style={{
+                fontSize: 'clamp(2.8rem, 5.5vw, 4.8rem)',
+                lineHeight: 1.05,
+                fontStyle: 'italic',
+                fontWeight: 500,
+                color: '#fff',
+                textShadow: '0 2px 30px rgba(0,0,0,0.3)',
+              }}
+            >
+              {slide.headline.map((line, i) => (
+                <span key={i} style={{ display: 'block', overflow: 'hidden' }}>
+                  <CharReveal text={line} delay={0.15 + i * 0.15} />
+                </span>
+              ))}
+            </h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.5 }}
+              style={{
+                fontSize: '1rem',
+                color: 'var(--rose-dust)',
+                maxWidth: 420,
+                lineHeight: 1.75,
+              }}
+            >
+              {slide.description}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.65 }}
+              style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}
+            >
+              <motion.div whileHover={{ scale: 1.05, x: 3 }} whileTap={{ scale: 0.97 }}>
+                <Link
+                  to={slide.cta.to}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.95rem 2.2rem',
+                    background: 'var(--gold)',
+                    color: 'var(--ink)',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    fontWeight: 500,
+                    transition: 'background 0.35s ease, box-shadow 0.35s ease',
+                  }}
+                >
+                  {slide.cta.label} →
+                </Link>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05, x: 3 }} whileTap={{ scale: 0.97 }}>
+                <Link
+                  to={slide.ctaSecondary.to}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.95rem 2.2rem',
+                    border: '1px solid rgba(255,255,255,0.5)',
+                    background: 'transparent',
+                    color: '#fff',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    fontWeight: 500,
+                    transition: 'background 0.35s ease, border-color 0.35s ease',
+                  }}
+                >
+                  {slide.ctaSecondary.label}
+                </Link>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Slide indicators */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '0.75rem',
+            marginTop: '3.5rem',
+            alignItems: 'center',
+          }}
+        >
+          {heroSlides.map((_, i) => (
+            <motion.button
+              key={i}
+              onClick={() => goTo(i)}
+              whileHover={{ scale: 1.3 }}
+              whileTap={{ scale: 0.9 }}
+              style={{
+                width: i === current ? 36 : 10,
+                height: 10,
+                borderRadius: 5,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.4s ease',
+                background: i === current ? 'var(--gold)' : 'rgba(255,255,255,0.4)',
+              }}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
