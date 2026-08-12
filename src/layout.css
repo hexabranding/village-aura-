@@ -1,24 +1,27 @@
 .nav-link {
   position: relative;
   padding-bottom: 4px;
+  transition: color 0.3s ease;
 }
 
 .nav-link::after {
   content: '';
   position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 2px;
-  background: #1a1a1a;
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.35s ease;
+  left: 50%;
+  bottom: -2px;
+  width: 0;
+  height: 1.5px;
+  background: var(--gold);
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1), left 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-link:hover {
+  color: var(--maroon);
 }
 
 .nav-link:hover::after {
-  transform: scaleX(1);
-  transform-origin: left;
+  width: 100%;
+  left: 0;
 }
 
 .menu-toggle {
@@ -53,12 +56,6 @@
 .zoom-preview,
 .zoom-hint {
   display: block;
-}
-
-@media (max-width: 1280px) {
-  .zoom-preview {
-    display: none !important;
-  }
 }
 
 @media (max-width: 860px) {
@@ -232,5 +229,18 @@
 @media (max-width: 560px) {
   .insta-grid {
     grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ─── Weaver Gallery Responsive ─── */
+@media (max-width: 860px) {
+  .weaver-gallery-wrap {
+    max-width: 320px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .weaver-gallery-wrap {
+    max-width: 280px !important;
   }
 }

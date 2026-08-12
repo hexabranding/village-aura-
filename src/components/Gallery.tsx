@@ -65,7 +65,7 @@ function GalleryCard({ image, index }: { image: GalleryImage; index: number }) {
       style={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: 16,
+                borderRadius: 'var(--radius)',
         cursor: 'pointer',
       }}
     >

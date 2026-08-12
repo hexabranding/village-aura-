@@ -7,10 +7,12 @@ import ProductCard from '../components/ProductCard';
 import ZariDivider from '../components/ZariDivider';
 
 interface ProductProps {
-  onAddToBag: (name: string) => void;
+  onAddToBag: (productId: string, colorIndex?: number) => void;
+  likedProducts: string[];
+  onToggleLike: (id: string) => void;
 }
 
-export default function Product({ onAddToBag }: ProductProps) {
+export default function Product({ onAddToBag, likedProducts, onToggleLike }: ProductProps) {
   const { id } = useParams();
   const product = id ? getProduct(id) : undefined;
 
@@ -20,13 +22,12 @@ export default function Product({ onAddToBag }: ProductProps) {
 
   // Zoom state
   const [hovering, setHovering] = useState(false);
-  const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
-  const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
   const [mobileZoom, setMobileZoom] = useState(false);
-  const imageRef = useRef<HTMLDivElement>(null);
+  const lensRef = useRef<HTMLDivElement>(null);
+  const zoomImgRef = useRef<HTMLImageElement>(null);
 
-  const ZOOM = 2.5;
-  const LENS_SIZE = 140;
+  const ZOOM = 2.8;
+  const LENS = 150;
 
   const related = useMemo(
     () =>
@@ -36,20 +37,33 @@ export default function Product({ onAddToBag }: ProductProps) {
     [product]
   );
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const syncZoom = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const pctX = x / rect.width;
-    const pctY = y / rect.height;
+    const w = rect.width;
+    const h = rect.height;
+    const lensHalf = LENS / 2;
 
-    // Clamp lens to image bounds
-    const halfLens = LENS_SIZE / 2;
-    const clampedX = Math.max(halfLens, Math.min(rect.width - halfLens, x));
-    const clampedY = Math.max(halfLens, Math.min(rect.height - halfLens, y));
+    const lxC = Math.min(Math.max(x, lensHalf), w - lensHalf);
+    const lyC = Math.min(Math.max(y, lensHalf), h - lensHalf);
 
-    setLensPos({ x: clampedX, y: clampedY });
-    setZoomPos({ x: pctX, y: pctY });
+    if (lensRef.current) {
+      lensRef.current.style.left = `${lxC}px`;
+      lensRef.current.style.top = `${lyC}px`;
+    }
+
+    if (zoomImgRef.current) {
+      const img = zoomImgRef.current;
+      const panel = img.parentElement!;
+      const cw = panel.offsetWidth;
+      const ch = panel.offsetHeight;
+      const iw = cw * ZOOM;
+      const ih = ch * ZOOM;
+      const tx = Math.max(-(iw - cw), -Math.round(((lxC - lensHalf) / w) * iw));
+      const ty = Math.max(-(ih - ch), -Math.round(((lyC - lensHalf) / h) * ih));
+      img.style.transform = `translate(${tx}px, ${ty}px)`;
+    }
   }, []);
 
   if (!product) return <Navigate to="/shop" replace />;
@@ -57,7 +71,7 @@ export default function Product({ onAddToBag }: ProductProps) {
   const variant = product.variants[variantIndex];
 
   const handleAdd = () => {
-    onAddToBag(product.name);
+    onAddToBag(product.id, variantIndex);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -76,13 +90,15 @@ export default function Product({ onAddToBag }: ProductProps) {
       >
         {/* Gallery */}
         <div className="gallery-sticky" style={{ position: 'sticky', top: '100px', alignSelf: 'start' }}>
-          {/* Main image with zoom */}
+          {/* Main image with zoom lens */}
           <div
-            ref={imageRef}
             className="product-zoom-container"
-            onMouseEnter={() => setHovering(true)}
+            onMouseEnter={(e) => {
+              setHovering(true);
+              syncZoom(e);
+            }}
             onMouseLeave={() => setHovering(false)}
-            onMouseMove={handleMouseMove}
+            onMouseMove={syncZoom}
             onClick={() => setMobileZoom(true)}
             style={{
               position: 'relative',
@@ -106,27 +122,28 @@ export default function Product({ onAddToBag }: ProductProps) {
               />
             </AnimatePresence>
 
-            {/* Lens overlay — desktop only */}
+            {/* Lens — follows cursor */}
             {hovering && (
               <div
+                ref={lensRef}
                 className="zoom-lens"
                 style={{
                   position: 'absolute',
-                  width: LENS_SIZE,
-                  height: LENS_SIZE,
-                  left: lensPos.x - LENS_SIZE / 2,
-                  top: lensPos.y - LENS_SIZE / 2,
-                  border: '2px solid var(--maroon)',
-                  background: 'rgba(107, 30, 35, 0.08)',
+                  width: LENS,
+                  height: LENS,
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  border: '1px solid #b0b0b0',
+                  background: 'rgba(255,255,255,0.3)',
+                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.08)',
                   pointerEvents: 'none',
                   zIndex: 5,
-                  borderRadius: '50%',
-                  transition: 'left 0.05s ease-out, top 0.05s ease-out',
                 }}
               />
             )}
 
-            {/* Zoom hint icon */}
+            {/* Zoom hint */}
             {!hovering && (
               <div
                 className="zoom-hint"
@@ -158,46 +175,42 @@ export default function Product({ onAddToBag }: ProductProps) {
             )}
           </div>
 
-          {/* Zoom preview — desktop only */}
-          <AnimatePresence>
-            {hovering && (
-              <motion.div
-                className="zoom-preview"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 'calc(100% + 16px)',
-                  width: 380,
-                  height: 475,
-                  overflow: 'hidden',
-                  borderRadius: 'var(--radius)',
-                  border: '1px solid var(--line)',
-                  background: 'var(--ivory-deep)',
-                  zIndex: 20,
-                  pointerEvents: 'none',
-                }}
-              >
-                <img
-                  src={variant.images[imageIndex]}
-                  alt=""
-                  style={{
-                    position: 'absolute',
-                    width: `${ZOOM * 100}%`,
-                    height: `${ZOOM * 100}%`,
-                    objectFit: 'cover',
-                    objectPosition: `${zoomPos.x * 100}% ${zoomPos.y * 100}%`,
-                    transform: 'translate(-50%, -50%)',
-                    left: `${zoomPos.x * 100}%`,
-                    top: `${zoomPos.y * 100}%`,
-                  }}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Zoom preview panel — Flipkart style */}
+          <div
+            className="zoom-preview"
+            style={{
+              position: 'fixed',
+              right: 24,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 'min(40vw, 500px)',
+              aspectRatio: '4/5',
+              overflow: 'hidden',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--line)',
+              background: 'var(--ivory-deep)',
+              boxShadow: '0 30px 80px rgba(36,27,21,0.28)',
+              zIndex: 60,
+              pointerEvents: 'none',
+              opacity: hovering ? 1 : 0,
+              visibility: hovering ? 'visible' : 'hidden',
+              transition: 'opacity 0.2s ease, visibility 0.2s ease',
+            }}
+          >
+            <img
+              ref={zoomImgRef}
+              src={variant.images[imageIndex]}
+              alt=""
+              style={{
+                width: `${ZOOM * 100}%`,
+                height: `${ZOOM * 100}%`,
+                objectFit: 'cover',
+                transform: 'translate(0px, 0px)',
+                willChange: 'transform',
+                pointerEvents: 'none',
+              }}
+            />
+          </div>
 
           {/* Thumbnail rail */}
           <div className="thumb-rail" style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
@@ -315,7 +328,7 @@ export default function Product({ onAddToBag }: ProductProps) {
             <Accordion
               items={[
                 {
-                  title: product.category === 'Ornaments' ? 'Piece Details' : 'Weave Details',
+                  title: product.category === 'Jewellery' || product.category === 'Bags' ? 'Piece Details' : 'Weave Details',
                   content: (
                     <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
                       {product.details.map((d) => (
@@ -357,7 +370,13 @@ export default function Product({ onAddToBag }: ProductProps) {
             style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem 1.5rem' }}
           >
             {related.map((p, i) => (
-              <ProductCard key={p.id} product={p} index={i} />
+              <ProductCard
+                key={p.id}
+                product={p}
+                index={i}
+                isLiked={likedProducts.includes(p.id)}
+                onToggleLike={onToggleLike}
+              />
             ))}
           </div>
         </section>

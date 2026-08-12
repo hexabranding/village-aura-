@@ -6,27 +6,25 @@ const heroSlides = [
   {
     eyebrow: 'Woven Since 1962 — Kanchipuram, Banaras, Bengal',
     headline: ['Six yards,', 'one lifetime of moments.'],
-    description:
-      'Each Resham saree is handwoven to order by a named weaving house — every zari thread, every border motif, chosen the way it has been for generations.',
+  
     cta: { label: 'Shop the Weave', to: '/shop' },
-    ctaSecondary: { label: 'Bridal Edit', to: '/shop?category=Bridal' },
+    ctaSecondary: { label: 'Sarees', to: '/shop?category=Sarees' },
     image: 'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg?w=1920&h=1080&fit=crop',
   },
   {
     eyebrow: 'New Arrivals — Just Off the Loom',
     headline: ['Fresh weaves,', 'crafted this season.'],
-    description:
-      'Discover the latest additions to our collection — handwoven silks and cottons that just arrived from the weaving houses of Kanchipuram and Banaras.',
+    
+      
     cta: { label: 'New Arrivals', to: '/shop' },
-    ctaSecondary: { label: 'Silk Sarees', to: '/shop?category=Silk%20Sarees' },
+    ctaSecondary: { label: 'Jewellery', to: '/shop?category=Jewellery' },
     image: 'https://images.pexels.com/photos/1446161/pexels-photo-1446161.jpeg?w=1920&h=1080&fit=crop',
   },
   {
-    eyebrow: 'The Bridal Edit — Banarasi Heritage',
+    eyebrow: 'The Wedding Edit — Banarasi Heritage',
     headline: ['Woven for the', 'day you remember.'],
-    description:
-      'Banarasi brocade and temple-motif silk, chosen for the one day you want no compromises. Each piece is a family heirloom in the making.',
-    cta: { label: 'Explore Bridal', to: '/shop?category=Bridal' },
+
+    cta: { label: 'Explore Suit Sets', to: '/shop?category=Unstitched%20Suit%20Sets' },
     ctaSecondary: { label: 'All Collections', to: '/shop' },
     image: 'https://images.pexels.com/photos/3594582/pexels-photo-3594582.jpeg?w=1920&h=1080&fit=crop',
   },
@@ -226,7 +224,7 @@ export default function Hero() {
                 lineHeight: 1.75,
               }}
             >
-              {slide.description}
+              {slide.headline[0]}
             </motion.p>
 
             <motion.div

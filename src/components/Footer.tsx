@@ -53,7 +53,7 @@ export default function Footer() {
         <motion.div variants={fadeUp} transition={{ duration: 0.5 }}>
           <div className="eyebrow" style={{ color: 'var(--gold-soft)', marginBottom: '1rem' }}>Shop</div>
           <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem' }}>
-            {['Silk Sarees', 'Handwoven', 'Bridal', 'Cotton Sarees', 'Ornaments'].map((item) => (
+            {['Sarees', 'Jewellery', 'Bags', 'Unstitched Suit Sets'].map((item) => (
               <motion.li
                 key={item}
                 whileHover={{ x: 6, color: 'var(--gold-soft)' }}

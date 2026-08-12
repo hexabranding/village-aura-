@@ -6,9 +6,11 @@ import type { Product } from '../data/products';
 interface ProductCardProps {
   product: Product;
   index?: number;
+  isLiked?: boolean;
+  onToggleLike?: (id: string) => void;
 }
 
-export default function ProductCard({ product, index = 0 }: ProductCardProps) {
+export default function ProductCard({ product, index = 0, isLiked = false, onToggleLike }: ProductCardProps) {
   const [hovered, setHovered] = useState(false);
   const primary = product.variants[0];
   const secondaryImage = primary.images[1] ?? primary.images[0];
@@ -27,7 +29,12 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         style={{ display: 'block' }}
       >
         <motion.div
-          animate={{ y: hovered ? -6 : 0 }}
+          animate={{
+            y: hovered ? -6 : 0,
+            boxShadow: hovered
+              ? '0 16px 40px rgba(36, 27, 21, 0.15), 0 6px 16px rgba(36, 27, 21, 0.08)'
+              : '0 4px 12px rgba(36, 27, 21, 0.06)',
+          }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
           style={{
             position: 'relative',
@@ -80,7 +87,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                   background: 'var(--ivory)',
                   color: 'var(--maroon)',
                   padding: '0.5rem 1.2rem',
-                  fontSize: '0.7rem',
+                  fontSize: '0.78rem',
                   letterSpacing: '0.14em',
                   textTransform: 'uppercase',
                   fontFamily: 'var(--font-body)',
@@ -90,6 +97,46 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                 Quick View
               </motion.span>
             </motion.div>
+
+            {/* Like button */}
+            {onToggleLike && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onToggleLike(product.id);
+                }}
+                aria-label={isLiked ? 'Remove from liked' : 'Add to liked'}
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.9)',
+                  backdropFilter: 'blur(4px)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 5,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                  transition: 'background 0.2s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,1)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.9)')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill={isLiked ? 'var(--maroon)' : 'none'} stroke={isLiked ? 'var(--maroon)' : '#1a1a1a'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </motion.button>
+            )}
 
             {product.mrp && (
               <motion.span
@@ -105,7 +152,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                   background: 'var(--maroon)',
                   color: 'var(--ivory)',
                   padding: '0.3rem 0.6rem',
-                  fontSize: '0.65rem',
+                  fontSize: '0.72rem',
                   borderRadius: 'var(--radius-sm)',
                 }}
               >
@@ -114,7 +161,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             )}
           </div>
 
-          <div style={{ padding: '1rem 0.25rem 0.75rem' }}>
+          <div style={{ padding: '1rem 0.75rem 0.75rem' }}>
             <div className="eyebrow" style={{ color: 'var(--ink-soft)', marginBottom: '0.3rem' }}>
               {product.fabric}
             </div>

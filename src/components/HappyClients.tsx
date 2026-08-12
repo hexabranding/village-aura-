@@ -10,37 +10,37 @@ interface Client {
 const clients: Client[] = [
   {
     name: 'Priya Sharma',
-    location: 'Chennai',
+    location: '',
     quote: 'The Kanjivaram silk is everything I hoped for — the zari work is breathtaking.',
     image: 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=800&h=1200&fit=crop',
   },
   {
     name: 'Ananya Iyer',
-    location: 'Mumbai',
+    location: '',
     quote: 'My bridal Banarasi was the star of the wedding. Thank you, Resham!',
     image: 'https://images.pexels.com/photos/2723623/pexels-photo-2723623.jpeg?w=600&h=400&fit=crop',
   },
   {
     name: 'Deepa Nair',
-    location: 'Kochi',
+    location: '',
     quote: 'Wore the Chanderi to work — got more compliments than my presentation.',
     image: 'https://images.pexels.com/photos/27139278/pexels-photo-27139278.jpeg?w=600&h=900&fit=crop',
   },
   {
     name: 'Meera Joshi',
-    location: 'Delhi',
+    location: '',
     quote: 'The Jamdani feels like wearing a piece of art. Truly one of a kind.',
     image: 'https://images.pexels.com/photos/11822308/pexels-photo-11822308.jpeg?w=600&h=400&fit=crop',
   },
   {
     name: 'Lakshmi Rao',
-    location: 'Hyderabad',
+    location: '',
     quote: 'Ordered the Tant cotton — light, crisp, and perfect for summer weddings.',
     image: 'https://images.pexels.com/photos/11819173/pexels-photo-11819173.jpeg?w=600&h=400&fit=crop',
   },
   {
     name: 'Kavitha Menon',
-    location: 'Bangalore',
+    location: '',
     quote: 'The temple kemp necklace completes every silk saree look beautifully.',
     image: 'https://images.pexels.com/photos/10483857/pexels-photo-10483857.jpeg?w=600&h=400&fit=crop',
   },
@@ -71,7 +71,7 @@ function ClientCard({ client, index }: { client: Client; index: number }) {
       style={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: 16,
+        borderRadius: 'var(--radius)',
         cursor: 'pointer',
       }}
     >
@@ -115,20 +115,6 @@ function ClientCard({ client, index }: { client: Client; index: number }) {
         >
           "{client.quote}"
         </div>
-        <div style={{ fontSize: isLarge ? '0.9rem' : '0.8rem', fontWeight: 500, color: 'var(--ivory)', letterSpacing: '0.04em' }}>
-          {client.name}
-        </div>
-        <div
-          style={{
-            fontSize: '0.65rem',
-            color: 'var(--gold-soft)',
-            marginTop: '0.15rem',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-          }}
-        >
-          {client.location}
-        </div>
       </div>
 
       {/* Always-visible name label */}
@@ -146,7 +132,7 @@ function ClientCard({ client, index }: { client: Client; index: number }) {
         <div
           style={{
             fontFamily: 'var(--font-body)',
-            fontSize: '0.62rem',
+            fontSize: '0.72rem',
             letterSpacing: '0.15em',
             textTransform: 'uppercase',
             color: 'var(--ivory)',
@@ -154,7 +140,7 @@ function ClientCard({ client, index }: { client: Client; index: number }) {
             fontWeight: 500,
           }}
         >
-          {client.location}
+          {client.name}
         </div>
       </div>
 

@@ -7,6 +7,8 @@ import ProductCard from '../components/ProductCard';
 import Collections from '../components/Collections';
 import HappyClients from '../components/HappyClients';
 import Instagram from '../components/Instagram';
+import TiltImage from '../components/TiltImage';
+import AdCarousel from '../components/AdCarousel';
 import { products, collections } from '../data/products';
 
 const staggerContainer = {
@@ -138,30 +140,7 @@ function SectionHeader({ eyebrow, title, subtitle, action }: { eyebrow: string; 
   );
 }
 
-function FloatingBadge({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <motion.span
-      initial={{ opacity: 0, scale: 0.8, rotate: -3 }}
-      whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      style={{
-        display: 'inline-block',
-        background: 'var(--gold)',
-        color: 'var(--ivory)',
-        padding: '0.3rem 0.8rem',
-        fontSize: '0.65rem',
-        fontFamily: 'var(--font-body)',
-        letterSpacing: '0.15em',
-        textTransform: 'uppercase',
-        fontWeight: 500,
-        ...style,
-      }}
-    >
-      {children}
-    </motion.span>
-  );
-}
+
 
 function DecorativeLine() {
   return (
@@ -181,13 +160,18 @@ function DecorativeLine() {
   );
 }
 
-export default function Home() {
-  const [activeFilter, setActiveFilter] = useState<'new' | 'best' | 'featured'>('new');
+interface HomeProps {
+  likedProducts: string[];
+  onToggleLike: (id: string) => void;
+}
 
-  const allFiltered = products.filter((p) => p.category !== 'Ornaments');
+export default function Home({ likedProducts, onToggleLike }: HomeProps) {
+  const [activeFilter, setActiveFilter] = useState<'new' | 'best' | 'featured'>('new');
+  const [hoveredImage, setHoveredImage] = useState<number | null>(null);
+
   const newArrivals = products.filter((p) => p.isNew);
   const bestSellers = products.filter((p) => p.isBestSeller);
-  const featured = products.filter((p) => p.featured && p.category !== 'Ornaments');
+  const featured = products.filter((p) => p.featured);
 
   const filteredProducts =
     activeFilter === 'new'
@@ -203,7 +187,7 @@ export default function Home() {
       {/* ─── Offer Marquee ─── */}
       <div
         style={{
-          background: '#6b1e23',
+          background: 'var(--maroon)',
           overflow: 'hidden',
           padding: '0.85rem 0',
         }}
@@ -224,12 +208,12 @@ export default function Home() {
                 fontWeight: 500,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
-                color: '#c9a96e',
+                color: 'var(--gold)',
                 padding: '0 3rem',
               }}
             >
               ✦ Free Shipping on Orders Above ₹2999 &nbsp;&nbsp;&nbsp;
-              ✦ New Bridal Collection Out Now &nbsp;&nbsp;&nbsp;
+              ✦ New Suit Set Collection Out Now &nbsp;&nbsp;&nbsp;
               ✦ Handwoven authenticity guaranteed &nbsp;&nbsp;&nbsp;
               ✦ Easy 7-Day Returns &nbsp;&nbsp;&nbsp;
               ✦ COD Available &nbsp;&nbsp;&nbsp;
@@ -296,21 +280,43 @@ export default function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.4 }}
-            style={{ flex: '1 1 320px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}
+            style={{
+              flex: '1 1 380px',
+              position: 'relative',
+              height: 480,
+            }}
           >
-            <motion.img
+            {/* Left image — larger, main */}
+            <TiltImage
               src="https://images.pexels.com/photos/19567892/pexels-photo-19567892.jpeg?w=500&h=650&fit=crop"
               alt="Weaver at the loom"
-              whileHover={{ scale: 1.04, y: -6 }}
-              transition={{ duration: 0.4 }}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '3/4' }}
+              expanded={hoveredImage === 0}
+              onHoverChange={(h) => setHoveredImage(h ? 0 : null)}
+              style={{
+                position: 'absolute',
+                width: hoveredImage === 0 ? '70%' : '62%',
+                height: hoveredImage === 0 ? '100%' : '100%',
+                left: 0,
+                top: 0,
+                zIndex: hoveredImage === 0 ? 5 : 2,
+                transition: 'width 0.5s ease, z-index 0s',
+              }}
             />
-            <motion.img
+            {/* Right image — smaller, overlaps left */}
+            <TiltImage
               src="https://images.pexels.com/photos/31660114/pexels-photo-31660114.jpeg?w=500&h=650&fit=crop"
               alt="Close detail of zari border weaving"
-              whileHover={{ scale: 1.04, y: -6 }}
-              transition={{ duration: 0.4, delay: 0.08 }}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '3/4', marginTop: '2.5rem' }}
+              expanded={hoveredImage === 1}
+              onHoverChange={(h) => setHoveredImage(h ? 1 : null)}
+              style={{
+                position: 'absolute',
+                width: hoveredImage === 1 ? '60%' : '52%',
+                height: hoveredImage === 1 ? '90%' : '70%',
+                right: 0,
+                bottom: 0,
+                zIndex: hoveredImage === 1 ? 5 : 3,
+                transition: 'width 0.5s ease, height 0.5s ease, z-index 0s',
+              }}
             />
           </motion.div>
         </div>
@@ -432,7 +438,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.1 }}
             style={{ fontSize: '2.2rem', marginTop: '0.4rem' }}
           >
-            Sarees &amp; Ornaments
+            Sarees, Jewellery &amp; More
           </motion.h2>
           <motion.div
             initial={{ scaleX: 0 }}
@@ -476,8 +482,8 @@ export default function Home() {
                 fontWeight: 500,
                 letterSpacing: '0.04em',
                 transition: 'all 0.3s ease',
-                background: activeFilter === btn.key ? '#ed1c24' : '#e8e8e8',
-                color: activeFilter === btn.key ? '#fff' : '#1a1a2e',
+                background: activeFilter === btn.key ? 'var(--maroon)' : '#e8e8e8',
+                color: activeFilter === btn.key ? '#fff' : 'var(--ink)',
               }}
             >
               {btn.label}
@@ -504,7 +510,12 @@ export default function Home() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.35, delay: i * 0.06 }}
             >
-              <ProductCard product={p} index={i} />
+              <ProductCard
+                product={p}
+                index={i}
+                isLiked={likedProducts.includes(p.id)}
+                onToggleLike={onToggleLike}
+              />
             </motion.div>
           ))}
         </motion.div>
@@ -534,7 +545,7 @@ export default function Home() {
             >
               <div style={{ fontFamily: 'var(--font-display)', fontSize: '2.8rem', fontWeight: 500, color: 'var(--gold-soft)' }}>
                 <AnimatedCounter target={stat.value} />
-                {stat.value >= 1000 ? '+' : '+'}
+                +
               </div>
               <div className="eyebrow" style={{ color: 'var(--rose-dust)', marginTop: '0.3rem' }}>{stat.label}</div>
             </motion.div>
@@ -542,11 +553,14 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* ─── Happy Clients ─── */}
+      {/* ─── Happy Clients / Gallery ─── */}
       <HappyClients />
 
+      {/* ─── Ad Carousel ─── */}
+      <AdCarousel />
+
       {/* ─── Featured / This Season's Weaves ─── */}
-      <ParallaxSection style={{ background: 'var(--ivory-deep)', padding: '4.5rem 0' }}>
+      <ParallaxSection style={{ background: 'var(--ivory-deep)', padding: '4.5rem 0 3rem' }}>
         <div className="container">
           <SectionHeader
             eyebrow="The Edit"
@@ -571,7 +585,12 @@ export default function Home() {
           >
             {featured.map((p, i) => (
               <motion.div key={p.id} variants={scaleIn}>
-                <ProductCard product={p} index={i} />
+              <ProductCard
+                product={p}
+                index={i}
+                isLiked={likedProducts.includes(p.id)}
+                onToggleLike={onToggleLike}
+              />
               </motion.div>
             ))}
           </motion.div>
@@ -596,16 +615,16 @@ export default function Home() {
         >
           {[
             {
-              category: 'Bridal',
+              category: 'Sarees',
               eyebrow: 'Curated Edit',
-              title: 'The Bridal Collection',
-              copy: 'Banarasi brocade and temple-motif silk, chosen for the one day you want no compromises.',
+              title: 'The Saree Collection',
+              copy: 'Kanjivaram, Banarasi, Chanderi — six yards chosen for the moments you want to remember.',
               image: 'https://images.pexels.com/photos/30677843/pexels-photo-30677843.jpeg?w=900&h=700&fit=crop',
             },
             {
-              category: 'Ornaments',
+              category: 'Jewellery',
               eyebrow: 'Curated Edit',
-              title: 'The Ornaments Collection',
+              title: 'The Jewellery Collection',
               copy: 'Temple kemp, kundan and antique gold — pieces made to be worn with a six-yard drape.',
               image: 'https://images.pexels.com/photos/27103969/pexels-photo-27103969.jpeg?w=900&h=700&fit=crop',
             },

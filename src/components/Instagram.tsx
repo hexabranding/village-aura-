@@ -2,11 +2,11 @@ import { motion, useMotionValue } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 
 const instaPosts = [
-  { src: 'https://images.pexels.com/photos/28428053/pexels-photo-28428053.jpeg?w=500&h=500&fit=crop', label: 'Silk Sarees' },
-  { src: 'https://images.pexels.com/photos/37054317/pexels-photo-37054317.jpeg?w=500&h=500&fit=crop', label: 'Bridal Edit' },
-  { src: 'https://images.pexels.com/photos/37054321/pexels-photo-37054321.jpeg?w=500&h=500&fit=crop', label: 'Handwoven' },
-  { src: 'https://images.pexels.com/photos/30244535/pexels-photo-30244535.jpeg?w=500&h=500&fit=crop', label: 'Cotton Weaves' },
-  { src: 'https://images.pexels.com/photos/37054325/pexels-photo-37054325.jpeg?w=500&h=500&fit=crop', label: 'Ornaments' },
+  { src: 'https://images.pexels.com/photos/28428053/pexels-photo-28428053.jpeg?w=500&h=500&fit=crop', label: 'Sarees' },
+  { src: 'https://images.pexels.com/photos/37054317/pexels-photo-37054317.jpeg?w=500&h=500&fit=crop', label: 'Suit Sets' },
+  { src: 'https://images.pexels.com/photos/37054321/pexels-photo-37054321.jpeg?w=500&h=500&fit=crop', label: 'Weaves' },
+  { src: 'https://images.pexels.com/photos/30244535/pexels-photo-30244535.jpeg?w=500&h=500&fit=crop', label: 'Bags' },
+  { src: 'https://images.pexels.com/photos/37054325/pexels-photo-37054325.jpeg?w=500&h=500&fit=crop', label: 'Jewellery' },
   { src: 'https://images.pexels.com/photos/28428060/pexels-photo-28428060.jpeg?w=500&h=500&fit=crop', label: 'New Arrivals' },
 ];
 
@@ -141,7 +141,7 @@ export default function Instagram() {
               >
                 <div
                   style={{
-                    fontSize: '0.62rem',
+                    fontSize: '0.72rem',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     color: 'var(--ivory)',

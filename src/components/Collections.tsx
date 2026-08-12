@@ -7,7 +7,7 @@ interface CollectionsProps {
   collections: Collection[];
 }
 
-const CARD_W = 220;
+const CARD_W = 250;
 const GAP = 20;
 const SCROLL_SPEED = 28;
 
@@ -81,7 +81,7 @@ export default function Collections({ collections }: CollectionsProps) {
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic' }}>
                     {c.title}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--rose-dust)', marginTop: '0.2rem' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--rose-dust)', marginTop: '0.2rem' }}>
                     {c.tagline}
                   </div>
                 </div>
@@ -102,20 +102,6 @@ export default function Collections({ collections }: CollectionsProps) {
             </motion.div>
           ))}
         </motion.div>
-      </div>
-
-      <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-        <span
-          style={{
-            fontSize: '0.65rem',
-            color: 'var(--ink-soft)',
-            letterSpacing: '0.15em',
-            textTransform: 'uppercase',
-            opacity: 0.5,
-          }}
-        >
-        
-        </span>
       </div>
     </section>
   );

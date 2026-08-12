@@ -94,7 +94,7 @@ p {
 
 .eyebrow {
   font-family: var(--font-body);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--gold);
@@ -116,10 +116,11 @@ p {
   background: transparent;
   color: var(--maroon);
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 500;
+  border-radius: var(--radius-sm);
   transition: background 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
