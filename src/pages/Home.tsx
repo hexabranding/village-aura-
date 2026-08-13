@@ -11,21 +11,6 @@ import TiltImage from '../components/TiltImage';
 import AdCarousel from '../components/AdCarousel';
 import { products, collections } from '../data/products';
 
-const staggerContainer = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.92 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
-};
-
 const slideFromLeft = {
   hidden: { opacity: 0, x: -50 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
@@ -79,67 +64,6 @@ function AnimatedCounter({ target, duration = 1.5 }: { target: number; duration?
   return <span ref={ref}>{count.toLocaleString('en-IN')}</span>;
 }
 
-function SectionHeader({ eyebrow, title, subtitle, action }: { eyebrow: string; title: string; subtitle?: string; action?: React.ReactNode }) {
-  return (
-    <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.4 }}
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        marginBottom: '2.5rem',
-        flexWrap: 'wrap',
-        gap: '1rem',
-      }}
-    >
-      <div>
-        <motion.span
-          className="eyebrow"
-          initial={{ opacity: 0, x: -10 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          {eyebrow}
-        </motion.span>
-        <motion.h2
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          style={{ fontSize: '2.2rem', marginTop: '0.4rem' }}
-        >
-          {title}
-        </motion.h2>
-        {subtitle && (
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            style={{ color: 'var(--ink-soft)', marginTop: '0.4rem', maxWidth: 480 }}
-          >
-            {subtitle}
-          </motion.p>
-        )}
-      </div>
-      {action && (
-        <motion.div
-          initial={{ opacity: 0, x: 10 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          {action}
-        </motion.div>
-      )}
-    </motion.div>
-  );
-}
-
 
 
 function DecorativeLine() {
@@ -157,6 +81,285 @@ function DecorativeLine() {
         transformOrigin: 'left',
       }}
     />
+  );
+}
+
+interface WatchShopItem {
+  id: string;
+  name: string;
+  price: string;
+  poster: string;
+  video: string;
+}
+
+const watchShopItems: WatchShopItem[] = [
+  {
+    id: 'kanjivaram-silk-magenta',
+    name: 'Kanjivaram Silk — Magenta Bloom',
+    price: '₹18,500',
+    poster: 'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg?w=500&h=900&fit=crop',
+    video: 'https://videos.pexels.com/video-files/3191572/3191572-uhd_2560_1440_30fps.mp4',
+  },
+  {
+    id: 'temple-kemp-necklace',
+    name: 'Temple Kemp Necklace Set',
+    price: '₹6,400',
+    poster: 'https://images.pexels.com/photos/32780784/pexels-photo-32780784.jpeg?w=500&h=900&fit=crop',
+    video: 'https://videos.pexels.com/video-files/3191568/3191568-uhd_2560_1440_30fps.mp4',
+  },
+  {
+    id: 'brocade-potli-clutch',
+    name: 'Brocade Potli Clutch',
+    price: '₹2,800',
+    poster: 'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?w=500&h=900&fit=crop',
+    video: 'https://videos.pexels.com/video-files/3191572/3191572-uhd_2560_1440_30fps.mp4',
+  },
+  {
+    id: 'chanderi-anarkali-set',
+    name: 'Chanderi Anarkali Suit Set',
+    price: '₹6,200',
+    poster: 'https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg?w=500&h=900&fit=crop',
+    video: 'https://videos.pexels.com/video-files/3191568/3191568-uhd_2560_1440_30fps.mp4',
+  },
+];
+
+function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [mobilePlaying, setMobilePlaying] = useState(false);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    videoRef.current?.play().catch(() => {});
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  };
+
+  const handleMobileTap = () => {
+    if (!mobilePlaying) {
+      setMobilePlaying(true);
+      videoRef.current?.play().catch(() => {});
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleMobileTap}
+      style={{
+        position: 'relative',
+        borderRadius: 16,
+        overflow: 'hidden',
+        cursor: 'pointer',
+        aspectRatio: '9 / 16',
+        background: '#1a1a1a',
+        transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+        transition: 'transform 350ms ease',
+        transformOrigin: 'center center',
+      }}
+    >
+      {/* Video */}
+      <video
+        ref={videoRef}
+        src={item.video}
+        poster={item.poster}
+        muted
+        playsInline
+        loop
+        preload="metadata"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: isHovered ? 1 : 0,
+          transition: 'opacity 400ms ease',
+        }}
+      />
+
+      {/* Poster image (visible when not hovered) */}
+      <img
+        src={item.poster}
+        alt={item.name}
+        loading="lazy"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: isHovered ? 0 : 1,
+          transition: 'opacity 400ms ease',
+        }}
+      />
+
+      {/* Dark gradient overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(0deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 40%, transparent 60%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Play icon */}
+      <motion.div
+        animate={{ opacity: isHovered ? 0 : 1, scale: isHovered ? 0.8 : 1 }}
+        transition={{ duration: 0.3 }}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.9)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+        }}
+      >
+        <div
+          style={{
+            width: 0,
+            height: 0,
+            borderLeft: '18px solid var(--maroon)',
+            borderTop: '11px solid transparent',
+            borderBottom: '11px solid transparent',
+            marginLeft: 4,
+          }}
+        />
+      </motion.div>
+
+      {/* Product info */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '1.5rem 1.25rem 1.25rem',
+          color: '#fff',
+          pointerEvents: 'none',
+        }}
+      >
+        <div
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.95rem',
+            fontWeight: 600,
+            letterSpacing: '0.02em',
+            lineHeight: 1.3,
+            textShadow: '0 1px 8px rgba(0,0,0,0.4)',
+          }}
+        >
+          {item.name}
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.85rem',
+            color: 'var(--gold-soft)',
+            marginTop: '0.3rem',
+            fontWeight: 500,
+          }}
+        >
+          PRICE: {item.price}
+        </div>
+        <Link
+          to={`/product/${item.id}`}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            display: 'inline-block',
+            marginTop: '0.85rem',
+            padding: '0.55rem 1.4rem',
+            borderRadius: 30,
+            background: 'linear-gradient(135deg, var(--maroon) 0%, var(--maroon-deep) 100%)',
+            color: '#fff',
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.78rem',
+            fontWeight: 600,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            textDecoration: 'none',
+            pointerEvents: 'auto',
+            boxShadow: '0 2px 12px rgba(107,30,35,0.4)',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.boxShadow = '0 4px 18px rgba(107,30,35,0.55)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 2px 12px rgba(107,30,35,0.4)';
+          }}
+        >
+          Shop →
+        </Link>
+      </div>
+    </motion.div>
+  );
+}
+
+function WatchShopSection() {
+  return (
+    <section style={{ padding: '4.5rem 0', background: 'var(--ivory)' }}>
+      <div className="container">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          style={{ textAlign: 'center', marginBottom: '2.5rem' }}
+        >
+          <span className="eyebrow">Watch & Experience</span>
+          <h2 style={{ fontSize: '2.2rem', marginTop: '0.4rem', fontStyle: 'italic' }}>Watch &amp; Shop</h2>
+          <motion.div
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            style={{
+              width: 60,
+              height: 2,
+              background: 'linear-gradient(90deg, var(--gold), var(--gold-soft))',
+              margin: '0.75rem auto 0',
+              transformOrigin: 'center',
+            }}
+          />
+        </motion.div>
+
+        <div
+          className="watch-shop-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '1.5rem',
+          }}
+        >
+          {watchShopItems.map((item, i) => (
+            <WatchShopCard key={item.id} item={item} index={i} />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -304,7 +507,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
             />
             {/* Right image — smaller, overlaps left */}
             <TiltImage
-              src="https://images.pexels.com/photos/31660114/pexels-photo-31660114.jpeg?w=500&h=650&fit=crop"
+              src="https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=500&h=650&fit=crop"
               alt="Close detail of zari border weaving"
               expanded={hoveredImage === 1}
               onHoverChange={(h) => setHoveredImage(h ? 1 : null)}
@@ -559,43 +762,8 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
       {/* ─── Ad Carousel ─── */}
       <AdCarousel />
 
-      {/* ─── Featured / This Season's Weaves ─── */}
-      <ParallaxSection style={{ background: 'var(--ivory-deep)', padding: '4.5rem 0 3rem' }}>
-        <div className="container">
-          <SectionHeader
-            eyebrow="The Edit"
-            title="This Season's Weaves"
-            action={
-              <motion.div whileHover={{ scale: 1.04, x: 3 }} whileTap={{ scale: 0.97 }}>
-                <Link to="/shop" className="btn">View All Sarees →</Link>
-              </motion.div>
-            }
-          />
-          <motion.div
-            className="shop-grid"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '2rem 1.5rem',
-            }}
-          >
-            {featured.map((p, i) => (
-              <motion.div key={p.id} variants={scaleIn}>
-              <ProductCard
-                product={p}
-                index={i}
-                isLiked={likedProducts.includes(p.id)}
-                onToggleLike={onToggleLike}
-              />
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </ParallaxSection>
+      {/* ─── Watch & Shop ─── */}
+      <WatchShopSection />
 
       {/* ─── Curated Edits ─── */}
       <section className="container" style={{ padding: '0 0 4.5rem' }}>

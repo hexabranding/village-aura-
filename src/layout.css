@@ -64,7 +64,10 @@
     display: none !important;
   }
   .zoom-hint {
-    display: flex !important;
+    display: none !important;
+  }
+  .product-zoom-container {
+    cursor: zoom-in !important;
   }
 }
 
@@ -80,6 +83,9 @@
   }
   .pairing-grid {
     grid-template-columns: 1fr !important;
+  }
+  .watch-shop-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
@@ -102,6 +108,9 @@
   .shop-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
+  .watch-shop-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 @media (max-width: 560px) {
@@ -109,6 +118,9 @@
     grid-template-columns: 1fr !important;
   }
   .shop-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .watch-shop-grid {
     grid-template-columns: 1fr !important;
   }
 }

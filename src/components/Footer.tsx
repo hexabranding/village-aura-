@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import ZariDivider from './ZariDivider';
 import logo from '../assets/images/logo.png';
 
@@ -53,14 +54,20 @@ export default function Footer() {
         <motion.div variants={fadeUp} transition={{ duration: 0.5 }}>
           <div className="eyebrow" style={{ color: 'var(--gold-soft)', marginBottom: '1rem' }}>Shop</div>
           <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem' }}>
-            {['Sarees', 'Jewellery', 'Bags', 'Unstitched Suit Sets'].map((item) => (
+            {[
+              { name: 'Sarees', path: '/shop?category=Sarees' },
+              { name: 'Jewellery', path: '/shop?category=Jewellery' },
+              { name: 'Bags', path: '/shop?category=Bags' },
+              { name: 'Unstitched Suit Sets', path: '/shop?category=Unstitched%20Suit%20Sets' },
+            ].map((item) => (
               <motion.li
-                key={item}
+                key={item.name}
                 whileHover={{ x: 6, color: 'var(--gold-soft)' }}
                 transition={{ duration: 0.2 }}
-                style={{ cursor: 'default' }}
               >
-                {item}
+                <Link to={item.path} style={{ color: 'inherit', textDecoration: 'none' }}>
+                  {item.name}
+                </Link>
               </motion.li>
             ))}
           </ul>
@@ -68,14 +75,20 @@ export default function Footer() {
         <motion.div variants={fadeUp} transition={{ duration: 0.5 }}>
           <div className="eyebrow" style={{ color: 'var(--gold-soft)', marginBottom: '1rem' }}>Support</div>
           <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem' }}>
-            {['Size & Drape Guide', 'Shipping & Returns', 'Fabric Care', 'Contact Us'].map((item) => (
+            {[
+              { name: 'Size & Drape Guide', path: '/contact' },
+              { name: 'Shipping & Returns', path: '/contact' },
+              { name: 'Fabric Care', path: '/contact' },
+              { name: 'Contact Us', path: '/contact' },
+            ].map((item) => (
               <motion.li
-                key={item}
+                key={item.name}
                 whileHover={{ x: 6, color: 'var(--gold-soft)' }}
                 transition={{ duration: 0.2 }}
-                style={{ cursor: 'default' }}
               >
-                {item}
+                <Link to={item.path} style={{ color: 'inherit', textDecoration: 'none' }}>
+                  {item.name}
+                </Link>
               </motion.li>
             ))}
           </ul>

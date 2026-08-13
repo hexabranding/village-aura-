@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useCallback } from 'react';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProduct, products } from '../data/products';
@@ -12,6 +12,9 @@ interface ProductProps {
   onToggleLike: (id: string) => void;
 }
 
+const ZOOM_LEVEL = 2.8;
+const LENS_SIZE = 150;
+
 export default function Product({ onAddToBag, likedProducts, onToggleLike }: ProductProps) {
   const { id } = useParams();
   const product = id ? getProduct(id) : undefined;
@@ -19,15 +22,18 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
   const [variantIndex, setVariantIndex] = useState(0);
   const [imageIndex, setImageIndex] = useState(0);
   const [added, setAdded] = useState(false);
+  const [mobileZoom, setMobileZoom] = useState(false);
+
+  // Scroll to top when product changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   // Zoom state
   const [hovering, setHovering] = useState(false);
-  const [mobileZoom, setMobileZoom] = useState(false);
-  const lensRef = useRef<HTMLDivElement>(null);
-  const zoomImgRef = useRef<HTMLImageElement>(null);
-
-  const ZOOM = 2.8;
-  const LENS = 150;
+  const [zoomBgPos, setZoomBgPos] = useState({ x: 50, y: 50 });
+  const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const related = useMemo(
     () =>
@@ -38,37 +44,38 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
   );
 
   const syncZoom = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const w = rect.width;
     const h = rect.height;
-    const lensHalf = LENS / 2;
 
-    const lxC = Math.min(Math.max(x, lensHalf), w - lensHalf);
-    const lyC = Math.min(Math.max(y, lensHalf), h - lensHalf);
+    const px = Math.min(Math.max((x / w) * 100, 0), 100);
+    const py = Math.min(Math.max((y / h) * 100, 0), 100);
 
-    if (lensRef.current) {
-      lensRef.current.style.left = `${lxC}px`;
-      lensRef.current.style.top = `${lyC}px`;
-    }
+    setZoomBgPos({ x: px, y: py });
 
-    if (zoomImgRef.current) {
-      const img = zoomImgRef.current;
-      const panel = img.parentElement!;
-      const cw = panel.offsetWidth;
-      const ch = panel.offsetHeight;
-      const iw = cw * ZOOM;
-      const ih = ch * ZOOM;
-      const tx = Math.max(-(iw - cw), -Math.round(((lxC - lensHalf) / w) * iw));
-      const ty = Math.max(-(ih - ch), -Math.round(((lyC - lensHalf) / h) * ih));
-      img.style.transform = `translate(${tx}px, ${ty}px)`;
-    }
+    const half = LENS_SIZE / 2;
+    const lx = Math.min(Math.max(x, half), w - half);
+    const ly = Math.min(Math.max(y, half), h - half);
+    setLensPos({ x: lx, y: ly });
+  }, []);
+
+  const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    setHovering(true);
+    syncZoom(e);
+  }, [syncZoom]);
+
+  const handleMouseLeave = useCallback(() => {
+    setHovering(false);
   }, []);
 
   if (!product) return <Navigate to="/shop" replace />;
 
   const variant = product.variants[variantIndex];
+  const currentImageSrc = variant.images[imageIndex];
 
   const handleAdd = () => {
     onAddToBag(product.id, variantIndex);
@@ -89,125 +96,118 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
         style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 'clamp(2rem, 5vw, 4rem)' }}
       >
         {/* Gallery */}
-        <div className="gallery-sticky" style={{ position: 'sticky', top: '100px', alignSelf: 'start' }}>
-          {/* Main image with zoom lens */}
-          <div
-            className="product-zoom-container"
-            onMouseEnter={(e) => {
-              setHovering(true);
-              syncZoom(e);
-            }}
-            onMouseLeave={() => setHovering(false)}
-            onMouseMove={syncZoom}
-            onClick={() => setMobileZoom(true)}
-            style={{
-              position: 'relative',
-              aspectRatio: '4/5',
-              overflow: 'hidden',
-              background: 'var(--ivory-deep)',
-              borderRadius: 'var(--radius)',
-              cursor: hovering ? 'none' : 'zoom-in',
-            }}
-          >
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={`${variantIndex}-${imageIndex}`}
-                src={variant.images[imageIndex]}
-                alt={`${product.name} — ${variant.colorName}`}
-                initial={{ opacity: 0, scale: 1.02 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
-              />
-            </AnimatePresence>
-
-            {/* Lens — follows cursor */}
-            {hovering && (
-              <div
-                ref={lensRef}
-                className="zoom-lens"
-                style={{
-                  position: 'absolute',
-                  width: LENS,
-                  height: LENS,
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  border: '1px solid #b0b0b0',
-                  background: 'rgba(255,255,255,0.3)',
-                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.08)',
-                  pointerEvents: 'none',
-                  zIndex: 5,
-                }}
-              />
-            )}
-
-            {/* Zoom hint */}
-            {!hovering && (
-              <div
-                className="zoom-hint"
-                style={{
-                  position: 'absolute',
-                  bottom: 12,
-                  right: 12,
-                  background: 'rgba(36,27,21,0.6)',
-                  color: 'var(--ivory)',
-                  padding: '0.35rem 0.7rem',
-                  fontSize: '0.65rem',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  borderRadius: 'var(--radius-sm)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  pointerEvents: 'none',
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.3-4.3" />
-                  <path d="M11 8v6" />
-                  <path d="M8 11h6" />
-                </svg>
-                Hover to zoom
-              </div>
-            )}
-          </div>
-
-          {/* Zoom preview panel — Flipkart style */}
-          <div
-            className="zoom-preview"
-            style={{
-              position: 'fixed',
-              right: 24,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: 'min(40vw, 500px)',
-              aspectRatio: '4/5',
-              overflow: 'hidden',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--line)',
-              background: 'var(--ivory-deep)',
-              boxShadow: '0 30px 80px rgba(36,27,21,0.28)',
-              zIndex: 60,
-              pointerEvents: 'none',
-              opacity: hovering ? 1 : 0,
-              visibility: hovering ? 'visible' : 'hidden',
-              transition: 'opacity 0.2s ease, visibility 0.2s ease',
-            }}
-          >
-            <img
-              ref={zoomImgRef}
-              src={variant.images[imageIndex]}
-              alt=""
+        <div className="gallery-sticky" style={{ position: 'sticky', top: '100px', alignSelf: 'start', overflow: 'visible' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', position: 'relative' }}>
+            {/* Main image with zoom */}
+            <div
+              ref={containerRef}
+              className="product-zoom-container"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              onMouseMove={syncZoom}
+              onClick={() => !hovering && setMobileZoom(true)}
               style={{
-                width: `${ZOOM * 100}%`,
-                height: `${ZOOM * 100}%`,
-                objectFit: 'cover',
-                transform: 'translate(0px, 0px)',
-                willChange: 'transform',
+                position: 'relative',
+                aspectRatio: '4/5',
+                overflow: 'hidden',
+                background: 'var(--ivory-deep)',
+                borderRadius: 'var(--radius)',
+                cursor: hovering ? 'none' : 'zoom-in',
+                flex: '1 1 0%',
+                minWidth: 0,
+              }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={`${variantIndex}-${imageIndex}`}
+                  src={currentImageSrc}
+                  alt={`${product.name} — ${variant.colorName}`}
+                  initial={{ opacity: 0, scale: 1.02 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4, ease: 'easeOut' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+                />
+              </AnimatePresence>
+
+              {/* Lens overlay */}
+              {hovering && (
+                <div
+                  className="zoom-lens"
+                  style={{
+                    position: 'absolute',
+                    width: LENS_SIZE,
+                    height: LENS_SIZE,
+                    left: lensPos.x,
+                    top: lensPos.y,
+                    transform: 'translate(-50%, -50%)',
+                    border: '1.5px solid rgba(255,255,255,0.7)',
+                    borderRadius: 4,
+                    background: 'rgba(255,255,255,0.15)',
+                    boxShadow: '0 0 0 9999px rgba(0,0,0,0.06), 0 2px 12px rgba(0,0,0,0.12)',
+                    pointerEvents: 'none',
+                    zIndex: 5,
+                    transition: 'left 0.05s linear, top 0.05s linear',
+                  }}
+                />
+              )}
+
+              {/* Zoom hint */}
+              {!hovering && (
+                <div
+                  className="zoom-hint"
+                  style={{
+                    position: 'absolute',
+                    bottom: 12,
+                    right: 12,
+                    background: 'rgba(36,27,21,0.6)',
+                    color: 'var(--ivory)',
+                    padding: '0.35rem 0.7rem',
+                    fontSize: '0.65rem',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    borderRadius: 'var(--radius-sm)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                    <path d="M11 8v6" />
+                    <path d="M8 11h6" />
+                  </svg>
+                  Hover to zoom
+                </div>
+              )}
+            </div>
+
+            {/* Zoom preview panel */}
+            <div
+              className="zoom-preview"
+              style={{
+                position: 'absolute',
+                left: 'calc(100% + 1.5rem)',
+                top: 0,
+                width: 'min(42vw, 520px)',
+                aspectRatio: '4/5',
+                flex: '0 0 auto',
+                overflow: 'hidden',
+                borderRadius: 'var(--radius)',
+                border: '1px solid var(--line)',
+                background: '#fff',
+                boxShadow: '0 4px 24px rgba(36,27,21,0.10)',
                 pointerEvents: 'none',
+                opacity: hovering ? 1 : 0,
+                visibility: hovering ? 'visible' : 'hidden',
+                transition: 'opacity 0.25s ease, visibility 0.25s ease',
+                backgroundImage: `url(${currentImageSrc})`,
+                backgroundSize: `${ZOOM_LEVEL * 100}%`,
+                backgroundPosition: `${zoomBgPos.x}% ${zoomBgPos.y}%`,
+                backgroundRepeat: 'no-repeat',
+                zIndex: 20,
               }}
             />
           </div>
@@ -324,6 +324,48 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
             </AnimatePresence>
           </motion.button>
 
+          {/* WhatsApp Share Button */}
+          <motion.a
+            href={`https://wa.me/?text=${encodeURIComponent(`Check out this ${product.name} from Resham!\n\n₹${product.price.toLocaleString('en-IN')}\n\n${window.location.origin}/product/${product.id}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.6rem',
+              width: '100%',
+              marginTop: '0.75rem',
+              padding: '0.9rem',
+              borderRadius: 'var(--radius)',
+              border: '1.5px solid #25D366',
+              background: 'transparent',
+              color: '#25D366',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              letterSpacing: '0.04em',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              transition: 'background 0.3s ease, color 0.3s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#25D366';
+              e.currentTarget.style.color = '#fff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = '#25D366';
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+            Share on WhatsApp
+          </motion.a>
+
           <div style={{ marginTop: '2.5rem' }}>
             <Accordion
               items={[
@@ -358,30 +400,6 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
         </div>
       </div>
 
-      {related.length > 0 && (
-        <section style={{ marginTop: '5.5rem' }}>
-          <ZariDivider />
-          <div style={{ textAlign: 'center', margin: '2.5rem 0' }}>
-            <span className="eyebrow">You May Also Like</span>
-            <h2 style={{ fontSize: '2rem', marginTop: '0.4rem' }}>More from {product.category}</h2>
-          </div>
-          <div
-            className="shop-grid"
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem 1.5rem' }}
-          >
-            {related.map((p, i) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                index={i}
-                isLiked={likedProducts.includes(p.id)}
-                onToggleLike={onToggleLike}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Mobile zoom modal */}
       <AnimatePresence>
         {mobileZoom && (
@@ -403,7 +421,6 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
               cursor: 'zoom-out',
             }}
           >
-            {/* Close button */}
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -433,7 +450,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
             </motion.button>
 
             <motion.img
-              src={variant.images[imageIndex]}
+              src={currentImageSrc}
               alt={`${product.name} — ${variant.colorName}`}
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -447,7 +464,6 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
               }}
             />
 
-            {/* Image counter */}
             <div
               style={{
                 position: 'absolute',
@@ -465,7 +481,6 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
               {imageIndex + 1} / {variant.images.length}
             </div>
 
-            {/* Prev / Next arrows */}
             {variant.images.length > 1 && (
               <>
                 <motion.button
@@ -529,6 +544,30 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
           </motion.div>
         )}
       </AnimatePresence>
+
+      {related.length > 0 && (
+        <section style={{ marginTop: '5.5rem' }}>
+          <ZariDivider />
+          <div style={{ textAlign: 'center', margin: '2.5rem 0' }}>
+            <span className="eyebrow">You May Also Like</span>
+            <h2 style={{ fontSize: '2rem', marginTop: '0.4rem' }}>More from {product.category}</h2>
+          </div>
+          <div
+            className="shop-grid"
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem 1.5rem' }}
+          >
+            {related.map((p, i) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                index={i}
+                isLiked={likedProducts.includes(p.id)}
+                onToggleLike={onToggleLike}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

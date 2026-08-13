@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Shop from './pages/Shop';
 import Product from './pages/Product';
 import Login from './pages/Login';
+import Contact from './pages/Contact';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import type { CartItem } from './data/products';
@@ -93,6 +94,7 @@ export default function App() {
               <Route path="/shop" element={<Shop likedProducts={likedProducts} onToggleLike={toggleLike} />} />
               <Route path="/product/:id" element={<Product onAddToBag={addToBag} likedProducts={likedProducts} onToggleLike={toggleLike} />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/cart" element={<Cart cart={cart} updateQty={updateQty} removeFromCart={removeFromCart} />} />
               <Route path="/checkout" element={<Checkout cart={cart} clearCart={clearCart} />} />
             </Routes>

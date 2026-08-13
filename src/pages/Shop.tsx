@@ -9,12 +9,15 @@ interface ShopProps {
   onToggleLike: (id: string) => void;
 }
 
-const SAREES_SUBCATS = ['Ajrakh Cotton', 'Chanderi Silk', 'Maheshwari Silk', 'Kota Doria', 'Kota Cotton', 'Kalamkari'];
+const SUBCATS: Record<string, string[]> = {
+  Sarees: ['Ajrakh Cotton', 'Chanderi Silk', 'Maheshwari Silk', 'Kota Doria', 'Kota Cotton', 'Kalamkari'],
+  Jewellery: ['Necklaces', 'Earrings', 'Bangles', 'Hair Jewellery'],
+};
 
 export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeCategory = searchParams.get('category');
-  const activeSub = activeCategory === 'Sarees' ? searchParams.get('sub') : null;
+  const activeSub = activeCategory && SUBCATS[activeCategory] ? searchParams.get('sub') : null;
 
   const filtered = products.filter(
     (p) =>
@@ -22,9 +25,12 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
       (!activeSub || p.subCategory === activeSub)
   );
 
+  const subcats = activeCategory ? SUBCATS[activeCategory] : undefined;
+
   const setSub = (sub: string | null) => {
-    if (sub) setSearchParams({ category: 'Sarees', sub });
-    else setSearchParams({ category: 'Sarees' });
+    if (!activeCategory) return;
+    if (sub) setSearchParams({ category: activeCategory, sub });
+    else setSearchParams({ category: activeCategory });
   };
 
   return (
@@ -38,7 +44,7 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
 
       <ZariDivider />
 
-      {activeCategory === 'Sarees' && (
+      {subcats && (
         <div
           style={{
             display: 'flex',
@@ -59,9 +65,9 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
               fontSize: '0.62rem',
             }}
           >
-            All Sarees
+            All {activeCategory}
           </button>
-          {SAREES_SUBCATS.map((sub) => (
+          {subcats.map((sub) => (
             <button
               key={sub}
               onClick={() => setSub(sub)}

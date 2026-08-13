@@ -40,9 +40,10 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
 
   const navLinks = [
     { label: 'Sarees', to: '/shop?category=Sarees', subs: ['Ajrakh Cotton', 'Chanderi Silk', 'Maheshwari Silk', 'Kota Doria', 'Kota Cotton', 'Kalamkari'] },
-    { label: 'Jewellery', to: '/shop?category=Jewellery', subs: ['Handmade Bangles', 'Handmade Chokers', 'Long chains', 'Earrings', 'Bangles', 'Rings', 'Anklets'] },
+    { label: 'Jewellery', to: '/shop?category=Jewellery', subs: ['Necklaces', 'Earrings', 'Bangles', 'Hair Jewellery'] },
     { label: 'Bags', to: '/shop?category=Bags' },
     { label: 'Suit Sets', to: '/shop?category=Unstitched%20Suit%20Sets' },
+    { label: 'Contact', to: '/contact' },
   ];
 
   return (
@@ -143,31 +144,45 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                 </Link>
 
                 {link.subs && (
-                  <AnimatePresence>
+                  <>
+                    {/* Bridge element to prevent dropdown from closing */}
                     {hoveredNav === link.label && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                      <div
                         style={{
                           position: 'absolute',
-                          top: 'calc(100% + 16px)',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          minWidth: 230,
-                          background: 'var(--ivory)',
-                          border: '1px solid var(--line)',
-                          borderRadius: 'var(--radius)',
-                          boxShadow: '0 20px 50px rgba(36,27,21,0.15)',
-                          padding: '0.6rem',
-                          zIndex: 70,
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          height: 12,
+                          zIndex: 69,
                         }}
-                      >
+                      />
+                    )}
+                    <AnimatePresence>
+                      {hoveredNav === link.label && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                          style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 8px)',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            minWidth: 230,
+                            background: 'var(--ivory)',
+                            border: '1px solid var(--line)',
+                            borderRadius: 'var(--radius)',
+                            boxShadow: '0 20px 50px rgba(36,27,21,0.15)',
+                            padding: '0.6rem',
+                            zIndex: 70,
+                          }}
+                        >
                         {link.subs.map((sub) => (
                           <Link
                             key={sub}
-                            to={`/shop?category=${encodeURIComponent('Sarees')}&sub=${encodeURIComponent(sub)}`}
+                            to={`${link.to.split('&')[0]}&sub=${encodeURIComponent(sub)}`}
                             className="eyebrow"
                             style={{
                               display: 'flex',
@@ -195,6 +210,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                       </motion.div>
                     )}
                   </AnimatePresence>
+                  </>
                 )}
               </div>
             ))}

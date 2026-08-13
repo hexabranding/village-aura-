@@ -10,14 +10,15 @@ const instaPosts = [
   { src: 'https://images.pexels.com/photos/28428060/pexels-photo-28428060.jpeg?w=500&h=500&fit=crop', label: 'New Arrivals' },
 ];
 
-const CARD_SIZE = 260;
+const CARD_WIDTH = 260;
+const CARD_HEIGHT = 340;
 const GAP = 14;
 const SCROLL_SPEED = 30;
 
 export default function Instagram() {
   const x = useMotionValue(0);
   const paused = useRef(false);
-  const totalWidth = instaPosts.length * (CARD_SIZE + GAP);
+  const totalWidth = instaPosts.length * (CARD_WIDTH + GAP);
 
   useEffect(() => {
     let pos = 0;
@@ -38,7 +39,7 @@ export default function Instagram() {
   const duplicated = [...instaPosts, ...instaPosts, ...instaPosts];
 
   return (
-    <section style={{ padding: '4.5rem 0', overflow: 'hidden' }}>
+    <section style={{ padding: '5.5rem 0', overflow: 'hidden' }}>
       <div className="container" style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <motion.span
           className="eyebrow"
@@ -89,8 +90,8 @@ export default function Instagram() {
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               style={{
                 flexShrink: 0,
-                width: CARD_SIZE,
-                height: CARD_SIZE,
+                width: CARD_WIDTH,
+                height: CARD_HEIGHT,
                 position: 'relative',
                 overflow: 'hidden',
                 borderRadius: 'var(--radius)',
