@@ -486,7 +486,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
             style={{
               flex: '1 1 380px',
               position: 'relative',
-              height: 480,
+              height: 'clamp(300px, 50vw, 480px)',
             }}
           >
             {/* Left image — larger, main */}
@@ -533,7 +533,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         transition={{ duration: 0.8 }}
         style={{
           position: 'relative',
-          height: '420px',
+          height: 'clamp(280px, 50vh, 420px)',
           overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
@@ -746,7 +746,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               transition={{ duration: 0.5, delay: i * 0.12 }}
               style={{ textAlign: 'center', color: 'var(--ivory)' }}
             >
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '2.8rem', fontWeight: 500, color: 'var(--gold-soft)' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 5vw, 2.8rem)', fontWeight: 500, color: 'var(--gold-soft)' }}>
                 <AnimatedCounter target={stat.value} />
                 +
               </div>

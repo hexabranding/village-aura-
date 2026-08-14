@@ -24,7 +24,7 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
     <div className="container" style={{ padding: '3rem 0 5rem', maxWidth: 1060 }}>
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <span className="eyebrow">Your Selection</span>
-        <h1 style={{ fontSize: '2.4rem', marginTop: '0.4rem', fontStyle: 'italic' }}>Shopping Bag</h1>
+        <h1 style={{ fontSize: 'clamp(1.6rem, 5vw, 2.4rem)', marginTop: '0.4rem', fontStyle: 'italic' }}>Shopping Bag</h1>
       </div>
       <ZariDivider />
 
@@ -45,6 +45,7 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
         </motion.div>
       ) : (
         <div
+          className="cart-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: '1.6fr 1fr',
@@ -104,7 +105,8 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
                         <button
                           onClick={() => updateQty(ci.id, ci.colorIndex, ci.qty - 1)}
                           aria-label="Decrease quantity"
-                          style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--ivory)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}
+                          className="qty-btn"
+                          style={{ borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--ivory)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}
                         >
                           −
                         </button>
@@ -112,7 +114,8 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
                         <button
                           onClick={() => updateQty(ci.id, ci.colorIndex, ci.qty + 1)}
                           aria-label="Increase quantity"
-                          style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--ivory)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}
+                          className="qty-btn"
+                          style={{ borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--ivory)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}
                         >
                           +
                         </button>

@@ -129,12 +129,13 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     >
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <span className="eyebrow">Almost There</span>
-        <h1 style={{ fontSize: '2.4rem', marginTop: '0.4rem', fontStyle: 'italic' }}>Checkout</h1>
+        <h1 style={{ fontSize: 'clamp(1.6rem, 5vw, 2.4rem)', marginTop: '0.4rem', fontStyle: 'italic' }}>Checkout</h1>
       </div>
       <ZariDivider />
 
       <form
         onSubmit={placeOrder}
+        className="checkout-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: '1.6fr 1fr',
@@ -146,7 +147,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
             <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Shipping Details</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="checkout-name-phone" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                 <label className="eyebrow" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>Full Name</label>
                 <input required value={form.name} onChange={set('name')} placeholder="Your name" style={inputStyle} />
@@ -160,7 +161,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
               <label className="eyebrow" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>Full Address</label>
               <input required value={form.address} onChange={set('address')} placeholder="House, street, landmark" style={inputStyle} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+            <div className="checkout-address" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                 <label className="eyebrow" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>City</label>
                 <input required value={form.city} onChange={set('city')} placeholder="City" style={inputStyle} />

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/images/logo.png';
 import { getProduct } from '../data/products';
@@ -16,7 +16,22 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
   const [menuOpen, setMenuOpen] = useState(false);
   const [likedOpen, setLikedOpen] = useState(false);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  const [userOpen, setUserOpen] = useState(false);
   const likedRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const [loggedUser, setLoggedUser] = useState<{ email: string; name: string } | null>(() => {
+    const saved = localStorage.getItem('reshamUser');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('reshamUser');
+    setLoggedUser(null);
+    setUserOpen(false);
+    navigate('/');
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -28,6 +43,9 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
     const onMouseDown = (e: MouseEvent) => {
       if (likedRef.current && !likedRef.current.contains(e.target as Node)) {
         setLikedOpen(false);
+      }
+      if (userRef.current && !userRef.current.contains(e.target as Node)) {
+        setUserOpen(false);
       }
     };
     document.addEventListener('mousedown', onMouseDown);
@@ -67,7 +85,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          height: '100px',
+          height: 'clamp(60px, 10vw, 100px)',
         }}
       >
         {/* Left — hamburger on mobile */}
@@ -109,7 +127,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
           <img
             src={logo}
             alt="Village Allure"
-            style={{ height: 145, width: 'auto' }}
+            style={{ height: 'clamp(50px, 12vw, 145px)', width: 'auto' }}
           />
         </Link>
 
@@ -216,28 +234,210 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
             ))}
           </div>
 
-          {/* User login */}
-          <Link
-            to="/login"
-            aria-label="User account"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '6px',
-              borderRadius: '50%',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.04)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </Link>
+          {/* User login / account */}
+          <div ref={userRef} style={{ position: 'relative' }}>
+            {loggedUser ? (
+              <>
+                <motion.button
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label="User account"
+                  onClick={() => setUserOpen((v) => !v)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '6px',
+                    borderRadius: '50%',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.04)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </motion.button>
+
+                <AnimatePresence>
+                  {userOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                      style={{
+                        position: 'absolute',
+                        top: 'calc(100% + 14px)',
+                        right: 0,
+                        minWidth: 200,
+                        background: 'var(--ivory)',
+                        border: '1px solid var(--line)',
+                        borderRadius: 'var(--radius)',
+                        boxShadow: '0 24px 60px rgba(36,27,21,0.16)',
+                        zIndex: 60,
+                        padding: '0.5rem',
+                      }}
+                    >
+                      <div style={{ padding: '0.6rem 0.9rem', borderBottom: '1px solid var(--line)', marginBottom: '0.3rem' }}>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ink)' }}>{loggedUser.name}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.15rem' }}>{loggedUser.email}</div>
+                      </div>
+                      <Link
+                        to="/account"
+                        onClick={() => setUserOpen(false)}
+                        className="eyebrow"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.6rem',
+                          padding: '0.7rem 0.9rem',
+                          color: 'var(--ink)',
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.08em',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--ivory-deep)';
+                          e.currentTarget.style.color = 'var(--maroon)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'none';
+                          e.currentTarget.style.color = 'var(--ink)';
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        My Account
+                      </Link>
+                      <Link
+                        to="/orders"
+                        onClick={() => setUserOpen(false)}
+                        className="eyebrow"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.6rem',
+                          padding: '0.7rem 0.9rem',
+                          color: 'var(--ink)',
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.08em',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--ivory-deep)';
+                          e.currentTarget.style.color = 'var(--maroon)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'none';
+                          e.currentTarget.style.color = 'var(--ink)';
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                          <line x1="3" y1="6" x2="21" y2="6" />
+                          <path d="M16 10a4 4 0 0 1-8 0" />
+                        </svg>
+                        Orders
+                      </Link>
+                      <Link
+                        to="/profile"
+                        onClick={() => setUserOpen(false)}
+                        className="eyebrow"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.6rem',
+                          padding: '0.7rem 0.9rem',
+                          color: 'var(--ink)',
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.08em',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--ivory-deep)';
+                          e.currentTarget.style.color = 'var(--maroon)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'none';
+                          e.currentTarget.style.color = 'var(--ink)';
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="3" />
+                          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+                        </svg>
+                        My Profile
+                      </Link>
+                      <div style={{ borderTop: '1px solid var(--line)', marginTop: '0.3rem', paddingTop: '0.3rem' }}>
+                        <button
+                          onClick={handleLogout}
+                          className="eyebrow"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.6rem',
+                            padding: '0.7rem 0.9rem',
+                            color: 'var(--ink)',
+                            fontSize: '0.75rem',
+                            letterSpacing: '0.08em',
+                            borderRadius: 'var(--radius-sm)',
+                            width: '100%',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'var(--ivory-deep)';
+                            e.currentTarget.style.color = 'var(--maroon)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'none';
+                            e.currentTarget.style.color = 'var(--ink)';
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                          </svg>
+                          Logout
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                aria-label="User account"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '6px',
+                  borderRadius: '50%',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.04)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </Link>
+            )}
+          </div>
 
           {/* Liked products */}
           <div ref={likedRef} style={{ position: 'relative' }}>
@@ -301,7 +501,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                     position: 'absolute',
                     top: 'calc(100% + 14px)',
                     right: 0,
-                    width: 320,
+                    width: 'min(320px, 90vw)',
                     maxHeight: '70vh',
                     overflowY: 'auto',
                     background: 'var(--ivory)',

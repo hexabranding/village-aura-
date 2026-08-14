@@ -3,16 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ZariDivider from '../components/ZariDivider';
 
-export default function Login() {
+export default function Signup() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('reshamUser', JSON.stringify({ email, name: email.split('@')[0] || 'Member' }));
+    localStorage.setItem('reshamUser', JSON.stringify({ email, name: name || email.split('@')[0] || 'Member' }));
     navigate('/');
   };
 
@@ -63,7 +64,7 @@ export default function Login() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            Welcome Back
+            Join Village Allure
           </motion.span>
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
@@ -71,7 +72,7 @@ export default function Login() {
             transition={{ duration: 0.5, delay: 0.28 }}
             style={{ fontSize: '2rem', marginTop: '0.5rem', fontStyle: 'italic' }}
           >
-            Sign In
+            Create Account
           </motion.h1>
           <ZariDivider />
           <motion.p
@@ -80,7 +81,7 @@ export default function Login() {
             transition={{ duration: 0.5, delay: 0.35 }}
             style={{ color: 'var(--ink-soft)', fontSize: '0.88rem', marginTop: '0.2rem' }}
           >
-            Sign in to track your orders and saved weaves.
+            Sign up to track orders and save your favourite weaves.
           </motion.p>
         </div>
 
@@ -91,11 +92,31 @@ export default function Login() {
             transition={{ duration: 0.5, delay: 0.4 }}
             style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}
           >
-            <label className="eyebrow" htmlFor="login-email" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>
+            <label className="eyebrow" htmlFor="signup-name" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>
+              Full Name
+            </label>
+            <input
+              id="signup-name"
+              type="text"
+              required
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={inputStyle}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: -14 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.48 }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}
+          >
+            <label className="eyebrow" htmlFor="signup-email" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>
               Email Address
             </label>
             <input
-              id="login-email"
+              id="signup-email"
               type="email"
               required
               placeholder="you@example.com"
@@ -108,26 +129,18 @@ export default function Login() {
           <motion.div
             initial={{ opacity: 0, x: -14 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.48 }}
+            transition={{ duration: 0.5, delay: 0.56 }}
             style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label className="eyebrow" htmlFor="login-password" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>
-                Password
-              </label>
-              <Link
-                to="/login"
-                style={{ fontSize: '0.72rem', color: 'var(--maroon)', borderBottom: '1px solid var(--gold)' }}
-              >
-                Forgot?
-              </Link>
-            </div>
+            <label className="eyebrow" htmlFor="signup-password" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>
+              Password
+            </label>
             <div style={{ position: 'relative' }}>
               <input
-                id="login-password"
+                id="signup-password"
                 type={showPassword ? 'text' : 'password'}
                 required
-                placeholder="Enter your password"
+                placeholder="Create a password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ ...inputStyle, paddingRight: '2.75rem' }}
@@ -171,18 +184,19 @@ export default function Login() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.55 }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+            transition={{ duration: 0.5, delay: 0.62 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--ink-soft)' }}>
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                style={{ accentColor: 'var(--maroon)', width: 15, height: 15 }}
-              />
-              Remember me
-            </label>
+            <input
+              type="checkbox"
+              checked={agreeTerms}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
+              style={{ accentColor: 'var(--maroon)', width: 15, height: 15 }}
+            />
+            <span style={{ fontSize: '0.82rem', color: 'var(--ink-soft)' }}>
+              I agree to the{' '}
+              <span style={{ color: 'var(--maroon)', fontWeight: 600, borderBottom: '1px solid var(--gold)', cursor: 'pointer' }}>Terms & Conditions</span>
+            </span>
           </motion.div>
 
           <motion.button
@@ -192,19 +206,19 @@ export default function Login() {
             className="btn btn-solid"
             style={{ width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '0.85rem' }}
           >
-            Sign In
+            Create Account
           </motion.button>
         </form>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.65 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
           style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--ink-soft)' }}
         >
-          New to Village Allure?{' '}
-          <Link to="/signup" style={{ color: 'var(--maroon)', fontWeight: 600, borderBottom: '1px solid var(--gold)' }}>
-            Create an account
+          Already have an account?{' '}
+          <Link to="/login" style={{ color: 'var(--maroon)', fontWeight: 600, borderBottom: '1px solid var(--gold)' }}>
+            Sign in
           </Link>
         </motion.div>
       </motion.div>

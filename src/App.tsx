@@ -7,9 +7,22 @@ import Home from './pages/Home';
 import Shop from './pages/Shop';
 import Product from './pages/Product';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Contact from './pages/Contact';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import OrderTrackingPage from './pages/OrderTracking';
+import Account from './pages/Account';
+import Orders from './pages/Orders';
+import Profile from './pages/Profile';
+import AdminLogin from './pages/AdminLogin';
+import AdminLayout from './components/AdminLayout';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminProducts from './pages/AdminProducts';
+import AdminCategories from './pages/AdminCategories';
+import AdminOrders from './pages/AdminOrders';
+import AdminSales from './pages/AdminSales';
+import AdminAds from './pages/AdminAds';
 import type { CartItem } from './data/products';
 
 export default function App() {
@@ -76,9 +89,13 @@ export default function App() {
     setCart([]);
   }, []);
 
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Header cartCount={cartCount} likedCount={likedProducts.length} likedProducts={likedProducts} onToggleLike={toggleLike} />
+      {!isAdminRoute && (
+        <Header cartCount={cartCount} likedCount={likedProducts.length} likedProducts={likedProducts} onToggleLike={toggleLike} />
+      )}
 
       <main style={{ flex: 1 }}>
         <AnimatePresence mode="wait">
@@ -94,15 +111,30 @@ export default function App() {
               <Route path="/shop" element={<Shop likedProducts={likedProducts} onToggleLike={toggleLike} />} />
               <Route path="/product/:id" element={<Product onAddToBag={addToBag} likedProducts={likedProducts} onToggleLike={toggleLike} />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/cart" element={<Cart cart={cart} updateQty={updateQty} removeFromCart={removeFromCart} />} />
               <Route path="/checkout" element={<Checkout cart={cart} clearCart={clearCart} />} />
+              <Route path="/track-order" element={<OrderTrackingPage />} />
+              <Route path="/track-order/:orderId" element={<OrderTrackingPage />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="categories" element={<AdminCategories />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="sales" element={<AdminSales />} />
+                <Route path="ads" element={<AdminAds />} />
+              </Route>
             </Routes>
           </motion.div>
         </AnimatePresence>
       </main>
 
-      <Footer />
+      {!isAdminRoute && <Footer />}
 
       <AnimatePresence>
         {toast && (

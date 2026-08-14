@@ -166,7 +166,7 @@ export default function Hero() {
           position: 'relative',
           zIndex: 2,
           padding: 'clamp(7rem, 14vh, 11rem) clamp(2rem, 6vw, 6rem)',
-          maxWidth: 700,
+          maxWidth: 'min(700px, 90vw)',
           textAlign: 'left',
         }}
       >
@@ -187,7 +187,7 @@ export default function Hero() {
               transition={{ duration: 0.8, delay: 0.1 }}
               style={{
                 fontFamily: 'var(--font-body)',
-                fontSize: '0.68rem',
+                fontSize: '0.75rem',
                 textTransform: 'uppercase',
                 color: 'var(--gold-soft)',
                 fontWeight: 500,
@@ -198,7 +198,7 @@ export default function Hero() {
 
             <h1
               style={{
-                fontSize: 'clamp(2.8rem, 5.5vw, 4.8rem)',
+                fontSize: 'clamp(1.8rem, 5.5vw, 4.8rem)',
                 lineHeight: 1.05,
                 fontStyle: 'italic',
                 fontWeight: 500,
@@ -240,7 +240,7 @@ export default function Hero() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.6rem',
-                    padding: '0.95rem 2.2rem',
+                    padding: '0.95rem clamp(1.2rem, 3vw, 2.2rem)',
                     background: 'var(--gold)',
                     color: 'var(--ink)',
                     fontFamily: 'var(--font-body)',
@@ -261,7 +261,7 @@ export default function Hero() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.6rem',
-                    padding: '0.95rem 2.2rem',
+                    padding: '0.95rem clamp(1.2rem, 3vw, 2.2rem)',
                     border: '1px solid rgba(255,255,255,0.5)',
                     background: 'transparent',
                     color: '#fff',

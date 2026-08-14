@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ZariDivider from './ZariDivider';
@@ -14,8 +15,20 @@ const stagger = {
 };
 
 export default function Footer() {
+  const loggedUser = useMemo(() => {
+    const saved = localStorage.getItem('reshamUser');
+    return saved ? JSON.parse(saved) : null;
+  }, []);
+
+  const supportLinks = [
+    { name: 'Size & Drape Guide', path: '/contact' },
+    { name: 'Shipping & Returns', path: '/contact' },
+    { name: 'Fabric Care', path: '/contact' },
+    ...(!loggedUser ? [{ name: 'Track Order', path: '/track-order' }] : []),
+    { name: 'Contact Us', path: '/contact' },
+  ];
   return (
-    <footer style={{ background: 'var(--maroon-deep)', color: 'var(--ivory-deep)', marginTop: '6rem' }}>
+    <footer style={{ background: 'var(--maroon-deep)', color: 'var(--ivory-deep)', marginTop: 'clamp(3rem, 6vw, 6rem)' }}>
       <div className="container" style={{ paddingTop: '3.5rem' }}>
         <ZariDivider tone="ivory" />
       </div>
@@ -43,7 +56,7 @@ export default function Footer() {
             <img
               src={logo}
               alt="Village Allure"
-              style={{ height: 140, width: 'auto' }}
+              style={{ height: 'clamp(60px, 12vw, 140px)', width: 'auto' }}
             />
           </motion.div>
           <p style={{ fontSize: '0.85rem', lineHeight: 1.7, color: 'var(--rose-dust)', maxWidth: 280, marginTop: '0.75rem' }}>
@@ -75,12 +88,7 @@ export default function Footer() {
         <motion.div variants={fadeUp} transition={{ duration: 0.5 }}>
           <div className="eyebrow" style={{ color: 'var(--gold-soft)', marginBottom: '1rem' }}>Support</div>
           <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem' }}>
-            {[
-              { name: 'Size & Drape Guide', path: '/contact' },
-              { name: 'Shipping & Returns', path: '/contact' },
-              { name: 'Fabric Care', path: '/contact' },
-              { name: 'Contact Us', path: '/contact' },
-            ].map((item) => (
+            {supportLinks.map((item) => (
               <motion.li
                 key={item.name}
                 whileHover={{ x: 6, color: 'var(--gold-soft)' }}
@@ -137,6 +145,8 @@ export default function Footer() {
           color: 'var(--rose-dust)',
           display: 'flex',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
         }}
       >
         <span>© {new Date().getFullYear()} Resham. All rights reserved.</span>

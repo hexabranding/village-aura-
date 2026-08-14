@@ -81,6 +81,7 @@ export default function Contact() {
         </div>
 
         <div
+          className="contact-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
@@ -104,7 +105,7 @@ export default function Contact() {
             <h2 style={{ fontSize: '1.4rem', fontStyle: 'italic', marginBottom: '1.75rem' }}>Send a Message</h2>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="contact-name-email" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                   <label className="eyebrow" htmlFor="contact-name" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>
                     Your Name
@@ -315,14 +316,6 @@ export default function Contact() {
           </motion.div>
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .container > div:last-child {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </motion.div>
   );
 }
