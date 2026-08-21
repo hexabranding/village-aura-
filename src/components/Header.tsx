@@ -61,7 +61,9 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
     { label: 'Jewellery', to: '/shop?category=Jewellery', subs: ['Necklaces', 'Earrings', 'Bangles', 'Hair Jewellery'] },
     { label: 'Bags', to: '/shop?category=Bags' },
     { label: 'Suit Sets', to: '/shop?category=Unstitched%20Suit%20Sets' },
+    { label: 'Gallery', to: '/gallery' },
     { label: 'Contact', to: '/contact' },
+    
   ];
 
   return (

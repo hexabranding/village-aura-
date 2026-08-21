@@ -73,6 +73,7 @@ export default function Footer() {
               { name: 'Jewellery', path: '/shop?category=Jewellery' },
               { name: 'Bags', path: '/shop?category=Bags' },
               { name: 'Unstitched Suit Sets', path: '/shop?category=Unstitched%20Suit%20Sets' },
+              { name: 'Gallery', path: '/gallery' },
             ].map((item) => (
               <motion.li
                 key={item.name}
