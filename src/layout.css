@@ -247,6 +247,7 @@
     top: 0 !important;
     left: 0 !important;
   }
+}
 
 /* Instagram hover */
 .insta-overlay {
@@ -3320,13 +3321,6 @@
   box-shadow: 0 2px 12px rgba(36, 27, 21, 0.04);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-}
-  padding: 1.25rem 1.5rem;
-  background: white;
-  border-radius: 16px;
-  border: 1px solid rgba(201, 169, 110, 0.1);
-  box-shadow: 0 2px 12px rgba(36, 27, 21, 0.04);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .admin-product-card:hover {
