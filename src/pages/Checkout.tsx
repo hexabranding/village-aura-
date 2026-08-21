@@ -255,7 +255,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
                   <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product!.name}</div>
                   <div style={{ color: 'var(--ink-soft)' }}>Qty {ci.qty}</div>
                 </div>
-                <div style={{ fontFamily: 'var(--font-display)', color: 'var(--maroon)', fontSize: '0.9rem' }}>
+                <div style={{ fontFamily: 'var(--font-body)', color: 'var(--maroon)', fontSize: '0.9rem' }}>
                   ₹{(product!.price * ci.qty).toLocaleString('en-IN')}
                 </div>
               </div>
@@ -272,7 +272,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 600, marginTop: '0.25rem' }}>
               <span>Total</span>
-              <span style={{ fontFamily: 'var(--font-display)', color: 'var(--maroon)' }}>₹{total.toLocaleString('en-IN')}</span>
+              <span style={{ fontFamily: 'var(--font-body)', color: 'var(--maroon)' }}>₹{total.toLocaleString('en-IN')}</span>
             </div>
           </div>
           <p style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.9rem', lineHeight: 1.6 }}>

@@ -558,7 +558,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                               <div style={{ fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {p.name}
                               </div>
-                              <div style={{ fontSize: '0.78rem', color: 'var(--maroon)', fontFamily: 'var(--font-display)', marginTop: '0.1rem' }}>
+                              <div style={{ fontSize: '0.78rem', color: 'var(--maroon)', fontFamily: 'var(--font-body)', marginTop: '0.1rem' }}>
                                 ₹{p.price.toLocaleString('en-IN')}
                               </div>
                             </div>

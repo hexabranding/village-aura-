@@ -2506,7 +2506,7 @@
 }
 
 .admin-order-card-total {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--maroon);
@@ -2578,7 +2578,7 @@
 }
 
 .admin-order-card-detail-total {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--maroon);
@@ -3491,7 +3491,7 @@
 }
 
 .admin-product-card-selling {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--maroon);

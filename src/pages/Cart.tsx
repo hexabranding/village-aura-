@@ -121,7 +121,7 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
                         </button>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', color: 'var(--maroon)', fontWeight: 600 }}>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: '1.15rem', color: 'var(--maroon)', fontWeight: 600 }}>
                           ₹{(product!.price * ci.qty).toLocaleString('en-IN')}
                         </div>
                         {product!.mrp && (
@@ -170,7 +170,7 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
               <div style={{ borderTop: '1px solid var(--line)', margin: '0.4rem 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', fontWeight: 600 }}>
                 <span>Total</span>
-                <span style={{ fontFamily: 'var(--font-display)', color: 'var(--maroon)' }}>
+                <span style={{ fontFamily: 'var(--font-body)', color: 'var(--maroon)' }}>
                   ₹{(subtotal + shipping).toLocaleString('en-IN')}
                 </span>
               </div>

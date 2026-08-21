@@ -169,7 +169,7 @@ export default function ProductCard({ product, index = 0, isLiked = false, onTog
             <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'baseline', marginTop: '0.5rem' }}>
               <span
                 style={{
-                  fontFamily: 'var(--font-display)',
+                  fontFamily: 'var(--font-body)',
                   fontSize: '1.55rem',
                   fontWeight: 600,
                   color: 'var(--maroon)',
