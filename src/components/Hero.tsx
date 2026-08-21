@@ -6,7 +6,6 @@ const heroSlides = [
   {
     eyebrow: 'Woven Since 1962 — Kanchipuram, Banaras, Bengal',
     headline: ['Six yards,', 'one lifetime of moments.'],
-  
     cta: { label: 'Shop the Weave', to: '/shop' },
     ctaSecondary: { label: 'Sarees', to: '/shop?category=Sarees' },
     image: 'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg?w=1920&h=1080&fit=crop',
@@ -14,19 +13,16 @@ const heroSlides = [
   {
     eyebrow: 'New Arrivals — Just Off the Loom',
     headline: ['Fresh weaves,', 'crafted this season.'],
-    
-      
     cta: { label: 'New Arrivals', to: '/shop' },
     ctaSecondary: { label: 'Jewellery', to: '/shop?category=Jewellery' },
-    image: 'https://images.pexels.com/photos/1446161/pexels-photo-1446161.jpeg?w=1920&h=1080&fit=crop',
+    image: 'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg?w=1920&h=1080&fit=crop',
   },
   {
     eyebrow: 'The Wedding Edit — Banarasi Heritage',
     headline: ['Woven for the', 'day you remember.'],
-
     cta: { label: 'Explore Suit Sets', to: '/shop?category=Unstitched%20Suit%20Sets' },
     ctaSecondary: { label: 'All Collections', to: '/shop' },
-    image: 'https://images.pexels.com/photos/3594582/pexels-photo-3594582.jpeg?w=1920&h=1080&fit=crop',
+    image: 'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg?w=1920&h=1080&fit=crop',
   },
 ];
 
@@ -150,12 +146,12 @@ export default function Hero() {
 
       {/* Floating gold particles */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }}>
-        {Array.from({ length: 12 }).map((_, i) => (
+        {Array.from({ length: 40 }).map((_, i) => (
           <FloatingParticle
             key={i}
-            delay={i * 0.8}
-            x={10 + i * 7}
-            size={2 + (i % 3) * 1.2}
+            delay={i * 0.35}
+            x={3 + i * 2.5}
+            size={2 + (i % 5) * 1.5}
           />
         ))}
       </div>

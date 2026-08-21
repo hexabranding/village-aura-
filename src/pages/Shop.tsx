@@ -1,9 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
 import ZariDivider from '../components/ZariDivider';
-import { products } from '../data/products';
+import { products as localProducts } from '../data/products';
+import { api } from '../lib/api';
+import type { Product as ProductType } from '../data/products';
 
 interface ShopProps {
   likedProducts: string[];
@@ -40,6 +42,20 @@ const formatPrice = (v: number) =>
 export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filterOpen, setFilterOpen] = useState(false);
+  const [products, setProducts] = useState<ProductType[]>(localProducts);
+
+  useEffect(() => {
+    api.products.getAll().then((apiProducts) => {
+      if (apiProducts.length === 0) return;
+      const merged = localProducts.map((lp) => {
+        const apiP = apiProducts.find((p) => p.id === lp.id);
+        if (apiP && apiP.variants.some((v) => v.images.length > 0)) return apiP;
+        return lp;
+      });
+      const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
+      setProducts([...merged, ...newProducts]);
+    }).catch(() => {});
+  }, []);
   const activeCategory = searchParams.get('category');
   const activeSub = activeCategory && SUBCATS[activeCategory] ? searchParams.get('sub') : null;
   const activeSort = searchParams.get('sort') ?? '';

@@ -1,13 +1,15 @@
 import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getProduct, products } from '../data/products';
+import { getProduct, products as localProducts } from '../data/products';
 import Accordion from '../components/Accordion';
 import ProductCard from '../components/ProductCard';
 import ZariDivider from '../components/ZariDivider';
+import { api } from '../lib/api';
+import type { Product as ProductType } from '../data/products';
 
 interface ProductProps {
-  onAddToBag: (productId: string, colorIndex?: number) => void;
+  onAddToBag: (productId: string, colorIndex: number, qty: number) => void;
   likedProducts: string[];
   onToggleLike: (id: string) => void;
 }
@@ -17,12 +19,32 @@ const LENS_SIZE = 150;
 
 export default function Product({ onAddToBag, likedProducts, onToggleLike }: ProductProps) {
   const { id } = useParams();
-  const product = id ? getProduct(id) : undefined;
+  const [allProducts, setAllProducts] = useState<ProductType[]>(localProducts);
+  const product = useMemo(() => {
+    if (id) {
+      return allProducts.find((p) => p.id === id) ?? getProduct(id);
+    }
+    return undefined;
+  }, [id, allProducts]);
+
+  useEffect(() => {
+    api.products.getAll().then((apiProducts) => {
+      if (apiProducts.length === 0) return;
+      const merged = localProducts.map((lp) => {
+        const apiP = apiProducts.find((p) => p.id === lp.id);
+        if (apiP && apiP.variants.some((v) => v.images.length > 0)) return apiP;
+        return lp;
+      });
+      const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
+      setAllProducts([...merged, ...newProducts]);
+    }).catch(() => {});
+  }, []);
 
   const [variantIndex, setVariantIndex] = useState(0);
   const [imageIndex, setImageIndex] = useState(0);
   const [added, setAdded] = useState(false);
   const [mobileZoom, setMobileZoom] = useState(false);
+  const [bagQty, setBagQty] = useState(0);
 
   // Scroll to top when product changes
   useEffect(() => {
@@ -38,9 +60,9 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
   const related = useMemo(
     () =>
       product
-        ? products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
+        ? allProducts.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
         : [],
-    [product]
+    [product, allProducts]
   );
 
   const syncZoom = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -78,7 +100,8 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
   const currentImageSrc = variant.images[imageIndex];
 
   const handleAdd = () => {
-    onAddToBag(product.id, variantIndex);
+    onAddToBag(product.id, variantIndex, 1);
+    setBagQty((prev) => prev + 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -97,7 +120,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
       >
         {/* Gallery */}
         <div className="gallery-sticky" style={{ position: 'sticky', top: '100px', alignSelf: 'start', overflow: 'visible' }}>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', position: 'relative' }}>
+          <div className="gallery-inner" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', position: 'relative' }}>
             {/* Main image with zoom */}
             <div
               ref={containerRef}
@@ -213,7 +236,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
           </div>
 
           {/* Thumbnail rail */}
-          <div className="thumb-rail" style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+          <div className="thumb-rail gallery-thumbs" style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
             {variant.images.map((src, i) => (
               <motion.img
                 key={src}
@@ -245,7 +268,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
           </h1>
 
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'baseline', marginTop: '1rem' }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', color: 'var(--maroon)' }}>
+            <span style={{ fontSize: '1.6rem', color: 'var(--maroon)' }}>
               ₹{product.price.toLocaleString('en-IN')}
             </span>
             {product.mrp && (
@@ -324,9 +347,15 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
             </AnimatePresence>
           </motion.button>
 
+          {bagQty > 0 && (
+            <div style={{ marginTop: '0.75rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
+              {bagQty} {bagQty === 1 ? 'item' : 'items'} added to bag
+            </div>
+          )}
+
           {/* WhatsApp Share Button */}
           <motion.a
-            href={`https://wa.me/?text=${encodeURIComponent(`Check out this ${product.name} from Resham!\n\n₹${product.price.toLocaleString('en-IN')}\n\n${window.location.origin}/product/${product.id}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`Check out this ${product.name} from Village Aura!\n\n₹${product.price.toLocaleString('en-IN')}\n\n${window.location.origin}/product/${product.id}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             whileHover={{ scale: 1.02 }}
@@ -447,8 +476,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
               aria-label="Close zoom"
             >
               ✕
-            </motion.button>
-
+          </motion.button>
             <motion.img
               src={currentImageSrc}
               alt={`${product.name} — ${variant.colorName}`}

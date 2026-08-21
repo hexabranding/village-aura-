@@ -17,6 +17,7 @@ import Orders from './pages/Orders';
 import Profile from './pages/Profile';
 import AdminLogin from './pages/AdminLogin';
 import AdminLayout from './components/AdminLayout';
+import AdminProtected from './components/AdminProtected';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminProducts from './pages/AdminProducts';
 import AdminCategories from './pages/AdminCategories';
@@ -121,7 +122,7 @@ export default function App() {
               <Route path="/orders" element={<Orders />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminLayout />}>
+              <Route path="/admin" element={<AdminProtected><AdminLayout /></AdminProtected>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="categories" element={<AdminCategories />} />

@@ -88,98 +88,139 @@ export default function AdminCategories() {
     }
   };
 
-  if (loading) return <div className="admin-empty">Loading categories...</div>;
+  const totalCategories = categories.length;
+  const activeCount = categories.filter((c) => c.active).length;
+  const inactiveCount = categories.filter((c) => !c.active).length;
+
+  if (loading) {
+    return (
+      <div className="admin-products-loading">
+        <div className="admin-products-spinner" />
+        <span>Loading categories...</span>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="admin-toolbar">
-        <div className="admin-toolbar-left">
-          <span style={{ color: 'var(--ink-soft)', fontSize: '0.85rem' }}>
-            {categories.length} categor{categories.length !== 1 ? 'ies' : 'y'} total,{' '}
-            {categories.filter((c) => c.active).length} active
-          </span>
+    <div className="admin-categories-page">
+      <div className="admin-products-stats">
+        <div className="admin-products-stat">
+          <span className="admin-products-stat-icon">📁</span>
+          <div className="admin-products-stat-text">
+            <span className="admin-products-stat-value">{totalCategories}</span>
+            <span className="admin-products-stat-label">Total Categories</span>
+          </div>
         </div>
-        <button onClick={openAdd} className="admin-btn admin-btn-primary">+ Add Category</button>
+        <div className="admin-products-stat green">
+          <span className="admin-products-stat-icon">✅</span>
+          <div className="admin-products-stat-text">
+            <span className="admin-products-stat-value">{activeCount}</span>
+            <span className="admin-products-stat-label">Active</span>
+          </div>
+        </div>
+        <div className="admin-products-stat red">
+          <span className="admin-products-stat-icon">⏸️</span>
+          <div className="admin-products-stat-text">
+            <span className="admin-products-stat-value">{inactiveCount}</span>
+            <span className="admin-products-stat-label">Inactive</span>
+          </div>
+        </div>
       </div>
 
-      <div className="admin-ads-grid">
-        {categories.map((cat) => (
+      <div className="admin-categories-toolbar">
+        <h3 className="admin-categories-title">All Categories</h3>
+        <button onClick={openAdd} className="admin-products-add-btn">
+          <span>+</span>
+          Add Category
+        </button>
+      </div>
+
+      <div className="admin-categories-grid">
+        {categories.map((cat, index) => (
           <motion.div
             key={cat.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`admin-ad-card ${!cat.active ? 'inactive' : ''}`}
+            transition={{ delay: index * 0.05 }}
+            className={`admin-category-card ${!cat.active ? 'inactive' : ''}`}
           >
-            {cat.image ? (
-              <div className="admin-ad-image">
-                <img src={cat.image} alt={cat.name} />
-                {!cat.active && <div className="admin-ad-overlay">Inactive</div>}
-              </div>
-            ) : (
-              <div className="admin-ad-placeholder">📁</div>
-            )}
-            <div className="admin-ad-content">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>{cat.name}</h4>
-                <span className={`admin-tag ${cat.active ? 'new' : ''}`} style={{ fontSize: '0.65rem' }}>
-                  {cat.active ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-              {cat.description && (
-                <p style={{ fontSize: '0.8rem', color: 'var(--ink-soft)', margin: '0.5rem 0', lineHeight: 1.5 }}>
-                  {cat.description}
-                </p>
+            <div className="admin-category-card-image">
+              {cat.image ? (
+                <>
+                  <img src={cat.image} alt={cat.name} />
+                  {!cat.active && <div className="admin-category-card-overlay">Inactive</div>}
+                </>
+              ) : (
+                <div className="admin-category-card-placeholder">📁</div>
               )}
-              <div style={{ marginTop: '0.5rem' }}>
-                <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', fontWeight: 500 }}>Subcategories:</span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.3rem' }}>
+            </div>
+
+            <div className="admin-category-card-body">
+              <div className="admin-category-card-header">
+                <h4 className="admin-category-card-name">{cat.name}</h4>
+                <button
+                  onClick={() => toggleActive(cat)}
+                  className={`admin-category-card-status ${cat.active ? 'active' : 'inactive'}`}
+                >
+                  {cat.active ? 'Active' : 'Inactive'}
+                </button>
+              </div>
+
+              {cat.description && (
+                <p className="admin-category-card-desc">{cat.description}</p>
+              )}
+
+              <div className="admin-category-card-slug">
+                <span>Slug:</span> {cat.slug}
+              </div>
+
+              <div className="admin-category-card-subs">
+                <span className="admin-category-card-subs-label">Subcategories</span>
+                <div className="admin-category-card-subs-list">
                   {cat.subcategories.length > 0 ? (
                     cat.subcategories.map((sub, i) => (
-                      <span key={i} style={{
-                        fontSize: '0.68rem',
-                        background: 'var(--ivory-deep)',
-                        border: '1px solid var(--line)',
-                        padding: '0.15rem 0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        color: 'var(--ink-soft)',
-                      }}>
-                        {sub}
-                      </span>
+                      <span key={i} className="admin-category-card-sub">{sub}</span>
                     ))
                   ) : (
-                    <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', fontStyle: 'italic' }}>None</span>
+                    <span className="admin-category-card-sub empty">None</span>
                   )}
                 </div>
               </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--ink-soft)', marginTop: '0.5rem' }}>
-                Slug: {cat.slug}
-              </div>
             </div>
-            <div className="admin-ad-actions">
-              <button onClick={() => toggleActive(cat)} className="admin-btn-sm edit">
-                {cat.active ? 'Deactivate' : 'Activate'}
+
+            <div className="admin-category-card-actions">
+              <button onClick={() => openEdit(cat)} className="admin-category-card-edit">
+                <span>✏️</span>
+                Edit
               </button>
-              <button onClick={() => openEdit(cat)} className="admin-btn-sm edit">Edit</button>
               {deleteConfirm === cat.id ? (
-                <div style={{ display: 'flex', gap: 4 }}>
-                  <button onClick={() => handleDelete(cat.id)} className="admin-btn-sm delete-confirm">Yes</button>
-                  <button onClick={() => setDeleteConfirm(null)} className="admin-btn-sm cancel">No</button>
+                <div className="admin-product-card-delete-confirm">
+                  <button onClick={() => handleDelete(cat.id)} className="admin-product-card-delete-yes">
+                    Delete
+                  </button>
+                  <button onClick={() => setDeleteConfirm(null)} className="admin-product-card-delete-no">
+                    Cancel
+                  </button>
                 </div>
               ) : (
-                <button onClick={() => setDeleteConfirm(cat.id)} className="admin-btn-sm delete">Delete</button>
+                <button onClick={() => setDeleteConfirm(cat.id)} className="admin-category-card-delete">
+                  <span>🗑️</span>
+                  Delete
+                </button>
               )}
             </div>
           </motion.div>
         ))}
 
         {categories.length === 0 && (
-          <div className="admin-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📁</div>
-            <h3 style={{ margin: '0 0 0.5rem' }}>No Categories Yet</h3>
-            <p style={{ color: 'var(--ink-soft)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-              Create your first category to organize your products.
-            </p>
-            <button onClick={openAdd} className="admin-btn admin-btn-primary">+ Create First Category</button>
+          <div className="admin-products-empty">
+            <span className="admin-products-empty-icon">📁</span>
+            <h3>No Categories Yet</h3>
+            <p>Create your first category to organize your products.</p>
+            <button onClick={openAdd} className="admin-products-add-btn">
+              <span>+</span>
+              Create First Category
+            </button>
           </div>
         )}
       </div>
@@ -226,8 +267,8 @@ export default function AdminCategories() {
                   <label>Image URL</label>
                   <input value={form.image} onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))} placeholder="https://example.com/category.jpg" />
                   {form.image && (
-                    <div style={{ marginTop: '0.75rem' }}>
-                      <img src={form.image} alt="Preview" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                    <div className="admin-category-modal-preview">
+                      <img src={form.image} alt="Preview" />
                     </div>
                   )}
                 </div>
@@ -240,14 +281,13 @@ export default function AdminCategories() {
                     onChange={(e) => setForm((f) => ({ ...f, subcategories: e.target.value }))}
                     placeholder="Kanchipuram Silk, Banarasi Silk, Chanderi Silk"
                   />
-                  <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.25rem', display: 'block' }}>
-                    Separate each subcategory with a comma
-                  </span>
+                  <span className="admin-form-hint">Separate each subcategory with a comma</span>
                 </div>
 
                 <div className="admin-form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <label className="admin-category-modal-toggle">
                     <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} />
+                    <span className="admin-category-modal-toggle-track" />
                     Active (visible on store)
                   </label>
                 </div>

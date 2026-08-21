@@ -1,6 +1,6 @@
 import type { Product } from '../data/products';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = '/api';
 
 const getToken = () => localStorage.getItem('reshamAdminToken');
 

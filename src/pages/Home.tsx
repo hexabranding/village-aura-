@@ -9,7 +9,9 @@ import HappyClients from '../components/HappyClients';
 import Instagram from '../components/Instagram';
 import TiltImage from '../components/TiltImage';
 import AdCarousel from '../components/AdCarousel';
-import { products, collections } from '../data/products';
+import { products as localProducts, collections } from '../data/products';
+import { api } from '../lib/api';
+import type { Product as ProductType } from '../data/products';
 
 const slideFromLeft = {
   hidden: { opacity: 0, x: -50 },
@@ -368,9 +370,48 @@ interface HomeProps {
   onToggleLike: (id: string) => void;
 }
 
+function HomeBubble({ delay, x, size, color }: { delay: number; x: number; size: number; color: string }) {
+  return (
+    <motion.div
+      initial={{ y: '100vh', opacity: 0, scale: 0.5 }}
+      animate={{ y: '-10vh', opacity: [0, 0.6, 0.6, 0], scale: [0.5, 1, 1.1, 0.8] }}
+      transition={{
+        duration: 10 + Math.random() * 6,
+        delay,
+        repeat: Infinity,
+        ease: 'linear',
+      }}
+      style={{
+        position: 'absolute',
+        left: `${x}%`,
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: color,
+        pointerEvents: 'none',
+        filter: `blur(${size > 8 ? 2 : 0}px)`,
+      }}
+    />
+  );
+}
+
 export default function Home({ likedProducts, onToggleLike }: HomeProps) {
   const [activeFilter, setActiveFilter] = useState<'new' | 'best' | 'featured'>('new');
   const [hoveredImage, setHoveredImage] = useState<number | null>(null);
+  const [products, setProducts] = useState<ProductType[]>(localProducts);
+
+  useEffect(() => {
+    api.products.getAll().then((apiProducts) => {
+      if (apiProducts.length === 0) return;
+      const merged = localProducts.map((lp) => {
+        const apiP = apiProducts.find((p) => p.id === lp.id);
+        if (apiP && apiP.variants.some((v) => v.images.length > 0)) return apiP;
+        return lp;
+      });
+      const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
+      setProducts([...merged, ...newProducts]);
+    }).catch(() => {});
+  }, []);
 
   const newArrivals = products.filter((p) => p.isNew);
   const bestSellers = products.filter((p) => p.isBestSeller);
@@ -384,7 +425,20 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
       : featured;
 
   return (
-    <div>
+    <div style={{ position: 'relative', overflow: 'hidden' }}>
+      {/* Floating home bubbles */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        {Array.from({ length: 80 }).map((_, i) => (
+          <HomeBubble
+            key={i}
+            delay={i * 0.4}
+            x={1 + (i * 1.25) % 100}
+            size={4 + (i % 6) * 3}
+            color={`rgba(183,148,88,${0.1 + (i % 5) * 0.04})`}
+          />
+        ))}
+      </div>
+
       <Hero />
 
       {/* ─── Offer Marquee ─── */}
@@ -735,8 +789,8 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         <div className="container" style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2rem' }}>
           {[
             { label: 'Weaving Families', value: 40 },
-            { label: 'Years of Craft', value: 62 },
-            { label: 'Sarees Delivered', value: 12000 },
+            { label: 'Years of Craft', value: 2 },
+            { label: 'Sarees Delivered', value: 100 },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}

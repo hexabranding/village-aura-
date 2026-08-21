@@ -23,6 +23,24 @@ const statusIcons: Record<string, string> = {
   Cancelled: '❌',
 };
 
+const statusGradients: Record<string, string> = {
+  Pending: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+  Processing: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+  Shipped: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)',
+  'Out for Delivery': 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)',
+  Delivered: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+  Cancelled: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+};
+
+const statusTextColors: Record<string, string> = {
+  Pending: '#92400e',
+  Processing: '#1e40af',
+  Shipped: '#5b21b6',
+  'Out for Delivery': '#9a3412',
+  Delivered: '#065f46',
+  Cancelled: '#991b1b',
+};
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState('');
@@ -90,200 +108,202 @@ export default function AdminOrders() {
     cancelled: orders.filter((o) => o.status === 'Cancelled').length,
   };
 
-  if (loading) return <div className="admin-empty">Loading orders...</div>;
+  if (loading) {
+    return (
+      <div className="admin-products-loading">
+        <div className="admin-products-spinner" />
+        <span>Loading orders...</span>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="admin-order-stats">
-        {allStatuses.slice(0, 5).map((s) => (
-          <div key={s} className="admin-order-stat" style={{ borderLeftColor: statusColors[s] }}>
-            <div className="admin-order-stat-value">{stats[s.toLowerCase().replace(/\s+/g, '') as keyof typeof stats]}</div>
-            <div className="admin-order-stat-label">{s}</div>
-          </div>
-        ))}
+    <div className="admin-orders-page">
+      <div className="admin-products-stats">
+        {allStatuses.slice(0, 5).map((s) => {
+          const key = s.toLowerCase().replace(/\s+/g, '') as keyof typeof stats;
+          return (
+            <div key={s} className="admin-products-stat">
+              <div className="admin-stat-icon" style={{ background: statusGradients[s], color: statusTextColors[s] }}>
+                {statusIcons[s]}
+              </div>
+              <div className="admin-products-stat-text">
+                <span className="admin-products-stat-value">{stats[key]}</span>
+                <span className="admin-products-stat-label">{s}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="admin-toolbar">
-        <div className="admin-toolbar-left">
-          <input
-            type="text"
-            placeholder="Search by ID, name, or phone..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="admin-search"
-          />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="admin-select">
+      <div className="admin-products-toolbar">
+        <div className="admin-products-toolbar-left">
+          <div className="admin-products-search-wrap">
+            <span className="admin-products-search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Search by ID, name, or phone..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="admin-products-search"
+            />
+            {search && (
+              <button className="admin-products-search-clear" onClick={() => setSearch('')}>✕</button>
+            )}
+          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="admin-products-filter">
             <option value="All">All Statuses</option>
             {allStatuses.map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
         </div>
-      </div>
-
-      <div className="admin-card">
-        <div className="admin-table-wrapper">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Phone</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Payment</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((order) => (
-                <tr key={order.orderId} onClick={() => setExpandedOrder(expandedOrder === order.orderId ? null : order.orderId)} style={{ cursor: 'pointer' }}>
-                  <td><code style={{ fontSize: '0.75rem' }}>{order.orderId}</code></td>
-                  <td style={{ fontWeight: 500 }}>{order.name}</td>
-                  <td>{order.phone}</td>
-                  <td>{order.items?.length || 0}</td>
-                  <td style={{ fontWeight: 600, color: 'var(--maroon)' }}>₹{order.total.toLocaleString('en-IN')}</td>
-                  <td><span style={{ fontSize: '0.78rem' }}>{order.payment}</span></td>
-                  <td>
-                    <span className={`admin-status-badge ${order.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.82rem' }}>{order.date}</td>
-                  <td onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => openStatusModal(order)} className="admin-btn-sm edit">Update</button>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan={9} className="admin-empty">No orders found</td></tr>
-              )}
-            </tbody>
-          </table>
+        <div style={{ fontSize: '0.82rem', color: 'var(--ink-soft)' }}>
+          {filtered.length} order{filtered.length !== 1 ? 's' : ''} found
         </div>
       </div>
 
-      {/* Expanded Order Detail */}
-      <AnimatePresence>
-        {expandedOrder && (() => {
-          const order = orders.find((o) => o.orderId === expandedOrder);
-          if (!order) return null;
-          return (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              style={{ overflow: 'hidden' }}
-            >
-              <div style={{
-                background: 'var(--ivory)',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--radius)',
-                padding: '1.5rem',
-                marginTop: '0.5rem',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ margin: 0, fontSize: '1rem' }}>Order Details — {order.orderId}</h3>
-                  <button onClick={() => setExpandedOrder(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--ink-soft)' }}>✕</button>
+      <div className="admin-orders-list">
+        {filtered.map((order, index) => (
+          <motion.div
+            key={order.orderId}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.03 }}
+            className={`admin-order-card ${expandedOrder === order.orderId ? 'expanded' : ''}`}
+          >
+            <div className="admin-order-card-main" onClick={() => setExpandedOrder(expandedOrder === order.orderId ? null : order.orderId)}>
+              <div className="admin-order-card-status-bar" style={{ background: statusColors[order.status] }} />
+
+              <div className="admin-order-card-info">
+                <div className="admin-order-card-header">
+                  <div>
+                    <span className="admin-order-card-id">{order.orderId}</span>
+                    <h4 className="admin-order-card-name">{order.name}</h4>
+                  </div>
+                  <span
+                    className="admin-order-card-badge"
+                    style={{
+                      background: statusGradients[order.status],
+                      color: statusTextColors[order.status],
+                    }}
+                  >
+                    {statusIcons[order.status]} {order.status}
+                  </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', fontSize: '0.82rem' }}>
-                  <div>
-                    <strong style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ink-soft)' }}>Customer</strong>
-                    <div style={{ fontWeight: 500 }}>{order.name}</div>
-                    <div>{order.phone}</div>
-                    {order.email && <div style={{ color: 'var(--ink-soft)' }}>{order.email}</div>}
+                <div className="admin-order-card-details">
+                  <div className="admin-order-card-detail">
+                    <span className="admin-order-card-detail-label">Phone</span>
+                    <span className="admin-order-card-detail-value">{order.phone}</span>
                   </div>
-                  <div>
-                    <strong style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ink-soft)' }}>Shipping Address</strong>
-                    <div>{order.address || 'N/A'}</div>
-                    <div>{order.city || ''}, {order.state || ''} {order.pincode || ''}</div>
+                  <div className="admin-order-card-detail">
+                    <span className="admin-order-card-detail-label">Items</span>
+                    <span className="admin-order-card-detail-value">{order.items?.length || 0}</span>
                   </div>
-                  <div>
-                    <strong style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ink-soft)' }}>Items</strong>
-                    {order.items?.map((item, i) => (
-                      <div key={i} style={{ marginBottom: '0.15rem' }}>
-                        {item.id} × {item.qty}
-                      </div>
-                    )) || 'N/A'}
+                  <div className="admin-order-card-detail">
+                    <span className="admin-order-card-detail-label">Payment</span>
+                    <span className="admin-order-card-detail-value">{order.payment}</span>
                   </div>
-                  <div>
-                    <strong style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ink-soft)' }}>Payment & Total</strong>
-                    <div>{order.payment}</div>
-                    <div style={{ fontWeight: 600, color: 'var(--maroon)', fontSize: '1rem' }}>₹{order.total.toLocaleString('en-IN')}</div>
+                  <div className="admin-order-card-detail">
+                    <span className="admin-order-card-detail-label">Date</span>
+                    <span className="admin-order-card-detail-value">{order.date}</span>
                   </div>
                 </div>
+              </div>
 
-                {order.notes && (
-                  <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'var(--ivory-deep)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem' }}>
-                    <strong style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ink-soft)' }}>Notes: </strong>
-                    {order.notes}
+              <div className="admin-order-card-price">
+                <span className="admin-order-card-total">₹{order.total.toLocaleString('en-IN')}</span>
+              </div>
+
+              <div className="admin-order-card-actions" onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => openStatusModal(order)} className="admin-order-card-update">
+                  <span>✏️</span> Update
+                </button>
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {expandedOrder === order.orderId && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="admin-order-card-detail-panel"
+                >
+                  <div className="admin-order-card-detail-grid">
+                    <div className="admin-order-card-detail-section">
+                      <span className="admin-order-card-detail-title">Customer</span>
+                      <div className="admin-order-card-detail-text">{order.name}</div>
+                      <div className="admin-order-card-detail-text">{order.phone}</div>
+                      {order.email && <div className="admin-order-card-detail-text muted">{order.email}</div>}
+                    </div>
+                    <div className="admin-order-card-detail-section">
+                      <span className="admin-order-card-detail-title">Shipping Address</span>
+                      <div className="admin-order-card-detail-text">{order.address || 'N/A'}</div>
+                      <div className="admin-order-card-detail-text">{order.city || ''}, {order.state || ''} {order.pincode || ''}</div>
+                    </div>
+                    <div className="admin-order-card-detail-section">
+                      <span className="admin-order-card-detail-title">Items</span>
+                      {order.items?.map((item, i) => (
+                        <div key={i} className="admin-order-card-detail-text">{item.id} × {item.qty}</div>
+                      )) || <div className="admin-order-card-detail-text muted">N/A</div>}
+                    </div>
+                    <div className="admin-order-card-detail-section">
+                      <span className="admin-order-card-detail-title">Payment & Total</span>
+                      <div className="admin-order-card-detail-text">{order.payment}</div>
+                      <div className="admin-order-card-detail-total">₹{order.total.toLocaleString('en-IN')}</div>
+                    </div>
                   </div>
-                )}
 
-                {/* Tracking Timeline */}
-                {order.tracking && order.tracking.length > 0 && (
-                  <div style={{ marginTop: '1.25rem', borderTop: '1px solid var(--line)', paddingTop: '1.25rem' }}>
-                    <strong style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ink-soft)' }}>Tracking Timeline</strong>
-                    <div style={{ position: 'relative', paddingLeft: '2rem' }}>
-                      {/* Vertical line */}
-                      <div style={{
-                        position: 'absolute',
-                        left: '0.55rem',
-                        top: '0.3rem',
-                        bottom: '0.3rem',
-                        width: '2px',
-                        background: 'var(--line)',
-                      }} />
-                      {order.tracking.map((entry: OrderTracking, i: number) => (
-                        <div key={i} style={{ position: 'relative', marginBottom: i < order.tracking!.length - 1 ? '1rem' : 0 }}>
-                          <div style={{
-                            position: 'absolute',
-                            left: '-1.55rem',
-                            top: '0.15rem',
-                            width: '0.85rem',
-                            height: '0.85rem',
-                            borderRadius: '50%',
-                            background: statusColors[entry.status] || 'var(--ink-soft)',
-                            border: '2px solid var(--ivory)',
-                            zIndex: 1,
-                          }} />
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem' }}>
-                            <div>
-                              <div style={{ fontWeight: 500, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                                <span>{statusIcons[entry.status] || '📋'}</span>
-                                {entry.status}
+                  {order.notes && (
+                    <div className="admin-order-card-notes">
+                      <strong>Notes:</strong> {order.notes}
+                    </div>
+                  )}
+
+                  {order.tracking && order.tracking.length > 0 && (
+                    <div className="admin-order-card-timeline">
+                      <span className="admin-order-card-detail-title">Tracking Timeline</span>
+                      <div className="admin-timeline">
+                        {order.tracking.map((entry: OrderTracking, i: number) => (
+                          <div key={i} className="admin-timeline-item">
+                            <div className="admin-timeline-dot" style={{ background: statusColors[entry.status] || 'var(--ink-soft)' }} />
+                            <div className="admin-timeline-content">
+                              <div className="admin-timeline-status">
+                                <span>{statusIcons[entry.status] || '📋'}</span> {entry.status}
                               </div>
-                              {entry.message && (
-                                <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)', marginTop: '0.15rem' }}>
-                                  {entry.message}
-                                </div>
-                              )}
+                              {entry.message && <div className="admin-timeline-message">{entry.message}</div>}
                             </div>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            <div className="admin-timeline-date">
                               {new Date(entry.timestamp).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {order.estimatedDelivery && (
-                  <div style={{ marginTop: '1rem', fontSize: '0.82rem', color: 'var(--ink-soft)' }}>
-                    <strong>Estimated Delivery:</strong> {order.estimatedDelivery}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          );
-        })()}
-      </AnimatePresence>
+                  {order.estimatedDelivery && (
+                    <div className="admin-order-card-eta">
+                      <strong>Estimated Delivery:</strong> {order.estimatedDelivery}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        ))}
 
-      {/* Status Update Modal */}
+        {filtered.length === 0 && (
+          <div className="admin-products-empty">
+            <span className="admin-products-empty-icon">📦</span>
+            <h3>No orders found</h3>
+            <p>{search ? 'Try a different search term' : 'Orders will appear here when customers place them'}</p>
+          </div>
+        )}
+      </div>
+
       <AnimatePresence>
         {statusModal && (
           <motion.div
@@ -306,7 +326,7 @@ export default function AdminOrders() {
               </div>
 
               <div className="admin-modal-body">
-                <div style={{ fontSize: '0.82rem', color: 'var(--ink-soft)', marginBottom: '1rem' }}>
+                <div className="admin-order-modal-info">
                   Order: <strong>{statusModal.orderId}</strong> | Current: <strong style={{ color: statusColors[statusModal.currentStatus] }}>{statusModal.currentStatus}</strong>
                 </div>
 
@@ -337,9 +357,7 @@ export default function AdminOrders() {
 
               <div className="admin-modal-footer">
                 <button onClick={() => setStatusModal(null)} className="admin-btn admin-btn-outline">Cancel</button>
-                <button onClick={handleStatusUpdate} className="admin-btn admin-btn-primary">
-                  Update Status
-                </button>
+                <button onClick={handleStatusUpdate} className="admin-btn admin-btn-primary">Update Status</button>
               </div>
             </motion.div>
           </motion.div>

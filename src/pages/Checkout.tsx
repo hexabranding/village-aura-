@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 import { getProduct } from '../data/products';
 import type { CartItem } from '../data/products';
 import ZariDivider from '../components/ZariDivider';
+import { api } from '../lib/api';
 
 interface CheckoutProps {
   cart: CartItem[];
   clearCart: () => void;
 }
 
-interface Order {
+interface PlacedOrder {
   orderId: string;
   total: number;
   name: string;
@@ -20,9 +21,11 @@ interface Order {
 }
 
 export default function Checkout({ cart, clearCart }: CheckoutProps) {
-  const [placed, setPlaced] = useState<Order | null>(null);
+  const [placed, setPlaced] = useState<PlacedOrder | null>(null);
   const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', state: 'Delhi', pincode: '' });
   const [payment, setPayment] = useState('Cash on Delivery');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const items = cart
     .map((ci) => ({ ci, product: getProduct(ci.id) }))
@@ -35,22 +38,39 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const placeOrder = (e: React.FormEvent) => {
+  const placeOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    const orderId = `RSM-${Date.now().toString(36).toUpperCase()}`;
-    const order: Order = {
-      orderId,
-      total,
-      name: form.name,
-      phone: form.phone,
-      payment,
-      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-    };
-    const prev = JSON.parse(localStorage.getItem('reshamOrders') ?? '[]') as Order[];
-    localStorage.setItem('reshamOrders', JSON.stringify([...prev, order]));
-    clearCart();
-    setPlaced(order);
-    window.scrollTo(0, 0);
+    setLoading(true);
+    setError('');
+    try {
+      const orderItems = cart.map((ci) => ({ id: ci.id, colorIndex: ci.colorIndex, qty: ci.qty }));
+      const result = await api.orders.create({
+        total,
+        name: form.name,
+        phone: form.phone,
+        payment,
+        items: orderItems,
+        address: form.address,
+        city: form.city,
+        state: form.state,
+        pincode: form.pincode,
+      });
+      clearCart();
+      setPlaced({
+        orderId: result.orderId,
+        total,
+        name: form.name,
+        phone: form.phone,
+        payment,
+        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      });
+      window.scrollTo(0, 0);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to place order. Please try again.';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (placed) {
@@ -258,8 +278,11 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
           <p style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.9rem', lineHeight: 1.6 }}>
             Made-to-order pieces ship in 10–14 days; ready stock in 3–5 days. Free returns within 7 days for unworn, tag-intact sarees.
           </p>
-          <button type="submit" className="btn btn-solid" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
-            Place Order — ₹{total.toLocaleString('en-IN')}
+          {error && (
+            <p style={{ color: '#c0392b', fontSize: '0.82rem', textAlign: 'center', marginTop: '0.75rem' }}>{error}</p>
+          )}
+          <button type="submit" disabled={loading} className="btn btn-solid" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem', opacity: loading ? 0.7 : 1 }}>
+            {loading ? 'Placing Order...' : `Place Order — ₹${total.toLocaleString('en-IN')}`}
           </button>
           <Link to="/cart" className="eyebrow" style={{ display: 'block', textAlign: 'center', marginTop: '1rem', color: 'var(--maroon)' }}>
             ← Back to Bag

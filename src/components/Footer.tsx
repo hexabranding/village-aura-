@@ -149,7 +149,7 @@ export default function Footer() {
           gap: '0.5rem',
         }}
       >
-        <span>© {new Date().getFullYear()} Resham. All rights reserved.</span>
+        <span>© {new Date().getFullYear()} Village Aura. All rights reserved.</span>
         <span>Made with care, in India.</span>
       </div>
     </footer>

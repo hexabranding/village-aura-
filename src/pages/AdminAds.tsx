@@ -94,116 +94,135 @@ export default function AdminAds() {
   const positionLabels = { homepage: 'Homepage', sidebar: 'Sidebar', banner: 'Banner' };
   const positionColors: Record<string, string> = { homepage: '#3b82f6', sidebar: '#10b981', banner: '#f59e0b' };
 
-  if (loading) return <div className="admin-empty">Loading advertisements...</div>;
+  if (loading) {
+    return (
+      <div className="admin-products-loading">
+        <div className="admin-products-spinner" />
+        <span>Loading advertisements...</span>
+      </div>
+    );
+  }
+
+  const stats = {
+    total: ads.length,
+    active: ads.filter((a) => a.active).length,
+    homepage: ads.filter((a) => a.position === 'homepage').length,
+    banner: ads.filter((a) => a.position === 'banner').length,
+  };
 
   return (
-    <div>
-      <div className="admin-toolbar">
-        <div className="admin-toolbar-left">
-          <span style={{ color: 'var(--ink-soft)', fontSize: '0.85rem' }}>
-            {ads.length} advertisement{ads.length !== 1 ? 's' : ''} total,{' '}
-            {ads.filter((a) => a.active).length} active
-          </span>
+    <div className="admin-ads-page">
+      <div className="admin-products-stats">
+        <div className="admin-products-stat">
+          <div className="admin-stat-icon maroon">📢</div>
+          <div className="admin-products-stat-text">
+            <span className="admin-products-stat-value">{stats.total}</span>
+            <span className="admin-products-stat-label">Total Ads</span>
+          </div>
         </div>
-        <button onClick={openAdd} className="admin-btn admin-btn-primary">+ Add Advertisement</button>
+        <div className="admin-products-stat green">
+          <div className="admin-stat-icon green">✅</div>
+          <div className="admin-products-stat-text">
+            <span className="admin-products-stat-value">{stats.active}</span>
+            <span className="admin-products-stat-label">Active</span>
+          </div>
+        </div>
+        <div className="admin-products-stat">
+          <div className="admin-stat-icon gold">🏠</div>
+          <div className="admin-products-stat-text">
+            <span className="admin-products-stat-value">{stats.homepage}</span>
+            <span className="admin-products-stat-label">Homepage</span>
+          </div>
+        </div>
+        <div className="admin-products-stat">
+          <div className="admin-stat-icon teal">📋</div>
+          <div className="admin-products-stat-text">
+            <span className="admin-products-stat-value">{stats.banner}</span>
+            <span className="admin-products-stat-label">Banner</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="admin-products-toolbar">
+        <div className="admin-products-toolbar-left">
+          <button onClick={openAdd} className="admin-products-add-btn">
+            <span>+</span> Add Advertisement
+          </button>
+        </div>
       </div>
 
       <div className="admin-ads-grid">
-        {ads.map((ad) => (
+        {ads.map((ad, index) => (
           <motion.div
             key={ad.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
             className={`admin-ad-card ${!ad.active ? 'inactive' : ''}`}
           >
             {ad.image ? (
-              <div className="admin-ad-image">
+              <div className="admin-ad-card-image">
                 <img src={ad.image} alt={ad.title} />
-                {!ad.active && <div className="admin-ad-overlay">Inactive</div>}
+                {!ad.active && <div className="admin-ad-card-overlay">Inactive</div>}
               </div>
             ) : (
-              <div className="admin-ad-placeholder">📢</div>
+              <div className="admin-ad-card-placeholder">
+                <span>📢</span>
+              </div>
             )}
-            <div className="admin-ad-content">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem' }}>
-                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>{ad.title}</h4>
-                <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
-                  <span className={`admin-tag ${ad.active ? 'new' : ''}`} style={{ fontSize: '0.65rem' }}>
+
+            <div className="admin-ad-card-content">
+              <div className="admin-ad-card-header">
+                <h4 className="admin-ad-card-title">{ad.title}</h4>
+                <div className="admin-ad-card-badges">
+                  <span className={`admin-tag ${ad.active ? 'new' : ''}`}>
                     {ad.active ? 'Active' : 'Inactive'}
                   </span>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                <span style={{
-                  fontSize: '0.68rem',
-                  background: 'var(--ivory-deep)',
-                  border: '1px solid var(--line)',
-                  padding: '0.15rem 0.5rem',
-                  borderRadius: 'var(--radius-sm)',
-                  color: 'var(--ink-soft)',
-                }}>
-                  {typeLabels[ad.type] || ad.type}
-                </span>
-                <span style={{
-                  fontSize: '0.68rem',
-                  background: `${positionColors[ad.position]}15`,
-                  border: `1px solid ${positionColors[ad.position]}40`,
-                  padding: '0.15rem 0.5rem',
-                  borderRadius: 'var(--radius-sm)',
-                  color: positionColors[ad.position],
-                  fontWeight: 500,
-                }}>
+
+              <div className="admin-ad-card-tags">
+                <span className="admin-ad-tag type">{typeLabels[ad.type] || ad.type}</span>
+                <span className="admin-ad-tag position" style={{ color: positionColors[ad.position], background: `${positionColors[ad.position]}15`, borderColor: `${positionColors[ad.position]}40` }}>
                   {positionLabels[ad.position] || ad.position}
                 </span>
-                {ad.order > 0 && (
-                  <span style={{
-                    fontSize: '0.68rem',
-                    background: 'var(--ivory-deep)',
-                    border: '1px solid var(--line)',
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: 'var(--radius-sm)',
-                    color: 'var(--ink-soft)',
-                  }}>
-                    Order: {ad.order}
-                  </span>
-                )}
+                {ad.order > 0 && <span className="admin-ad-tag order">Order: {ad.order}</span>}
               </div>
+
               {ad.description && (
-                <p style={{ fontSize: '0.8rem', color: 'var(--ink-soft)', margin: '0.5rem 0', lineHeight: 1.5 }}>
-                  {ad.description}
-                </p>
+                <p className="admin-ad-card-desc">{ad.description}</p>
               )}
+
               {ad.link && (
-                <div style={{ fontSize: '0.72rem', color: 'var(--teal)', wordBreak: 'break-all' }}>
-                  🔗 {ad.link}
-                </div>
+                <div className="admin-ad-card-link">🔗 {ad.link}</div>
               )}
             </div>
-            <div className="admin-ad-actions">
-              <button onClick={() => toggleActive(ad)} className="admin-btn-sm edit">
-                {ad.active ? 'Deactivate' : 'Activate'}
+
+            <div className="admin-ad-card-actions">
+              <button onClick={() => toggleActive(ad)} className={`admin-ad-card-action ${ad.active ? 'deactivate' : 'activate'}`}>
+                {ad.active ? '⏸ Deactivate' : '▶ Activate'}
               </button>
-              <button onClick={() => openEdit(ad)} className="admin-btn-sm edit">Edit</button>
+              <button onClick={() => openEdit(ad)} className="admin-ad-card-action edit">✏️ Edit</button>
               {deleteConfirm === ad.id ? (
-                <div style={{ display: 'flex', gap: 4 }}>
+                <div className="admin-ad-card-confirm">
                   <button onClick={() => handleDelete(ad.id)} className="admin-btn-sm delete-confirm">Yes</button>
                   <button onClick={() => setDeleteConfirm(null)} className="admin-btn-sm cancel">No</button>
                 </div>
               ) : (
-                <button onClick={() => setDeleteConfirm(ad.id)} className="admin-btn-sm delete">Delete</button>
+                <button onClick={() => setDeleteConfirm(ad.id)} className="admin-ad-card-action delete">🗑 Delete</button>
               )}
             </div>
           </motion.div>
         ))}
 
         {ads.length === 0 && (
-          <div className="admin-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📢</div>
-            <h3 style={{ margin: '0 0 0.5rem' }}>No Advertisements Yet</h3>
-            <p style={{ color: 'var(--ink-soft)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-              Create your first advertisement to promote products on your store.
-            </p>
-            <button onClick={openAdd} className="admin-btn admin-btn-primary">+ Create First Ad</button>
+          <div className="admin-products-empty" style={{ gridColumn: '1 / -1' }}>
+            <span className="admin-products-empty-icon">📢</span>
+            <h3>No Advertisements Yet</h3>
+            <p>Create your first advertisement to promote products on your store.</p>
+            <button onClick={openAdd} className="admin-products-add-btn" style={{ marginTop: '1rem' }}>
+              <span>+</span> Create First Ad
+            </button>
           </div>
         )}
       </div>

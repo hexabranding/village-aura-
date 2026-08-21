@@ -25,6 +25,7 @@ export interface Product {
   featured?: boolean;
   isNew?: boolean;
   isBestSeller?: boolean;
+  inStock?: boolean;
 }
 
 const sareeImages = [

@@ -48,7 +48,7 @@ export default function Instagram() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          @resham.official
+@village__allure
         </motion.span>
         <motion.h2
           initial={{ opacity: 0, y: 15 }}
@@ -161,12 +161,12 @@ export default function Instagram() {
       <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
         <motion.div whileHover={{ scale: 1.04, x: 3 }} whileTap={{ scale: 0.97 }} style={{ display: 'inline-block' }}>
           <a
-            href="https://instagram.com/resham.official"
+            href="https://www.instagram.com/village__allure"
             target="_blank"
             rel="noopener noreferrer"
             className="btn"
           >
-            Follow @resham.official →
+            Follow @village__allure →
           </a>
         </motion.div>
       </div>

@@ -206,8 +206,8 @@ export default function Contact() {
               <div>
                 <div className="eyebrow" style={{ color: 'var(--gold)', fontSize: '0.62rem', marginBottom: '0.3rem' }}>Visit Us</div>
                 <div style={{ fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.6 }}>
-                  123 Weaver's Street<br />
-                  Chandni Chowk, Delhi 110006<br />
+                  ABCDEFGHTJ<br />
+                  abcdefgh<br />
                   India
                 </div>
               </div>
@@ -233,7 +233,7 @@ export default function Contact() {
               <div>
                 <div className="eyebrow" style={{ color: 'var(--gold)', fontSize: '0.62rem', marginBottom: '0.3rem' }}>Call Us</div>
                 <div style={{ fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.6 }}>
-                  +91 98765 43210<br />
+                  +91 1234567890<br />
                   Mon – Sat, 10 AM – 7 PM IST
                 </div>
               </div>
@@ -260,8 +260,8 @@ export default function Contact() {
               <div>
                 <div className="eyebrow" style={{ color: 'var(--gold)', fontSize: '0.62rem', marginBottom: '0.3rem' }}>Email Us</div>
                 <div style={{ fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.6 }}>
-                  hello@resham.in<br />
-                  support@resham.in
+                  hello@gmail.com<br />
+                  support@gmail.com
                 </div>
               </div>
             </div>
