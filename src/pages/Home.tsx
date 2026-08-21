@@ -443,6 +443,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
 
       {/* ─── Offer Marquee ─── */}
       <div
+        className="home-marquee"
         style={{
           background: 'var(--maroon)',
           overflow: 'hidden',
@@ -453,7 +454,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           style={{
             display: 'flex',
             whiteSpace: 'nowrap',
-            animation: 'marquee 25s linear infinite',
+            animation: 'marquee 8s linear infinite',
           }}
         >
           {[...Array(3)].map((_, i) => (
@@ -788,9 +789,9 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
       >
         <div className="container" style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2rem' }}>
           {[
-            { label: 'Weaving Families', value: 40 },
-            { label: 'Years of Craft', value: 2 },
-            { label: 'Sarees Delivered', value: 100 },
+            { label: 'Years of Craft', value: 6 },
+            { label: 'Weaving Families', value: 1500 },
+            { label: 'Happy Customers', value: 3000},
           ].map((stat, i) => (
             <motion.div
               key={stat.label}

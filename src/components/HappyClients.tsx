@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 interface Client {
   name: string;
@@ -207,6 +208,22 @@ export default function HappyClients() {
         {clients.map((client, i) => (
           <ClientCard key={client.name} client={client} index={i} />
         ))}
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <Link
+          to="/gallery"
+          className="btn"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            padding: '0.85rem 2.2rem',
+          }}
+        >
+          View All
+          <span style={{ fontSize: '1rem' }}>→</span>
+        </Link>
       </div>
     </section>
   );

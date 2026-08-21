@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import Product from './pages/Product';
+import GalleryPage from './pages/GalleryPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Contact from './pages/Contact';
@@ -36,6 +37,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
   const [toast, setToast] = useState<string | null>(null);
+  const [toastColor, setToastColor] = useState<string>('var(--maroon-deep)');
   const location = useLocation();
 
   useEffect(() => {
@@ -54,8 +56,9 @@ export default function App() {
     });
   }, []);
 
-  const showToast = useCallback((message: string) => {
+  const showToast = useCallback((message: string, color?: string) => {
     setToast(message);
+    setToastColor(color || 'var(--maroon-deep)');
     window.clearTimeout((showToast as unknown as { _t?: number })._t);
     (showToast as unknown as { _t?: number })._t = window.setTimeout(() => setToast(null), 2400);
   }, []);
@@ -69,7 +72,7 @@ export default function App() {
         }
         return [...prev, { id: productId, colorIndex, qty: 1 }];
       });
-      showToast('Added to bag');
+      showToast('Added to bag', '#16a34a');
     },
     [showToast]
   );
@@ -89,6 +92,10 @@ export default function App() {
   const clearCart = useCallback(() => {
     setCart([]);
   }, []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname, location.search]);
 
   const isAdminRoute = location.pathname.startsWith('/admin');
 
@@ -110,6 +117,7 @@ export default function App() {
             <Routes location={location}>
               <Route path="/" element={<Home likedProducts={likedProducts} onToggleLike={toggleLike} />} />
               <Route path="/shop" element={<Shop likedProducts={likedProducts} onToggleLike={toggleLike} />} />
+              <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/product/:id" element={<Product onAddToBag={addToBag} likedProducts={likedProducts} onToggleLike={toggleLike} />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -148,7 +156,7 @@ export default function App() {
               position: 'fixed',
               bottom: '1.75rem',
               left: '50%',
-              background: 'var(--maroon-deep)',
+              background: toastColor,
               color: 'var(--ivory)',
               padding: '0.9rem 1.5rem',
               fontSize: '0.85rem',

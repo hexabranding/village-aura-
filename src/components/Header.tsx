@@ -127,6 +127,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
           <img
             src={logo}
             alt="Village Allure"
+            className="header-logo"
             style={{ height: 'clamp(50px, 12vw, 145px)', width: 'auto' }}
           />
         </Link>
