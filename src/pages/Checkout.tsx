@@ -23,7 +23,7 @@ interface PlacedOrder {
 export default function Checkout({ cart, clearCart }: CheckoutProps) {
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
   const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', state: 'Delhi', pincode: '' });
-  const [payment, setPayment] = useState('Cash on Delivery');
+  const [payment, setPayment] = useState('UPI / Pay on App');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -211,7 +211,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
           <div>
             <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Payment Method</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              {['Cash on Delivery', 'UPI / Pay on App', 'Credit / Debit Card'].map((m) => (
+              {['UPI / Pay on App', 'Credit / Debit Card'].map((m) => (
                 <label
                   key={m}
                   style={{

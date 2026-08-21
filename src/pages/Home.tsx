@@ -218,36 +218,42 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
       />
 
       {/* Play icon */}
-      <motion.div
-        animate={{ opacity: isHovered ? 0 : 1, scale: isHovered ? 0.8 : 1 }}
-        transition={{ duration: 0.3 }}
+      <div
         style={{
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 56,
-          height: 56,
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,0.9)',
+          inset: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           pointerEvents: 'none',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
         }}
       >
-        <div
+        <motion.div
+          animate={{ opacity: isHovered ? 0 : 1, scale: isHovered ? 0.8 : 1 }}
+          transition={{ duration: 0.3 }}
           style={{
-            width: 0,
-            height: 0,
-            borderLeft: '18px solid var(--maroon)',
-            borderTop: '11px solid transparent',
-            borderBottom: '11px solid transparent',
-            marginLeft: 4,
+            width: 56,
+            height: 56,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
           }}
-        />
-      </motion.div>
+        >
+          <div
+            style={{
+              width: 0,
+              height: 0,
+              borderLeft: '18px solid var(--maroon)',
+              borderTop: '11px solid transparent',
+              borderBottom: '11px solid transparent',
+              marginLeft: 4,
+            }}
+          />
+        </motion.div>
+      </div>
 
       {/* Product info */}
       <div
@@ -474,7 +480,6 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               ✦ New Suit Set Collection Out Now &nbsp;&nbsp;&nbsp;
               ✦ Handwoven authenticity guaranteed &nbsp;&nbsp;&nbsp;
               ✦ Easy 7-Day Returns &nbsp;&nbsp;&nbsp;
-              ✦ COD Available &nbsp;&nbsp;&nbsp;
             </span>
           ))}
         </div>
