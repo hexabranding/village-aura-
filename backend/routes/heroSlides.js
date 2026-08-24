@@ -1,0 +1,11 @@
+import express from 'express';
+import HeroSlide from '../models/HeroSlide.js';
+import auth from '../middleware/auth.js';
+const router = express.Router();
+router.get('/active', async (req,res)=>{ try{ const d=await HeroSlide.find({active:true}).sort({order:1}); res.json(d);}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+router.get('/all', auth, async (req,res)=>{ try{ const d=await HeroSlide.find().sort({order:1}); res.json(d);}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+router.get('/', async (req,res)=>{ try{ const token=req.headers.authorization; if(token){ const d=await HeroSlide.find().sort({order:1}); return res.json(d);} const d=await HeroSlide.find({active:true}).sort({order:1}); res.json(d);}catch(e){const d=await HeroSlide.find({active:true}).sort({order:1}); res.json(d);} });
+router.post('/', auth, async (req,res)=>{ try{ const doc=new HeroSlide(req.body); await doc.save(); res.status(201).json(doc);}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+router.put('/:id', auth, async (req,res)=>{ try{ const doc=await HeroSlide.findByIdAndUpdate(req.params.id, req.body, {new:true}); if(!doc) return res.status(404).json({error:'Not found'}); res.json(doc);}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+router.delete('/:id', auth, async (req,res)=>{ try{ await HeroSlide.findByIdAndDelete(req.params.id); res.json({message:'Deleted'});}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+export default router;

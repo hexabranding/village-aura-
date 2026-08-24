@@ -6,16 +6,12 @@ import ZariDivider from '../components/ZariDivider';
 import { products as localProducts } from '../data/products';
 import { api } from '../lib/api';
 import type { Product as ProductType } from '../data/products';
+import type { Category } from '../lib/api';
 
 interface ShopProps {
   likedProducts: string[];
   onToggleLike: (id: string) => void;
 }
-
-const SUBCATS: Record<string, string[]> = {
-  Sarees: ['Ajrakh Cotton', 'Chanderi Silk', 'Maheshwari Silk', 'Kota Doria', 'Kota Cotton', 'Kalamkari'],
-  Jewellery: ['Necklaces', 'Earrings', 'Bangles', 'Hair Jewellery'],
-};
 
 const SORT_OPTIONS = [
   { label: 'Default', value: '' },
@@ -43,6 +39,7 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filterOpen, setFilterOpen] = useState(false);
   const [products, setProducts] = useState<ProductType[]>(localProducts);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     api.products.getAll().then((apiProducts) => {
@@ -55,9 +52,10 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
       const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
       setProducts([...merged, ...newProducts]);
     }).catch(() => {});
+    api.categories.getAll().then(setCategories).catch(() => {});
   }, []);
   const activeCategory = searchParams.get('category');
-  const activeSub = activeCategory && SUBCATS[activeCategory] ? searchParams.get('sub') : null;
+  const activeSub = activeCategory ? searchParams.get('sub') : null;
   const activeSort = searchParams.get('sort') ?? '';
   const activeMin = searchParams.get('min') ?? '';
   const activeMax = searchParams.get('max') ?? '';
@@ -83,7 +81,9 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
       return 0;
     });
 
-  const subcats = activeCategory ? SUBCATS[activeCategory] : undefined;
+  const subcats = activeCategory
+    ? categories.find((c) => c.name === activeCategory)?.subcategories || []
+    : undefined;
   const hasPriceFilter = activeMin || activeMax;
 
   const buildParams = useCallback(

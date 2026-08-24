@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../lib/api';
 import type { Order } from '../lib/api';
-import { getProduct } from '../data/products';
+import { getProduct, products as localProducts } from '../data/products';
+import type { Product as ProductType } from '../data/products';
 
 interface DailySales {
   day: string;
@@ -28,30 +29,46 @@ interface SalesStats {
 
 export default function AdminSales() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [apiProducts, setApiProducts] = useState<ProductType[]>(localProducts);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('last30days');
 
   useEffect(() => {
-    const loadOrders = async () => {
+    const loadData = async () => {
       try {
-        const data = await api.orders.getAll();
-        setOrders(data);
+        const [ordersData, productsData] = await Promise.all([
+          api.orders.getAll(),
+          api.products.getAll().catch(() => []),
+        ]);
+        setOrders(ordersData);
+        if (productsData.length > 0) {
+          setApiProducts(productsData);
+        }
       } catch (error) {
-        console.error('Failed to load orders:', error);
+        console.error('Failed to load data:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadOrders();
+    loadData();
   }, []);
 
+  const filteredOrders = orders.filter((o) => {
+    if (dateRange === 'all') return true;
+    const orderDate = new Date(o.date);
+    const now = new Date();
+    const daysAgo = dateRange === 'last7days' ? 7 : 30;
+    const cutoff = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+    return orderDate >= cutoff;
+  });
+
   const stats: SalesStats = {
-    totalRevenue: orders.reduce((sum, o) => sum + o.total, 0),
-    totalOrders: orders.length,
-    averageOrderValue: orders.length > 0 ? Math.round(orders.reduce((sum, o) => sum + o.total, 0) / orders.length) : 0,
+    totalRevenue: filteredOrders.reduce((sum, o) => sum + o.total, 0),
+    totalOrders: filteredOrders.length,
+    averageOrderValue: filteredOrders.length > 0 ? Math.round(filteredOrders.reduce((sum, o) => sum + o.total, 0) / filteredOrders.length) : 0,
     dailySales: (() => {
       const dayMap: Record<string, { revenue: number; orders: number }> = {};
-      orders.forEach((o) => {
+      filteredOrders.forEach((o) => {
         const day = o.date;
         if (!dayMap[day]) dayMap[day] = { revenue: 0, orders: 0 };
         dayMap[day].revenue += o.total;
@@ -65,9 +82,11 @@ export default function AdminSales() {
     })(),
     productSales: (() => {
       const prodMap: Record<string, { sales: number; revenue: number }> = {};
-      orders.forEach((o) => {
+      filteredOrders.forEach((o) => {
         o.items?.forEach((item) => {
-          const product = getProduct(item.id);
+          const localProduct = getProduct(item.id);
+          const apiProduct = apiProducts.find((p) => p.id === item.id);
+          const product = apiProduct || localProduct;
           const key = product?.name || item.id;
           if (!prodMap[key]) prodMap[key] = { sales: 0, revenue: 0 };
           prodMap[key].sales += item.qty;
@@ -81,7 +100,7 @@ export default function AdminSales() {
     })(),
     ordersByStatus: (() => {
       const statusMap: Record<string, number> = {};
-      orders.forEach((o) => {
+      filteredOrders.forEach((o) => {
         statusMap[o.status] = (statusMap[o.status] || 0) + 1;
       });
       return Object.entries(statusMap).map(([status, count]) => ({ status, count }));

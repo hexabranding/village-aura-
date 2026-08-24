@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { api } from '../lib/api';
 
 interface GalleryImage {
   src: string;
@@ -8,52 +9,22 @@ interface GalleryImage {
   subtitle: string;
 }
 
-const images: GalleryImage[] = [
-  {
-    src: 'https://images.pexels.com/photos/12707148/pexels-photo-12707148.jpeg?w=800&h=1200&fit=crop',
-    title: 'Tissue',
-    subtitle: 'VIEW MORE',
-  },
-  {
-    src: 'https://images.pexels.com/photos/27155550/pexels-photo-27155550.jpeg?w=600&h=400&fit=crop',
-    title: 'Statement of Self Expression',
-    subtitle: 'VIEW MORE',
-  },
-  {
-    src: 'https://images.pexels.com/photos/27155540/pexels-photo-27155540.jpeg?w=600&h=900&fit=crop',
-    title: 'Bandhini',
-    subtitle: 'VIEW MORE',
-  },
-  {
-    src: 'https://images.pexels.com/photos/27155545/pexels-photo-27155545.jpeg?w=600&h=400&fit=crop',
-    title: 'Bengal Cotton',
-    subtitle: 'VIEW MORE',
-  },
-  {
-    src: 'https://images.pexels.com/photos/8489649/pexels-photo-8489649.jpeg?w=600&h=400&fit=crop',
-    title: 'Silk Stories',
-    subtitle: 'VIEW MORE',
-  },
-  {
-    src: 'https://images.pexels.com/photos/30249392/pexels-photo-30249392.jpeg?w=600&h=400&fit=crop',
-    title: 'Modern Weaves',
-    subtitle: 'VIEW MORE',
-  },
-  {
-    src: 'https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?w=600&h=800&fit=crop',
-    title: 'Kanchipuram Silk',
-    subtitle: 'VIEW MORE',
-  },
-  {
-    src: 'https://images.pexels.com/photos/2693526/pexels-photo-2693526.jpeg?w=600&h=400&fit=crop',
-    title: 'Banarasi Elegance',
-    subtitle: 'VIEW MORE',
-  },
-  {
-    src: 'https://images.pexels.com/photos/3819969/pexels-photo-3819969.jpeg?w=600&h=400&fit=crop',
-    title: 'Chanderi Grace',
-    subtitle: 'VIEW MORE',
-  },
+const fallbackImages: GalleryImage[] = [
+  { src: '/images/IMG_9630.PNG', title: 'Tissue', subtitle: 'VIEW MORE' },
+  { src: '/images/IMG_9588.PNG', title: 'Statement', subtitle: 'VIEW MORE' },
+  { src: '/images/IMG_9587.PNG', title: 'Bandhini', subtitle: 'VIEW MORE' },
+  { src: '/images/IMG_8835.PNG', title: 'Bengal Cotton', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_19_32%20PM.png', title: 'Silk Stories', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_09_29%20PM.png', title: 'Modern Weaves', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_08_42%20PM.png', title: 'Kanchipuram Silk', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_08_05%20PM.png', title: 'Banarasi Elegance', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_08_00%20PM.png', title: 'Chanderi Grace', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_07_15%20PM.png', title: 'Heritage Weave', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_06_25%20PM.png', title: 'Royal Drape', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_05_20%20PM.png', title: 'Festive Glow', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_02_42%20PM.png', title: 'Loom Legacy', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2003_52_09%20PM.png', title: 'Handcrafted', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2003_50_46%20PM.png', title: 'Village Aura', subtitle: 'VIEW MORE' },
 ];
 
 const fadeUp = {
@@ -66,8 +37,19 @@ const fadeUp = {
 };
 
 export default function GalleryPage() {
+  const [images, setImages] = useState<GalleryImage[]>(fallbackImages);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+    api.gallery.getActive().then((data) => {
+      if (data.length > 0) {
+        setImages(data.map((img) => ({
+          src: img.image,
+          title: img.title,
+          subtitle: img.subtitle || 'VIEW MORE',
+        })));
+      }
+    }).catch(() => {});
   }, []);
 
   return (

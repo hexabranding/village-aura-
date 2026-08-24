@@ -1,7 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '../lib/api';
 
-const slides = [
+interface Slide {
+  image: string;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  cta: string;
+  link: string;
+}
+
+const fallbackSlides: Slide[] = [
   {
     image: 'https://images.pexels.com/photos/30677843/pexels-photo-30677843.jpeg?w=1400&h=500&fit=crop',
     eyebrow: 'New Arrival',
@@ -30,10 +40,31 @@ const slides = [
 
 export default function AdCarousel() {
   const [current, setCurrent] = useState(0);
+  const [slides, setSlides] = useState<Slide[]>(fallbackSlides);
+
+  useEffect(() => {
+    api.ads.getActive().then((ads) => {
+      // Only true carousel ads belong in the slider — fixed ads render in
+      // FixedAdBanner, and sidebar-positioned ads are hidden on the home page.
+      const carousels = ads
+        .filter((ad) => ad.type === 'carousel' && ad.position !== 'sidebar' && ad.image)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+      if (carousels.length > 0) {
+        setSlides(carousels.map((ad) => ({
+          image: ad.image,
+          eyebrow: ad.title,
+          title: ad.title,
+          subtitle: ad.description || '',
+          cta: 'Shop Now',
+          link: ad.link || '/shop',
+        })));
+      }
+    }).catch(() => {});
+  }, []);
 
   const next = useCallback(() => {
     setCurrent((prev) => (prev + 1) % slides.length);
-  }, []);
+  }, [slides.length]);
 
   useEffect(() => {
     const timer = setInterval(next, 3000);
@@ -255,6 +286,7 @@ export default function AdCarousel() {
       >
         ›
       </button>
-    </section>
+      </section>
   );
 }
+

@@ -9,6 +9,7 @@ import HappyClients from '../components/HappyClients';
 import Instagram from '../components/Instagram';
 import TiltImage from '../components/TiltImage';
 import AdCarousel from '../components/AdCarousel';
+import Testimonials from '../components/Testimonials';
 import { products as localProducts, collections } from '../data/products';
 import { api } from '../lib/api';
 import type { Product as ProductType } from '../data/products';
@@ -94,7 +95,7 @@ interface WatchShopItem {
   video: string;
 }
 
-const watchShopItems: WatchShopItem[] = [
+const fallbackWatchShopItems: WatchShopItem[] = [
   {
     id: 'kanjivaram-silk-magenta',
     name: 'Kanjivaram Silk — Magenta Bloom',
@@ -132,7 +133,11 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    videoRef.current?.play().catch(() => {});
+    const v = videoRef.current;
+    if (v) {
+      v.muted = true;
+      v.play().catch(() => {});
+    }
   };
 
   const handleMouseLeave = () => {
@@ -179,7 +184,7 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
         muted
         playsInline
         loop
-        preload="metadata"
+        preload="auto"
         style={{
           position: 'absolute',
           inset: 0,
@@ -327,6 +332,22 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
 }
 
 function WatchShopSection() {
+  const [watchShopItems, setWatchShopItems] = useState<WatchShopItem[]>(fallbackWatchShopItems);
+
+  useEffect(() => {
+    api.watchshop.getActive().then((data) => {
+      if (data.length > 0) {
+        setWatchShopItems(data.map((item) => ({
+          id: item.productId || item.id,
+          name: item.name,
+          price: item.price,
+          poster: item.poster,
+          video: item.video,
+        })));
+      }
+    }).catch(() => {});
+  }, []);
+
   return (
     <section style={{ padding: '4.5rem 0', background: 'var(--ivory)' }}>
       <div className="container">
@@ -405,6 +426,11 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
   const [activeFilter, setActiveFilter] = useState<'new' | 'best' | 'featured'>('new');
   const [hoveredImage, setHoveredImage] = useState<number | null>(null);
   const [products, setProducts] = useState<ProductType[]>(localProducts);
+  const [fixedBanner, setFixedBanner] = useState<string | null>(null);
+  const [fixedBannerLink, setFixedBannerLink] = useState<string | null>(null);
+  const [fixedBannerOffer, setFixedBannerOffer] = useState<string | null>(null);
+  const [weaver, setWeaver] = useState<any>(null);
+  const [curated, setCurated] = useState<any[] | null>(null);
 
   useEffect(() => {
     api.products.getAll().then((apiProducts) => {
@@ -417,6 +443,19 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
       const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
       setProducts([...merged, ...newProducts]);
     }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    api.ads.getActive().then((ads) => {
+      const fixed = ads.filter((ad) => ad.type === 'fixed' && ad.position !== 'sidebar' && ad.image).sort((a, b) => (a.order || 0) - (b.order || 0));
+      if (fixed.length > 0) {
+        setFixedBanner(fixed[0].image);
+        setFixedBannerLink(fixed[0].link || null);
+        setFixedBannerOffer((fixed[0] as any).offer || null);
+      }
+    }).catch(() => {});
+    api.weaverStory.get().then(setWeaver).catch(() => {});
+    api.curatedEdits.getActive().then((d) => { if (d.length) setCurated(d); }).catch(() => {});
   }, []);
 
   const newArrivals = products.filter((p) => p.isNew);
@@ -502,7 +541,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
             viewport={{ once: true, amount: 0.4 }}
             style={{ flex: '1 1 320px' }}
           >
-            <span className="eyebrow">By Hand, By Name</span>
+            <span className="eyebrow">{weaver?.eyebrow || 'By Hand, By Name'}</span>
             <DecorativeLine />
             <motion.h2
               initial={{ opacity: 0, y: 15 }}
@@ -511,7 +550,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               transition={{ delay: 0.2 }}
               style={{ fontSize: '2rem', marginTop: '0.8rem', fontStyle: 'italic' }}
             >
-              Every saree is signed by the loom that made it.
+              {weaver?.title || 'Every saree is signed by the loom that made it.'}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 10 }}
@@ -520,9 +559,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               transition={{ delay: 0.35 }}
               style={{ color: 'var(--ink-soft)', lineHeight: 1.8, marginTop: '1rem', maxWidth: 480 }}
             >
-              We work directly with 40 weaving families across Kanchipuram, Banaras, Chanderi and
-              rural Bengal. No middle warehouses, no mass reproduction — a saree isn't cut from a
-              bolt here, it's finished only when you order it.
+              {weaver?.description || 'We work directly with 40 weaving families across Kanchipuram, Banaras, Chanderi and rural Bengal. No middle warehouses, no mass reproduction — a saree isn\'t cut from a bolt here, it\'s finished only when you order it.'}
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -533,8 +570,8 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               whileTap={{ scale: 0.97 }}
               style={{ display: 'inline-block', marginTop: '1.75rem' }}
             >
-              <Link to="/shop" className="btn btn-solid">
-                Meet the Weaves →
+              <Link to={weaver?.buttonLink || '/shop'} className="btn btn-solid">
+                {weaver?.buttonText || 'Meet the Weaves →'}
               </Link>
             </motion.div>
           </motion.div>
@@ -551,7 +588,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           >
             {/* Left image — larger, main */}
             <TiltImage
-              src="https://images.pexels.com/photos/19567892/pexels-photo-19567892.jpeg?w=500&h=650&fit=crop"
+              src={weaver?.image1 || 'https://images.pexels.com/photos/19567892/pexels-photo-19567892.jpeg?w=500&h=650&fit=crop'}
               alt="Weaver at the loom"
               expanded={hoveredImage === 0}
               onHoverChange={(h) => setHoveredImage(h ? 0 : null)}
@@ -567,7 +604,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
             />
             {/* Right image — smaller, overlaps left */}
             <TiltImage
-              src="https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=500&h=650&fit=crop"
+              src={weaver?.image2 || 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=500&h=650&fit=crop'}
               alt="Close detail of zari border weaving"
               expanded={hoveredImage === 1}
               onHoverChange={(h) => setHoveredImage(h ? 1 : null)}
@@ -585,7 +622,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         </div>
       </ParallaxSection>
 
-      {/* ─── Banner Section ─── */}
+      {/* ─── Banner Section — Fixed Ad Background ─── */}
       <motion.section
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -595,17 +632,14 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           position: 'relative',
           height: 'clamp(280px, 50vh, 420px)',
           overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
+          display: 'block',
         }}
       >
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: 'url(https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop)',
+            backgroundImage: `url(${fixedBanner || 'https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundAttachment: 'fixed',
@@ -615,71 +649,17 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(180deg, rgba(36,27,21,0.7) 0%, rgba(36,27,21,0.75) 100%)',
+            background: 'linear-gradient(180deg, rgba(36,27,21,0.35) 0%, rgba(36,27,21,0.25) 100%)',
           }}
         />
-        <div style={{ position: 'relative', zIndex: 1, padding: '2rem', maxWidth: 650 }}>
-          <motion.span
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: '0.68rem',
-              letterSpacing: '0.3em',
-              textTransform: 'uppercase',
-              color: 'var(--gold-soft)',
-              fontWeight: 500,
-            }}
-          >
-            Handcrafted Elegance
-          </motion.span>
-          <motion.h2
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            style={{
-              fontSize: 'clamp(2rem, 4vw, 3rem)',
-              fontStyle: 'italic',
-              fontWeight: 500,
-              color: '#fff',
-              marginTop: '0.8rem',
-              lineHeight: 1.15,
-              textShadow: '0 2px 20px rgba(0,0,0,0.3)',
-            }}
-          >
-            Every thread tells a story of tradition.
-          </motion.h2>
-          <motion.div
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            style={{
-              width: 60,
-              height: 2,
-              background: 'linear-gradient(90deg, var(--gold), var(--gold-soft))',
-              margin: '1.2rem auto 0',
-              transformOrigin: 'center',
-            }}
-          />
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            style={{
-              fontSize: '0.95rem',
-              color: 'var(--rose-dust)',
-              marginTop: '1rem',
-              lineHeight: 1.7,
-            }}
-          >
-            From the looms of Kanchipuram to the bridal trousseaux of Banaras — sarees woven to be heirlooms.
-          </motion.p>
-        </div>
+        {fixedBannerOffer && (
+          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 2, background: 'var(--gold)', color: 'var(--ink)', padding: '0.5rem 1.2rem', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', boxShadow: '0 4px 18px rgba(0,0,0,0.25)' }}>
+            {fixedBannerOffer}
+          </div>
+        )}
+        {fixedBannerLink && (
+          <Link to={fixedBannerLink} style={{ position: 'absolute', inset: 0, zIndex: 1 }} aria-label="Fixed banner link" />
+        )}
       </motion.section>
 
       {/* ─── Shop by Collection ─── */}
@@ -795,7 +775,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         <div className="container" style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2rem' }}>
           {[
             { label: 'Years of Craft', value: 6 },
-            { label: 'Weaving Families', value: 1500 },
+            { label: 'Weaving Families', value: 15 },
             { label: 'Happy Customers', value: 3000},
           ].map((stat, i) => (
             <motion.div
@@ -825,6 +805,9 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
       {/* ─── Watch & Shop ─── */}
       <WatchShopSection />
 
+      {/* ─── Testimonials ─── */}
+      <Testimonials />
+
       {/* ─── Curated Edits ─── */}
       <section className="container" style={{ padding: '0 0 4.5rem' }}>
         <motion.div
@@ -841,7 +824,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           className="pairing-grid"
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}
         >
-          {[
+          {(curated && curated.length > 0 ? curated : [
             {
               category: 'Sarees',
               eyebrow: 'Curated Edit',
@@ -856,7 +839,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               copy: 'Temple kemp, kundan and antique gold — pieces made to be worn with a six-yard drape.',
               image: 'https://images.pexels.com/photos/27103969/pexels-photo-27103969.jpeg?w=900&h=700&fit=crop',
             },
-          ].map((edit, i) => (
+          ]).map((edit: any, i: number) => (
             <motion.div
               key={edit.category}
               initial={{ opacity: 0, y: 30, scale: 0.97 }}

@@ -79,7 +79,7 @@ export default function AdminOrders() {
     setStatusMessage('');
     setEstimatedDelivery(order.estimatedDelivery || '');
     setOrderNotes(order.notes || '');
-    setStatusModal({ orderId: order.orderId, currentStatus: order.status });
+    setStatusModal({ orderId: order.id, currentStatus: order.status });
   };
 
   const handleStatusUpdate = async () => {

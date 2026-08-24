@@ -1,13 +1,30 @@
 import { motion, useMotionValue } from 'framer-motion';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-const instaPosts = [
-  { src: 'https://images.pexels.com/photos/28428053/pexels-photo-28428053.jpeg?w=500&h=500&fit=crop', label: 'Sarees' },
-  { src: 'https://images.pexels.com/photos/37054317/pexels-photo-37054317.jpeg?w=500&h=500&fit=crop', label: 'Suit Sets' },
-  { src: 'https://images.pexels.com/photos/37054321/pexels-photo-37054321.jpeg?w=500&h=500&fit=crop', label: 'Weaves' },
-  { src: 'https://images.pexels.com/photos/30244535/pexels-photo-30244535.jpeg?w=500&h=500&fit=crop', label: 'Bags' },
-  { src: 'https://images.pexels.com/photos/37054325/pexels-photo-37054325.jpeg?w=500&h=500&fit=crop', label: 'Jewellery' },
-  { src: 'https://images.pexels.com/photos/28428060/pexels-photo-28428060.jpeg?w=500&h=500&fit=crop', label: 'New Arrivals' },
+const instaPostsBase = [
+  { label: 'Sarees' },
+  { label: 'Suit Sets' },
+  { label: 'Weaves' },
+  { label: 'Bags' },
+  { label: 'Jewellery' },
+  { label: 'New Arrivals' },
+];
+const publicImages = [
+  '/images/IMG_9630.PNG',
+  '/images/IMG_9588.PNG',
+  '/images/IMG_9587.PNG',
+  '/images/IMG_8835.PNG',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_19_32%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_09_29%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_08_42%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_08_05%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_08_00%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_07_15%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_06_25%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_05_20%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_02_42%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2003_52_09%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2003_50_46%20PM.png',
 ];
 
 const CARD_WIDTH = 260;
@@ -18,7 +35,12 @@ const SCROLL_SPEED = 30;
 export default function Instagram() {
   const x = useMotionValue(0);
   const paused = useRef(false);
-  const totalWidth = instaPosts.length * (CARD_WIDTH + GAP);
+  const [posts, setPosts] = useState(() => instaPostsBase.map((p, i) => ({ ...p, src: publicImages[i % publicImages.length] })));
+  useEffect(() => {
+    const shuffled = [...publicImages].sort(() => 0.5 - Math.random());
+    setPosts(instaPostsBase.map((p, i) => ({ ...p, src: shuffled[i % shuffled.length] })));
+  }, []);
+  const totalWidth = posts.length * (CARD_WIDTH + GAP);
 
   useEffect(() => {
     let pos = 0;
@@ -36,7 +58,7 @@ export default function Instagram() {
     return () => cancelAnimationFrame(raf);
   }, [x, totalWidth]);
 
-  const duplicated = [...instaPosts, ...instaPosts, ...instaPosts];
+  const duplicated = [...posts, ...posts, ...posts];
 
   return (
     <section style={{ padding: '5.5rem 0', overflow: 'hidden' }}>

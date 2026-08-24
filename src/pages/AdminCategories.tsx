@@ -1,20 +1,76 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/api';
 import type { Category } from '../lib/api';
+
+function InlineNameEditor({ name, onSave }: { name: string; onSave: (n: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
+
+  const save = () => {
+    const trimmed = value.trim();
+    if (trimmed && trimmed !== name) onSave(trimmed);
+    else setValue(name);
+    setEditing(false);
+  };
+
+  const cancel = () => { setValue(name); setEditing(false); };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        className="admin-category-inline-name-input"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') save();
+          if (e.key === 'Escape') cancel();
+        }}
+        onClick={(e) => e.stopPropagation()}
+      />
+    );
+  }
+
+  return (
+    <h4
+      className="admin-category-card-name editable"
+      onClick={() => setEditing(true)}
+      title="Click to edit name"
+    >
+      {name}
+    </h4>
+  );
+}
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
-  const [form, setForm] = useState({ name: '', slug: '', subcategories: '', image: '', description: '', active: true });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [formName, setFormName] = useState('');
+  const [formSlug, setFormSlug] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formImage, setFormImage] = useState('');
+  const [formSubcategories, setFormSubcategories] = useState<string[]>([]);
+  const [formActive, setFormActive] = useState(true);
+  const [formSubInput, setFormSubInput] = useState('');
+  const [formUploading, setFormUploading] = useState(false);
+
+  const [cardSubInputs, setCardSubInputs] = useState<Record<string, string>>({});
 
   const loadCategories = async () => {
     try {
       const data = await api.categories.getAll();
       setCategories(data);
+      window.dispatchEvent(new Event('categoriesUpdated'));
+      localStorage.setItem('categoriesUpdated', Date.now().toString());
     } catch (error) {
       console.error('Failed to load categories:', error);
     } finally {
@@ -22,50 +78,111 @@ export default function AdminCategories() {
     }
   };
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
+  useEffect(() => { loadCategories(); }, []);
 
-  const openAdd = () => {
-    setEditing(null);
-    setForm({ name: '', slug: '', subcategories: '', image: '', description: '', active: true });
-    setShowModal(true);
-  };
+  useEffect(() => {
+    if (!editing && formName && !formSlug) {
+      setFormSlug(formName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+    }
+  }, [formName, editing, formSlug]);
 
   const openEdit = (cat: Category) => {
     setEditing(cat);
-    setForm({
-      name: cat.name,
-      slug: cat.slug,
-      subcategories: cat.subcategories.join(', '),
-      image: cat.image,
-      description: cat.description,
-      active: cat.active,
-    });
+    setFormName(cat.name);
+    setFormSlug(cat.slug);
+    setFormDescription(cat.description);
+    setFormImage(cat.image);
+    setFormSubcategories([...cat.subcategories]);
+    setFormActive(cat.active);
+    setFormSubInput('');
     setShowModal(true);
   };
 
+  const addSubToForm = () => {
+    const val = formSubInput.trim();
+    if (val && !formSubcategories.includes(val)) {
+      setFormSubcategories((s) => [...s, val]);
+    }
+    setFormSubInput('');
+  };
+
+  const removeSubFromForm = (sub: string) => {
+    setFormSubcategories((s) => s.filter((x) => x !== sub));
+  };
+
+  const handleFormImageUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setFormUploading(true);
+    try {
+      const urls = await api.upload.images(files);
+      if (urls.length > 0) setFormImage(urls[0]);
+    } catch (err) {
+      console.error('Upload failed:', err);
+    } finally {
+      setFormUploading(false);
+    }
+  };
+
   const handleSave = async () => {
-    if (!form.name) return;
+    if (!formName.trim() || !editing) return;
     try {
       const payload = {
-        name: form.name,
-        slug: form.slug || form.name.toLowerCase().replace(/\s+/g, '-'),
-        subcategories: form.subcategories.split(',').map((s) => s.trim()).filter(Boolean),
-        image: form.image,
-        description: form.description,
-        active: form.active,
+        name: formName.trim(),
+        slug: formSlug || formName.trim().toLowerCase().replace(/\s+/g, '-'),
+        subcategories: formSubcategories,
+        image: formImage,
+        description: formDescription,
+        active: formActive,
       };
-
-      if (editing) {
-        await api.categories.update(editing.id, payload);
-      } else {
-        await api.categories.create(payload);
-      }
+      await api.categories.update(editing.id, payload);
       await loadCategories();
       setShowModal(false);
     } catch (error) {
       console.error('Failed to save category:', error);
+    }
+  };
+
+  const handleInlineNameSave = async (cat: Category, newName: string) => {
+    try {
+      await api.categories.update(cat.id, {
+        name: newName,
+        slug: cat.slug === cat.name.toLowerCase().replace(/\s+/g, '-')
+          ? newName.toLowerCase().replace(/\s+/g, '-')
+          : cat.slug,
+      });
+      await loadCategories();
+    } catch (error) {
+      console.error('Failed to rename category:', error);
+    }
+  };
+
+  const handleInlineSubAdd = async (cat: Category, sub: string) => {
+    if (!sub.trim() || cat.subcategories.includes(sub.trim())) return;
+    const updated = [...cat.subcategories, sub.trim()];
+    try {
+      await api.categories.update(cat.id, { subcategories: updated });
+      await loadCategories();
+    } catch (error) {
+      console.error('Failed to add subcategory:', error);
+    }
+  };
+
+  const handleInlineSubRemove = async (cat: Category, sub: string) => {
+    const updated = cat.subcategories.filter((s) => s !== sub);
+    try {
+      await api.categories.update(cat.id, { subcategories: updated });
+      await loadCategories();
+    } catch (error) {
+      console.error('Failed to remove subcategory:', error);
+    }
+  };
+
+  const toggleActive = async (cat: Category) => {
+    try {
+      await api.categories.update(cat.id, { active: !cat.active });
+      await loadCategories();
+    } catch (error) {
+      console.error('Failed to toggle category:', error);
     }
   };
 
@@ -79,18 +196,9 @@ export default function AdminCategories() {
     }
   };
 
-  const toggleActive = async (cat: Category) => {
-    try {
-      await api.categories.update(cat.id, { active: !cat.active });
-      await loadCategories();
-    } catch (error) {
-      console.error('Failed to toggle category:', error);
-    }
-  };
-
   const totalCategories = categories.length;
   const activeCount = categories.filter((c) => c.active).length;
-  const inactiveCount = categories.filter((c) => !c.active).length;
+  const totalSubs = categories.reduce((sum, c) => sum + c.subcategories.length, 0);
 
   if (loading) {
     return (
@@ -118,21 +226,17 @@ export default function AdminCategories() {
             <span className="admin-products-stat-label">Active</span>
           </div>
         </div>
-        <div className="admin-products-stat red">
-          <span className="admin-products-stat-icon">⏸️</span>
+        <div className="admin-products-stat">
+          <span className="admin-products-stat-icon">🏷️</span>
           <div className="admin-products-stat-text">
-            <span className="admin-products-stat-value">{inactiveCount}</span>
-            <span className="admin-products-stat-label">Inactive</span>
+            <span className="admin-products-stat-value">{totalSubs}</span>
+            <span className="admin-products-stat-label">Total Subcategories</span>
           </div>
         </div>
       </div>
 
       <div className="admin-categories-toolbar">
         <h3 className="admin-categories-title">All Categories</h3>
-        <button onClick={openAdd} className="admin-products-add-btn">
-          <span>+</span>
-          Add Category
-        </button>
       </div>
 
       <div className="admin-categories-grid">
@@ -157,7 +261,7 @@ export default function AdminCategories() {
 
             <div className="admin-category-card-body">
               <div className="admin-category-card-header">
-                <h4 className="admin-category-card-name">{cat.name}</h4>
+                <InlineNameEditor name={cat.name} onSave={(n) => handleInlineNameSave(cat, n)} />
                 <button
                   onClick={() => toggleActive(cat)}
                   className={`admin-category-card-status ${cat.active ? 'active' : 'inactive'}`}
@@ -177,13 +281,41 @@ export default function AdminCategories() {
               <div className="admin-category-card-subs">
                 <span className="admin-category-card-subs-label">Subcategories</span>
                 <div className="admin-category-card-subs-list">
-                  {cat.subcategories.length > 0 ? (
-                    cat.subcategories.map((sub, i) => (
-                      <span key={i} className="admin-category-card-sub">{sub}</span>
-                    ))
-                  ) : (
-                    <span className="admin-category-card-sub empty">None</span>
-                  )}
+                  {cat.subcategories.map((sub, i) => (
+                    <span key={i} className="admin-category-card-sub">
+                      {sub}
+                      <button
+                        className="admin-category-card-sub-remove"
+                        onClick={() => handleInlineSubRemove(cat, sub)}
+                        title={`Remove ${sub}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  <div className="admin-category-card-sub-add">
+                    <input
+                      type="text"
+                      placeholder="Add sub..."
+                      value={cardSubInputs[cat.id] || ''}
+                      onChange={(e) => setCardSubInputs((prev) => ({ ...prev, [cat.id]: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleInlineSubAdd(cat, cardSubInputs[cat.id] || '');
+                          setCardSubInputs((prev) => ({ ...prev, [cat.id]: '' }));
+                        }
+                      }}
+                    />
+                    <button
+                      className="admin-category-card-sub-add-btn"
+                      onClick={() => {
+                        handleInlineSubAdd(cat, cardSubInputs[cat.id] || '');
+                        setCardSubInputs((prev) => ({ ...prev, [cat.id]: '' }));
+                      }}
+                    >
+                      Add
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -216,11 +348,7 @@ export default function AdminCategories() {
           <div className="admin-products-empty">
             <span className="admin-products-empty-icon">📁</span>
             <h3>No Categories Yet</h3>
-            <p>Create your first category to organize your products.</p>
-            <button onClick={openAdd} className="admin-products-add-btn">
-              <span>+</span>
-              Create First Category
-            </button>
+            <p>Categories from backend will appear here.</p>
           </div>
         )}
       </div>
@@ -242,7 +370,7 @@ export default function AdminCategories() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="admin-modal-header">
-                <h3>{editing ? 'Edit Category' : 'Add New Category'}</h3>
+                <h3>Edit Category</h3>
                 <button onClick={() => setShowModal(false)} className="admin-modal-close">✕</button>
               </div>
 
@@ -250,43 +378,66 @@ export default function AdminCategories() {
                 <div className="admin-form-grid">
                   <div className="admin-form-group">
                     <label>Category Name *</label>
-                    <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Sarees" />
+                    <input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Sarees" />
                   </div>
                   <div className="admin-form-group">
                     <label>Slug</label>
-                    <input value={form.slug} onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))} placeholder="Auto-generated from name" />
+                    <input value={formSlug} onChange={(e) => setFormSlug(e.target.value)} placeholder="Auto-generated from name" />
                   </div>
                 </div>
 
                 <div className="admin-form-group">
                   <label>Description</label>
-                  <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Short description of this category..." />
+                  <textarea rows={2} value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Short description of this category..." />
                 </div>
 
                 <div className="admin-form-group">
-                  <label>Image URL</label>
-                  <input value={form.image} onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))} placeholder="https://example.com/category.jpg" />
-                  {form.image && (
+                  <label>Image</label>
+                  <div className="admin-form-image-upload-row">
+                    <input value={formImage} onChange={(e) => setFormImage(e.target.value)} placeholder="Image URL or upload below" />
+                    <label className="admin-btn admin-btn-outline admin-upload-btn">
+                      {formUploading ? 'Uploading...' : 'Upload'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleFormImageUpload(e.target.files)}
+                        disabled={formUploading}
+                      />
+                    </label>
+                  </div>
+                  {formImage && (
                     <div className="admin-category-modal-preview">
-                      <img src={form.image} alt="Preview" />
+                      <img src={formImage} alt="Preview" />
                     </div>
                   )}
                 </div>
 
                 <div className="admin-form-group">
-                  <label>Subcategories (comma-separated)</label>
-                  <textarea
-                    rows={3}
-                    value={form.subcategories}
-                    onChange={(e) => setForm((f) => ({ ...f, subcategories: e.target.value }))}
-                    placeholder="Kanchipuram Silk, Banarasi Silk, Chanderi Silk"
-                  />
-                  <span className="admin-form-hint">Separate each subcategory with a comma</span>
+                  <label>Subcategories</label>
+                  <div className="admin-modal-subs-list">
+                    {formSubcategories.map((sub) => (
+                      <span key={sub} className="admin-category-card-sub">
+                        {sub}
+                        <button className="admin-category-card-sub-remove" onClick={() => removeSubFromForm(sub)}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="admin-modal-subs-add">
+                    <input
+                      type="text"
+                      placeholder="Add a subcategory..."
+                      value={formSubInput}
+                      onChange={(e) => setFormSubInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') addSubToForm(); }}
+                    />
+                    <button type="button" className="admin-btn admin-btn-outline" onClick={addSubToForm}>Add</button>
+                  </div>
                 </div>
 
                 <div className="admin-form-group">
                   <label className="admin-category-modal-toggle">
-                    <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} />
+                    <input type="checkbox" checked={formActive} onChange={(e) => setFormActive(e.target.checked)} />
                     <span className="admin-category-modal-toggle-track" />
                     Active (visible on store)
                   </label>
@@ -296,7 +447,7 @@ export default function AdminCategories() {
               <div className="admin-modal-footer">
                 <button onClick={() => setShowModal(false)} className="admin-btn admin-btn-outline">Cancel</button>
                 <button onClick={handleSave} className="admin-btn admin-btn-primary">
-                  {editing ? 'Save Changes' : 'Add Category'}
+                  Save Changes
                 </button>
               </div>
             </motion.div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '../lib/api';
 
 const heroSlides = [
   {
@@ -69,8 +70,22 @@ function CharReveal({ text, delay = 0 }: { text: string; delay?: number }) {
 }
 
 export default function Hero() {
+  const [slides, setSlides] = useState(heroSlides);
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
+  useEffect(() => {
+    api.heroSlides.getActive().then((data: any[]) => {
+      if (data.length > 0) {
+        setSlides(data.map((s: any) => ({
+          eyebrow: s.eyebrow,
+          headline: Array.isArray(s.headline) ? s.headline : [s.headline],
+          cta: { label: s.ctaLabel, to: s.ctaLink },
+          ctaSecondary: { label: s.ctaSecondaryLabel, to: s.ctaSecondaryLink },
+          image: s.image,
+        })));
+      }
+    }).catch(() => {});
+  }, []);
 
   const goTo = useCallback(
     (idx: number) => {
@@ -83,12 +98,12 @@ export default function Hero() {
   useEffect(() => {
     const timer = setInterval(() => {
       setDirection(1);
-      setCurrent((prev) => (prev + 1) % heroSlides.length);
+      setCurrent((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
-  const slide = heroSlides[current];
+  const slide = slides[current] || slides[0];
 
   const textVariants = {
     enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 40 : -40 }),
@@ -285,7 +300,7 @@ export default function Hero() {
             alignItems: 'center',
           }}
         >
-          {heroSlides.map((_, i) => (
+          {slides.map((_, i) => (
             <motion.button
               key={i}
               onClick={() => goTo(i)}

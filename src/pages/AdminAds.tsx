@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/api';
 import type { Ad } from '../lib/api';
@@ -12,6 +12,7 @@ export default function AdminAds() {
     description: '',
     image: '',
     link: '',
+    offer: '',
     type: 'carousel' as 'fixed' | 'carousel',
     position: 'homepage' as 'homepage' | 'sidebar' | 'banner',
     active: true,
@@ -19,6 +20,28 @@ export default function AdminAds() {
   });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [adminChecked, setAdminChecked] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const token = localStorage.getItem('reshamAdminToken');
+      if (!token) {
+        setAdminChecked(false);
+        return;
+      }
+      try {
+        await api.auth.verify();
+        setAdminChecked(true);
+        await loadAds();
+      } catch {
+        localStorage.removeItem('reshamAdminToken');
+        setAdminChecked(false);
+      }
+    };
+    checkAdmin();
+  }, []);
 
   const loadAds = async () => {
     try {
@@ -26,18 +49,30 @@ export default function AdminAds() {
       setAds(data);
     } catch (error) {
       console.error('Failed to load ads:', error);
+      setAdminChecked(false);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadAds();
-  }, []);
+  const handleImageUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+
+    try {
+      const urls = await api.upload.images(files);
+      setForm((f) => ({ ...f, image: urls[0] }));
+    } catch (error) {
+      console.error('Upload error:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ title: '', description: '', image: '', link: '', type: 'carousel', position: 'homepage', active: true, order: 1 });
+    setForm({ title: '', description: '', image: '', link: '', offer: '', type: 'carousel', position: 'homepage', active: true, order: 1 });
+    setSaveError(null); setSaving(false);
     setShowModal(true);
   };
 
@@ -48,27 +83,35 @@ export default function AdminAds() {
       description: ad.description,
       image: ad.image,
       link: ad.link,
+      offer: (ad as any).offer || '',
       type: ad.type || 'carousel',
       position: ad.position || 'homepage',
       active: ad.active,
       order: ad.order || 1,
     });
+    setSaveError(null); setSaving(false);
     setShowModal(true);
   };
 
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const handleSave = async () => {
-    if (!form.title) return;
+    if (!form.title.trim()) { setSaveError('Title is required'); return; }
+    if (!form.image) { setSaveError('Image is required'); return; }
+    setSaving(true); setSaveError(null);
     try {
+      const payload = { ...form, title: form.title.trim() };
       if (editing) {
-        await api.ads.update(editing.id, form);
+        await api.ads.update(editing.id, payload);
       } else {
-        await api.ads.create(form);
+        await api.ads.create(payload as any);
       }
       await loadAds();
       setShowModal(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save ad:', error);
-    }
+      setSaveError(error?.message || 'Failed to save — check login and try again');
+    } finally { setSaving(false); }
   };
 
   const handleDelete = async (id: string) => {
@@ -91,8 +134,17 @@ export default function AdminAds() {
   };
 
   const typeLabels = { carousel: 'Carousel', fixed: 'Fixed' };
-  const positionLabels = { homepage: 'Homepage', sidebar: 'Sidebar', banner: 'Banner' };
+  const positionLabels = { homepage: 'Homepage', sidebar: 'Sidebar (hidden)', banner: 'Banner (Top)' };
   const positionColors: Record<string, string> = { homepage: '#3b82f6', sidebar: '#10b981', banner: '#f59e0b' };
+
+  if (!adminChecked) {
+    return (
+      <div className="admin-products-loading">
+        <div className="admin-products-spinner" />
+        <span>Verifying admin access...</span>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -186,6 +238,7 @@ export default function AdminAds() {
                 <span className="admin-ad-tag position" style={{ color: positionColors[ad.position], background: `${positionColors[ad.position]}15`, borderColor: `${positionColors[ad.position]}40` }}>
                   {positionLabels[ad.position] || ad.position}
                 </span>
+                {(ad as any).offer && <span className="admin-ad-tag" style={{ color: '#c08a3e', background: '#c08a3e15', borderColor: '#c08a3e40' }}>Offer: {(ad as any).offer}</span>}
                 {ad.order > 0 && <span className="admin-ad-tag order">Order: {ad.order}</span>}
               </div>
 
@@ -259,21 +312,47 @@ export default function AdminAds() {
                   <textarea rows={3} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Describe your advertisement..." />
                 </div>
 
+                <div className="admin-form-group">
+                  <label>Offer Badge — Fixed Banner Only</label>
+                  <input value={form.offer} onChange={(e) => setForm((f) => ({ ...f, offer: e.target.value }))} placeholder="e.g. 50% OFF · Festive Offer" />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.25rem', display: 'block' }}>
+                    Shown as overlay on the fixed banner image (gradient section) — leave empty to hide
+                  </span>
+                </div>
+
                 <div className="admin-form-grid">
                   <div className="admin-form-group">
-                    <label>Type</label>
-                    <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as 'fixed' | 'carousel' }))}>
-                      <option value="carousel">Carousel (Homepage Slider)</option>
-                      <option value="fixed">Fixed (Static Banner)</option>
+                    <label>Type — where it shows on Home</label>
+                    <select
+                      value={form.type}
+                      onChange={(e) => {
+                        const type = e.target.value as 'fixed' | 'carousel';
+                        setForm((f) => ({
+                          ...f,
+                          type,
+                          position: type === 'fixed' ? 'banner' : 'homepage',
+                        }));
+                      }}
+                    >
+                      <option value="carousel">Carousel — slider (mid-page)</option>
+                      <option value="fixed">Fixed — top banner (after hero)</option>
                     </select>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.25rem', display: 'block' }}>
+                      {form.type === 'fixed'
+                        ? 'Shows as a static banner right after the hero, at the top of the home page'
+                        : 'Shows as a slide inside the homepage carousel (mid-page)'}
+                    </span>
                   </div>
                   <div className="admin-form-group">
                     <label>Position</label>
                     <select value={form.position} onChange={(e) => setForm((f) => ({ ...f, position: e.target.value as 'homepage' | 'sidebar' | 'banner' }))}>
                       <option value="homepage">Homepage</option>
-                      <option value="sidebar">Sidebar</option>
                       <option value="banner">Banner (Top)</option>
+                      <option value="sidebar">Sidebar (hidden on home)</option>
                     </select>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.25rem', display: 'block' }}>
+                      Sidebar ads are not shown on the home page
+                    </span>
                   </div>
                 </div>
 
@@ -286,13 +365,51 @@ export default function AdminAds() {
                 </div>
 
                 <div className="admin-form-group">
-                  <label>Image URL</label>
-                  <input value={form.image} onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))} placeholder="https://example.com/ad-image.jpg" />
+                  <label>Image</label>
+                  <div className="admin-image-upload-area">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e.target.files)}
+                      style={{ display: 'none' }}
+                    />
+                    <button
+                      type="button"
+                      className="admin-upload-btn"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? (
+                        <span className="admin-login-loading">
+                          <span className="admin-login-spinner" />
+                          Uploading...
+                        </span>
+                      ) : (
+                        <>
+                          <span>📷</span>
+                          <span>Click to Upload</span>
+                          <span className="admin-upload-hint">JPG, PNG, WebP — Max 5MB each</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                   {form.image && (
-                    <div style={{ marginTop: '0.75rem' }}>
+                    <div style={{ marginTop: '0.75rem', textAlign: 'center' }}>
                       <img src={form.image} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                     </div>
                   )}
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--ink-soft)' }}>Or paste / edit an Image URL</label>
+                    <input
+                      type="url"
+                      value={form.image}
+                      onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
+                      placeholder="https://example.com/ad-image.jpg"
+                      style={{ width: '100%', marginTop: '0.35rem', padding: '0.5rem', boxSizing: 'border-box' }}
+                    />
+                  </div>
                 </div>
 
                 <div className="admin-form-group">
@@ -308,10 +425,11 @@ export default function AdminAds() {
                 </div>
               </div>
 
+              {saveError && <div style={{ padding: '0 1.5rem 0.75rem', color: '#dc2626', fontSize: '0.82rem' }}>{saveError}</div>}
               <div className="admin-modal-footer">
-                <button onClick={() => setShowModal(false)} className="admin-btn admin-btn-outline">Cancel</button>
-                <button onClick={handleSave} className="admin-btn admin-btn-primary">
-                  {editing ? 'Save Changes' : 'Add Advertisement'}
+                <button onClick={() => { setSaveError(null); setShowModal(false); }} className="admin-btn admin-btn-outline">Cancel</button>
+                <button onClick={handleSave} disabled={saving} className="admin-btn admin-btn-primary" style={{ opacity: saving ? 0.6 : 1 }}>
+                  {saving ? 'Saving...' : editing ? 'Save Changes' : 'Add Advertisement'}
                 </button>
               </div>
             </motion.div>

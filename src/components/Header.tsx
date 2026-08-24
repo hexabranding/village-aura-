@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/images/logo.png';
 import { getProduct } from '../data/products';
+import { api } from '../lib/api';
+import type { Category } from '../lib/api';
 
 interface HeaderProps {
   cartCount: number;
@@ -25,6 +27,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
     const saved = localStorage.getItem('reshamUser');
     return saved ? JSON.parse(saved) : null;
   });
+  const [apiCategories, setApiCategories] = useState<Category[]>([]);
 
   const handleLogout = () => {
     localStorage.removeItem('reshamUser');
@@ -37,6 +40,22 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
     const onScroll = () => setScrolled(window.scrollY > 24);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const load = () => api.categories.getAll().then(setApiCategories).catch(() => {});
+    load();
+    const onFocus = () => load();
+    const onStorage = (e: StorageEvent) => { if (e.key === 'categoriesUpdated') load(); };
+    const onCustom = () => load();
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('categoriesUpdated', onCustom as EventListener);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('categoriesUpdated', onCustom as EventListener);
+    };
   }, []);
 
   useEffect(() => {
@@ -56,14 +75,22 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
     .map((id) => getProduct(id))
     .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
+  const order = ['sarees','jewellery','bags','suits-sets','others','gallery'];
+  const sortedCategories = [...apiCategories].filter((c) => c.active).sort((a,b)=>{
+    const ai = order.indexOf(a.slug); const bi = order.indexOf(b.slug);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
   const navLinks = [
-    { label: 'Sarees', to: '/shop?category=Sarees', subs: ['Ajrakh Cotton', 'Chanderi Silk', 'Maheshwari Silk', 'Kota Doria', 'Kota Cotton', 'Kalamkari'] },
-    { label: 'Jewellery', to: '/shop?category=Jewellery', subs: ['Necklaces', 'Earrings', 'Bangles', 'Hair Jewellery'] },
-    { label: 'Bags', to: '/shop?category=Bags' },
-    { label: 'Suit Sets', to: '/shop?category=Unstitched%20Suit%20Sets' },
-    { label: 'Gallery', to: '/gallery' },
+    { label: 'Home', to: '/', icon: true } as { label: string; to: string; subs?: string[]; icon?: boolean },
+    ...sortedCategories.map((c) => ({
+        label: c.name,
+        to: c.slug === 'gallery' ? '/gallery' : `/shop?category=${encodeURIComponent(c.name)}`,
+        subs: c.subcategories,
+      })),
     { label: 'Contact', to: '/contact' },
-    
   ];
 
   return (
@@ -118,12 +145,13 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
           />
         </button>
 
-        {/* Center — logo */}
+        {/* Left — logo */}
         <Link
           to="/"
           style={{
             display: 'flex',
             alignItems: 'center',
+            marginLeft: '-30px',
           }}
         >
           <img
@@ -135,8 +163,8 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
         </Link>
 
         {/* Right — nav + user + cart */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '1.8rem' }}>
-          <div className="nav-links" style={{ display: 'flex', gap: '2.2rem' }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+          <div className="nav-links" style={{ display: 'flex', gap: '1.35rem', alignItems: 'center' }}>
             {navLinks.map((link) => (
               <div
                 key={link.label}
@@ -147,24 +175,33 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                 <Link
                   to={link.to}
                   className="nav-link"
+                  aria-label={link.label}
                   style={{
                     color: 'var(--ink)',
                     fontWeight: 600,
-                    fontSize: '0.82rem',
-                    letterSpacing: '0.18em',
+                    fontSize: '0.80rem',
+                    letterSpacing: '0.13em',
                     textTransform: 'uppercase',
                     fontFamily: 'var(--font-body)',
                     position: 'relative',
-                    padding: '4px 0',
+                    padding: '4px 2px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
                   }}
                 >
-                  {link.label}
-                  {link.subs && (
+                  {(link as { icon?: boolean }).icon ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-5H9v5H4a1 1 0 0 1-1-1V9.5Z" />
+                    </svg>
+                  ) : (
+                    link.label
+                  )}
+                  {link.subs && link.subs.length > 0 && (
                     <span style={{ fontSize: '0.6rem', marginLeft: '0.25rem', color: 'var(--maroon)' }}>▾</span>
                   )}
                 </Link>
 
-                {link.subs && (
+                {link.subs && link.subs.length > 0 && (
                   <>
                     {/* Bridge element to prevent dropdown from closing */}
                     {hoveredNav === link.label && (

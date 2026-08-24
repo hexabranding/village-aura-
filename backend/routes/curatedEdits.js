@@ -1,0 +1,11 @@
+import express from 'express';
+import CuratedEdit from '../models/CuratedEdit.js';
+import auth from '../middleware/auth.js';
+const router = express.Router();
+router.get('/active', async (req,res)=>{ try{ const data=await CuratedEdit.find({active:true}).sort({order:1}); res.json(data);}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+router.get('/', async (req,res)=>{ try{ const token=req.headers.authorization; if(token){ try{ const data=await CuratedEdit.find().sort({order:1}); return res.json(data);}catch(_){} } const data=await CuratedEdit.find({active:true}).sort({order:1}); res.json(data);}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+router.get('/all', auth, async (req,res)=>{ try{ const data=await CuratedEdit.find().sort({order:1}); res.json(data);}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+router.post('/', auth, async (req,res)=>{ try{ const doc=new CuratedEdit(req.body); await doc.save(); res.status(201).json(doc);}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+router.put('/:id', auth, async (req,res)=>{ try{ const doc=await CuratedEdit.findByIdAndUpdate(req.params.id, req.body, {new:true}); if(!doc) return res.status(404).json({error:'Not found'}); res.json(doc);}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+router.delete('/:id', auth, async (req,res)=>{ try{ await CuratedEdit.findByIdAndDelete(req.params.id); res.json({message:'Deleted'});}catch(e){console.error(e); res.status(500).json({error:'Failed'});} });
+export default router;

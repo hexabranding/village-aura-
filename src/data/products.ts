@@ -28,73 +28,33 @@ export interface Product {
   inStock?: boolean;
 }
 
-const sareeImages = [
-  'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg',
-  'https://images.pexels.com/photos/1446161/pexels-photo-1446161.jpeg',
-  'https://images.pexels.com/photos/1162983/pexels-photo-1162983.jpeg',
-  'https://images.pexels.com/photos/3594582/pexels-photo-3594582.jpeg',
-  'https://images.pexels.com/photos/12707148/pexels-photo-12707148.jpeg',
-  'https://images.pexels.com/photos/27155550/pexels-photo-27155550.jpeg',
-  'https://images.pexels.com/photos/27155540/pexels-photo-27155540.jpeg',
-  'https://images.pexels.com/photos/27155545/pexels-photo-27155545.jpeg',
-  'https://images.pexels.com/photos/8489649/pexels-photo-8489649.jpeg',
-  'https://images.pexels.com/photos/30249392/pexels-photo-30249392.jpeg',
-  'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg',
-  'https://images.pexels.com/photos/2723623/pexels-photo-2723623.jpeg',
-  'https://images.pexels.com/photos/27139278/pexels-photo-27139278.jpeg',
-  'https://images.pexels.com/photos/11822308/pexels-photo-11822308.jpeg',
-  'https://images.pexels.com/photos/11819173/pexels-photo-11819173.jpeg',
-  'https://images.pexels.com/photos/2965095/pexels-photo-2965095.jpeg',
-  'https://images.pexels.com/photos/2150622/pexels-photo-2150622.jpeg',
-  'https://images.pexels.com/photos/31660114/pexels-photo-31660114.jpeg',
-  'https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg',
-  'https://images.pexels.com/photos/27103969/pexels-photo-27103969.jpeg',
+const publicImages = [
+  '/images/IMG_9630.PNG',
+  '/images/IMG_9588.PNG',
+  '/images/IMG_9587.PNG',
+  '/images/IMG_8835.PNG',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_19_32%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_09_29%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_08_42%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_08_05%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_08_00%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_07_15%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_06_25%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_05_20%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_02_42%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2003_52_09%20PM.png',
+  '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2003_50_46%20PM.png',
 ];
 
-const jewelleryImages = [
-  'https://images.pexels.com/photos/32780784/pexels-photo-32780784.jpeg',
-  'https://images.pexels.com/photos/13079571/pexels-photo-13079571.jpeg',
-  'https://images.pexels.com/photos/33154729/pexels-photo-33154729.jpeg',
-  'https://images.pexels.com/photos/29245554/pexels-photo-29245554.jpeg',
-  'https://images.pexels.com/photos/29038003/pexels-photo-29038003.jpeg',
-  'https://images.pexels.com/photos/7632901/pexels-photo-7632901.jpeg',
-  'https://images.pexels.com/photos/35059564/pexels-photo-35059564.jpeg',
-  'https://images.pexels.com/photos/25389117/pexels-photo-25389117.jpeg',
-  'https://images.pexels.com/photos/6011769/pexels-photo-6011769.jpeg',
-  'https://images.pexels.com/photos/27155549/pexels-photo-27155549.jpeg',
-  'https://images.pexels.com/photos/27155552/pexels-photo-27155552.jpeg',
-  'https://images.pexels.com/photos/27155541/pexels-photo-27155541.jpeg',
-];
+const sareeImages = publicImages;
+const jewelleryImages = publicImages;
+const bagImages = publicImages;
+const suitImages = publicImages;
 
-const bagImages = [
-  'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg',
-  'https://images.pexels.com/photos/10477070/pexels-photo-10477070.jpeg',
-  'https://images.pexels.com/photos/2442893/pexels-photo-2442893.jpeg',
-  'https://images.pexels.com/photos/1038000/pexels-photo-1038000.jpeg',
-  'https://images.pexels.com/photos/934070/pexels-photo-934070.jpeg',
-  'https://images.pexels.com/photos/1251198/pexels-photo-1251198.jpeg',
-  'https://images.pexels.com/photos/2081169/pexels-photo-2081169.jpeg',
-  'https://images.pexels.com/photos/1038002/pexels-photo-1038002.jpeg',
-  'https://images.pexels.com/photos/1152076/pexels-photo-1152076.jpeg',
-  'https://images.pexels.com/photos/934069/pexels-photo-934069.jpeg',
-];
-
-const suitImages = [
-  'https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg',
-  'https://images.pexels.com/photos/2747446/pexels-photo-2747446.jpeg',
-  'https://images.pexels.com/photos/2747448/pexels-photo-2747448.jpeg',
-  'https://images.pexels.com/photos/3641056/pexels-photo-3641056.jpeg',
-  'https://images.pexels.com/photos/3641110/pexels-photo-3641110.jpeg',
-  'https://images.pexels.com/photos/3641069/pexels-photo-3641069.jpeg',
-  'https://images.pexels.com/photos/2747447/pexels-photo-2747447.jpeg',
-  'https://images.pexels.com/photos/3641055/pexels-photo-3641055.jpeg',
-  'https://images.pexels.com/photos/3641104/pexels-photo-3641104.jpeg',
-  'https://images.pexels.com/photos/3641364/pexels-photo-3641364.jpeg',
-];
-
-const imgPool = (pool: string[], seed: string, w = 900, h = 1150) => {
+const imgPool = (pool: string[], seed: string, _w = 900, _h = 1150) => {
   const index = Math.abs(seed.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % pool.length;
-  return `${pool[index]}?w=${w}&h=${h}&fit=crop`;
+  const src = pool[index];
+  return src.startsWith('/images/') ? src : `${src}?w=${_w}&h=${_h}&fit=crop`;
 };
 
 const saree = (seed: string, w = 900, h = 1150) => imgPool(sareeImages, seed, w, h);
@@ -476,7 +436,7 @@ export const products: Product[] = [
   {
     id: 'chanderi-anarkali-set',
     name: 'Chanderi Anarkali Suit Set',
-    category: 'Unstitched Suit Sets',
+    category: 'Suits Sets',
     fabric: 'Chanderi Silk-Cotton',
     price: 6200,
     mrp: 7500,
@@ -494,7 +454,7 @@ export const products: Product[] = [
   {
     id: 'kota-straight-suit-set',
     name: 'Kota Doria Straight Set',
-    category: 'Unstitched Suit Sets',
+    category: 'Suits Sets',
     fabric: 'Kota Doria Cotton',
     price: 3800,
     description:
@@ -510,7 +470,7 @@ export const products: Product[] = [
   {
     id: 'banarasi-wedding-suit-set',
     name: 'Banarasi Suit Set — Wedding Edit',
-    category: 'Unstitched Suit Sets',
+    category: 'Suits Sets',
     fabric: 'Banarasi Silk',
     price: 9800,
     mrp: 12000,
@@ -592,7 +552,9 @@ export const collections: Collection[] = [
   { category: 'Sarees', title: 'Sarees', tagline: 'Kanjivaram, Banarasi & organza — six yards for every moment', image: imgPool(sareeImages, 'coll-silk', 700, 850) },
   { category: 'Jewellery', title: 'Jewellery', tagline: 'Temple kemp, kundan & antique gold', image: imgPool(jewelleryImages, 'coll-ornaments', 700, 850) },
   { category: 'Bags', title: 'Bags', tagline: 'Handwoven clutches, potlis & totes', image: imgPool(bagImages, 'coll-bags', 700, 850) },
-  { category: 'Unstitched Suit Sets', title: 'Suit Sets', tagline: 'Anarkali & straight sets in handloom', image: imgPool(suitImages, 'coll-suits', 700, 850) },
+  { category: 'Suits Sets', title: 'Suit Sets', tagline: 'Anarkali & straight sets in handloom', image: imgPool(suitImages, 'coll-suits', 700, 850) },
+  { category: 'Others', title: 'Others', tagline: 'Curated handloom finds', image: imgPool(publicImages, 'coll-others', 700, 850) },
+  { category: 'Gallery', title: 'Gallery', tagline: 'Woven with love', image: imgPool(publicImages, 'coll-gallery', 700, 850) },
 ];
 
 export const getProduct = (id: string) => products.find((p) => p.id === id);

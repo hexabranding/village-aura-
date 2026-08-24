@@ -14,8 +14,8 @@ const headers = () => {
 
 const handleResponse = async (res: Response) => {
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || 'Request failed');
+    const error = await res.json().catch(() => ({ error: `Request failed (${res.status})` }));
+    throw new Error(error.error || `Request failed (${res.status})`);
   }
   return res.json();
 };
@@ -39,6 +39,43 @@ export interface Ad {
   link: string;
   type: 'fixed' | 'carousel';
   position: 'homepage' | 'sidebar' | 'banner';
+  offer: string;
+  active: boolean;
+  order: number;
+  createdAt: string;
+}
+
+export interface GalleryImage {
+  id: string;
+  image: string;
+  title: string;
+  subtitle: string;
+  link: string;
+  active: boolean;
+  order: number;
+  createdAt: string;
+}
+
+export interface WatchShopItem {
+  id: string;
+  name: string;
+  price: string;
+  poster: string;
+  video: string;
+  productId: string;
+  active: boolean;
+  order: number;
+  createdAt: string;
+}
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  category: string;
+  rating: number;
+  quote: string;
+  image: string;
   active: boolean;
   order: number;
   createdAt: string;
@@ -51,6 +88,7 @@ export interface OrderTracking {
 }
 
 export interface Order {
+  id: string;
   orderId: string;
   total: number;
   name: string;
@@ -205,7 +243,7 @@ export const api = {
 
   ads: {
     getAll: async (): Promise<Ad[]> => {
-      const res = await fetch(`${API_BASE}/ads`);
+      const res = await fetch(`${API_BASE}/ads`, { headers: headers() });
       return handleResponse(res);
     },
     getActive: async (): Promise<Ad[]> => {
@@ -249,6 +287,179 @@ export const api = {
     getSales: async (category?: string) => {
       const url = category ? `${API_BASE}/dashboard/sales?category=${category}` : `${API_BASE}/dashboard/sales`;
       const res = await fetch(url, { headers: headers() });
+      return handleResponse(res);
+    },
+  },
+
+  upload: {
+    images: async (files: FileList): Promise<string[]> => {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append('images', file);
+      });
+      const token = getToken();
+      const res = await fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+      const data = await handleResponse(res);
+      return data.urls;
+    },
+  },
+
+  gallery: {
+    getAll: async (): Promise<GalleryImage[]> => {
+      const res = await fetch(`${API_BASE}/gallery`, { headers: headers() });
+      return handleResponse(res);
+    },
+    getActive: async (): Promise<GalleryImage[]> => {
+      const res = await fetch(`${API_BASE}/gallery/active`);
+      return handleResponse(res);
+    },
+    create: async (image: Omit<GalleryImage, 'id' | 'createdAt'>) => {
+      const res = await fetch(`${API_BASE}/gallery`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(image),
+      });
+      return handleResponse(res);
+    },
+    update: async (id: string, updates: Partial<GalleryImage>) => {
+      const res = await fetch(`${API_BASE}/gallery/${id}`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify(updates),
+      });
+      return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/gallery/${id}`, {
+        method: 'DELETE',
+        headers: headers(),
+      });
+      return handleResponse(res);
+    },
+  },
+
+  watchshop: {
+    getAll: async (): Promise<WatchShopItem[]> => {
+      const res = await fetch(`${API_BASE}/watchshop`, { headers: headers() });
+      return handleResponse(res);
+    },
+    getActive: async (): Promise<WatchShopItem[]> => {
+      const res = await fetch(`${API_BASE}/watchshop/active`);
+      return handleResponse(res);
+    },
+    create: async (item: Omit<WatchShopItem, 'id' | 'createdAt'>) => {
+      const res = await fetch(`${API_BASE}/watchshop`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(item),
+      });
+      return handleResponse(res);
+    },
+    update: async (id: string, updates: Partial<WatchShopItem>) => {
+      const res = await fetch(`${API_BASE}/watchshop/${id}`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify(updates),
+      });
+      return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/watchshop/${id}`, {
+        method: 'DELETE',
+        headers: headers(),
+      });
+      return handleResponse(res);
+    },
+  },
+
+  testimonials: {
+    getAll: async (): Promise<Testimonial[]> => {
+      const res = await fetch(`${API_BASE}/testimonials`, { headers: headers() });
+      return handleResponse(res);
+    },
+    getActive: async (): Promise<Testimonial[]> => {
+      const res = await fetch(`${API_BASE}/testimonials/active`);
+      return handleResponse(res);
+    },
+    create: async (item: Omit<Testimonial, 'id' | 'createdAt'>) => {
+      const res = await fetch(`${API_BASE}/testimonials`, { method: 'POST', headers: headers(), body: JSON.stringify(item) });
+      return handleResponse(res);
+    },
+    update: async (id: string, updates: Partial<Testimonial>) => {
+      const res = await fetch(`${API_BASE}/testimonials/${id}`, { method: 'PUT', headers: headers(), body: JSON.stringify(updates) });
+      return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/testimonials/${id}`, { method: 'DELETE', headers: headers() });
+      return handleResponse(res);
+    },
+  },
+
+  weaverStory: {
+    get: async () => {
+      const res = await fetch(`${API_BASE}/weaver-story`);
+      return handleResponse(res);
+    },
+    update: async (data: any) => {
+      const res = await fetch(`${API_BASE}/weaver-story`, { method: 'PUT', headers: headers(), body: JSON.stringify(data) });
+      return handleResponse(res);
+    },
+  },
+
+  curatedEdits: {
+    getAll: async () => {
+      const res = await fetch(`${API_BASE}/curated-edits/all`, { headers: headers() });
+      const data = await res.json().catch(() => []);
+      if (res.ok) return data;
+      const r2 = await fetch(`${API_BASE}/curated-edits/active`);
+      return handleResponse(r2);
+    },
+    getActive: async () => {
+      const res = await fetch(`${API_BASE}/curated-edits/active`);
+      return handleResponse(res);
+    },
+    create: async (item: any) => {
+      const res = await fetch(`${API_BASE}/curated-edits`, { method: 'POST', headers: headers(), body: JSON.stringify(item) });
+      return handleResponse(res);
+    },
+    update: async (id: string, updates: any) => {
+      const res = await fetch(`${API_BASE}/curated-edits/${id}`, { method: 'PUT', headers: headers(), body: JSON.stringify(updates) });
+      return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/curated-edits/${id}`, { method: 'DELETE', headers: headers() });
+      return handleResponse(res);
+    },
+  },
+
+  heroSlides: {
+    getAll: async () => {
+      const res = await fetch(`${API_BASE}/hero-slides/all`, { headers: headers() });
+      const data = await res.json().catch(() => []);
+      if (res.ok) return data;
+      const r2 = await fetch(`${API_BASE}/hero-slides/active`);
+      return handleResponse(r2);
+    },
+    getActive: async () => {
+      const res = await fetch(`${API_BASE}/hero-slides/active`);
+      return handleResponse(res);
+    },
+    create: async (item: any) => {
+      const res = await fetch(`${API_BASE}/hero-slides`, { method: 'POST', headers: headers(), body: JSON.stringify(item) });
+      return handleResponse(res);
+    },
+    update: async (id: string, updates: any) => {
+      const res = await fetch(`${API_BASE}/hero-slides/${id}`, { method: 'PUT', headers: headers(), body: JSON.stringify(updates) });
+      return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/hero-slides/${id}`, { method: 'DELETE', headers: headers() });
       return handleResponse(res);
     },
   },

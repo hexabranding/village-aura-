@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { api } from '../lib/api';
 
 interface Client {
   name: string;
@@ -13,37 +15,37 @@ const clients: Client[] = [
     name: 'Priya Sharma',
     location: '',
     quote: 'The Kanjivaram silk is everything I hoped for — the zari work is breathtaking.',
-    image: 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=800&h=1200&fit=crop',
+    image: '/images/IMG_9630.PNG',
   },
   {
     name: 'Ananya Iyer',
     location: '',
     quote: 'My bridal Banarasi was the star of the wedding. Thank you, Resham!',
-    image: 'https://images.pexels.com/photos/2723623/pexels-photo-2723623.jpeg?w=600&h=400&fit=crop',
+    image: '/images/IMG_9588.PNG',
   },
   {
     name: 'Deepa Nair',
     location: '',
     quote: 'Wore the Chanderi to work — got more compliments than my presentation.',
-    image: 'https://images.pexels.com/photos/27139278/pexels-photo-27139278.jpeg?w=600&h=900&fit=crop',
+    image: '/images/IMG_9587.PNG',
   },
   {
     name: 'Meera Joshi',
     location: '',
     quote: 'The Jamdani feels like wearing a piece of art. Truly one of a kind.',
-    image: 'https://images.pexels.com/photos/11822308/pexels-photo-11822308.jpeg?w=600&h=400&fit=crop',
+    image: '/images/IMG_8835.PNG',
   },
   {
     name: 'Lakshmi Rao',
     location: '',
     quote: 'Ordered the Tant cotton — light, crisp, and perfect for summer weddings.',
-    image: 'https://images.pexels.com/photos/11819173/pexels-photo-11819173.jpeg?w=600&h=400&fit=crop',
+    image: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_19_32%20PM.png',
   },
   {
     name: 'Kavitha Menon',
     location: '',
     quote: 'The temple kemp necklace completes every silk saree look beautifully.',
-    image: 'https://images.pexels.com/photos/10483857/pexels-photo-10483857.jpeg?w=600&h=400&fit=crop',
+    image: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_09_29%20PM.png',
   },
 ];
 
@@ -168,6 +170,22 @@ function ClientCard({ client, index }: { client: Client; index: number }) {
 }
 
 export default function HappyClients() {
+  const [dynamicClients, setDynamicClients] = useState<Client[] | null>(null);
+  useEffect(() => {
+    api.gallery.getActive().then((data) => {
+      if (data.length > 0) {
+        setDynamicClients(
+          data.slice(0, 6).map((g) => ({
+            name: g.title,
+            location: g.subtitle || '',
+            quote: g.title,
+            image: g.image,
+          }))
+        );
+      }
+    }).catch(() => {});
+  }, []);
+  const displayClients = dynamicClients || clients;
   return (
     <section className="container" style={{ padding: '4.5rem 0' }}>
       <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
@@ -205,8 +223,8 @@ export default function HappyClients() {
       </div>
 
       <div className="clients-grid">
-        {clients.map((client, i) => (
-          <ClientCard key={client.name} client={client} index={i} />
+        {displayClients.map((client, i) => (
+          <ClientCard key={client.name + i} client={client} index={i} />
         ))}
       </div>
 

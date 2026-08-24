@@ -25,6 +25,10 @@ import AdminCategories from './pages/AdminCategories';
 import AdminOrders from './pages/AdminOrders';
 import AdminSales from './pages/AdminSales';
 import AdminAds from './pages/AdminAds';
+import AdminGallery from './pages/AdminGallery';
+import AdminWatchShop from './pages/AdminWatchShop';
+import AdminTestimonials from './pages/AdminTestimonials';
+import AdminHomeContent from './pages/AdminHomeContent';
 import type { CartItem } from './data/products';
 
 export default function App() {
@@ -137,6 +141,10 @@ export default function App() {
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="sales" element={<AdminSales />} />
                 <Route path="ads" element={<AdminAds />} />
+                <Route path="gallery" element={<AdminGallery />} />
+                <Route path="watch-shop" element={<AdminWatchShop />} />
+                <Route path="testimonials" element={<AdminTestimonials />} />
+                <Route path="home-content" element={<AdminHomeContent />} />
               </Route>
             </Routes>
           </motion.div>
