@@ -30,6 +30,7 @@ import AdminWatchShop from './pages/AdminWatchShop';
 import AdminTestimonials from './pages/AdminTestimonials';
 import AdminHomeContent from './pages/AdminHomeContent';
 import type { CartItem } from './data/products';
+import { loadProducts } from './lib/productStore';
 
 export default function App() {
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -43,6 +44,10 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [toastColor, setToastColor] = useState<string>('var(--maroon-deep)');
   const location = useLocation();
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('reshamCart', JSON.stringify(cart));

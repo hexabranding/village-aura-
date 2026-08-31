@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getProduct } from '../data/products';
+import { getProduct } from '../lib/productStore';
 import type { CartItem } from '../data/products';
 import ZariDivider from '../components/ZariDivider';
 import { api } from '../lib/api';
@@ -56,6 +56,26 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
         pincode: form.pincode,
       });
       clearCart();
+      const savedUser = localStorage.getItem('reshamUser');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        localStorage.setItem('reshamUser', JSON.stringify({ ...user, phone: form.phone, name: form.name || user.name }));
+      } else {
+        localStorage.setItem('reshamUser', JSON.stringify({ email: '', name: form.name, phone: form.phone }));
+      }
+      const localOrder = {
+        orderId: result.orderId,
+        total,
+        name: form.name,
+        phone: form.phone,
+        payment,
+        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        status: 'Pending',
+        items: cart.map((ci) => ({ id: ci.id, colorIndex: ci.colorIndex, qty: ci.qty })),
+      };
+      const existingOrders = JSON.parse(localStorage.getItem('reshamOrders') || '[]');
+      existingOrders.unshift(localOrder);
+      localStorage.setItem('reshamOrders', JSON.stringify(existingOrders));
       setPlaced({
         orderId: result.orderId,
         total,

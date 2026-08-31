@@ -275,21 +275,27 @@ export default function AdminProducts() {
     <div className="admin-products-page">
       <div className="admin-products-stats">
         <div className="admin-products-stat">
-          <span className="admin-products-stat-icon">📦</span>
+          <div className="admin-products-stat-icon-box" style={{ background: 'linear-gradient(135deg, rgba(107,30,35,0.08) 0%, rgba(107,30,35,0.04) 100%)' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--maroon)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </div>
           <div className="admin-products-stat-text">
             <span className="admin-products-stat-value">{totalProducts}</span>
             <span className="admin-products-stat-label">Total Products</span>
           </div>
         </div>
         <div className="admin-products-stat green">
-          <span className="admin-products-stat-icon">✅</span>
+          <div className="admin-products-stat-icon-box" style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.08) 0%, rgba(5,150,105,0.04) 100%)' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
           <div className="admin-products-stat-text">
             <span className="admin-products-stat-value">{inStockCount}</span>
             <span className="admin-products-stat-label">In Stock</span>
           </div>
         </div>
         <div className="admin-products-stat red">
-          <span className="admin-products-stat-icon">⚠️</span>
+          <div className="admin-products-stat-icon-box" style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(220,38,38,0.04) 100%)' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
           <div className="admin-products-stat-text">
             <span className="admin-products-stat-value">{outOfStockCount}</span>
             <span className="admin-products-stat-label">Out of Stock</span>
@@ -300,16 +306,18 @@ export default function AdminProducts() {
       <div className="admin-products-toolbar">
         <div className="admin-products-toolbar-left">
           <div className="admin-products-search-wrap">
-            <span className="admin-products-search-icon">🔍</span>
+            <svg className="admin-products-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input
               type="text"
-              placeholder="Search by name or ID..."
+              placeholder="Search products..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="admin-products-search"
             />
             {search && (
-              <button className="admin-products-search-clear" onClick={() => setSearch('')}>✕</button>
+              <button className="admin-products-search-clear" onClick={() => setSearch('')}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
             )}
           </div>
           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="admin-products-filter">
@@ -319,77 +327,108 @@ export default function AdminProducts() {
           </select>
         </div>
         <button onClick={openAdd} className="admin-products-add-btn">
-          <span>+</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Product
         </button>
       </div>
 
-      <div className="admin-card">
+      <div className="admin-card" style={{ overflow: 'hidden' }}>
         <div className="admin-table-wrapper">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Product</th>
+                <th style={{ width: '38%' }}>Product</th>
                 <th>Category</th>
                 <th>Price</th>
                 <th>Stock</th>
-                <th>Tags</th>
-                <th>Actions</th>
+                <th style={{ width: '14%', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((product) => (
-                <tr key={product.id} style={{ opacity: product.inStock === false ? 0.7 : 1 }}>
+                <tr key={product.id} className={product.inStock === false ? 'admin-row-outofstock' : ''}>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: 220 }}>
-                      <img src={product.variants[0]?.images[0] || 'https://via.placeholder.com/56x70?text=No+Img'} alt={product.name} style={{ width: 52, height: 64, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--line)', flexShrink: 0 }} />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{product.name}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--ink-soft)', letterSpacing: '0.04em' }}>{product.id}</div>
-                        <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
-                          {product.variants.slice(0, 4).map((v, i) => (
-                            <span key={i} title={v.colorName} style={{ width: 14, height: 14, borderRadius: '50%', background: v.hex, border: '1px solid rgba(0,0,0,0.1)', display: 'inline-block' }} />
+                    <div className="admin-product-cell">
+                      <div className="admin-product-thumb-wrap">
+                        <img
+                          src={product.variants[0]?.images[0] || 'https://via.placeholder.com/56x70?text=No+Img'}
+                          alt={product.name}
+                          className="admin-product-thumb"
+                        />
+                        {product.variants.length > 1 && (
+                          <span className="admin-product-variant-badge">{product.variants.length}</span>
+                        )}
+                      </div>
+                      <div className="admin-product-info">
+                        <span className="admin-product-name">{product.name}</span>
+                        <span className="admin-product-id">{product.id}</span>
+                        <div className="admin-product-colors">
+                          {product.variants.slice(0, 6).map((v, i) => (
+                            <span key={i} title={v.colorName} className="admin-color-dot" style={{ background: v.hex }} />
                           ))}
-                          {product.variants.length > 4 && <span style={{ fontSize: '0.68rem', color: 'var(--ink-soft)' }}>+{product.variants.length - 4}</span>}
+                          {product.variants.length > 6 && (
+                            <span className="admin-color-more">+{product.variants.length - 6}</span>
+                          )}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--ink)' }}>{product.category}</div>
-                    {product.subCategory && <div style={{ fontSize: '0.72rem', color: 'var(--ink-soft)' }}>{product.subCategory}</div>}
-                    {product.fabric && <div style={{ fontSize: '0.7rem', color: 'var(--gold)', marginTop: 2 }}>{product.fabric}</div>}
+                    <span className="admin-category-label">{product.category}</span>
+                    {product.subCategory && <span className="admin-subcategory-label">{product.subCategory}</span>}
+                    {product.fabric && <span className="admin-fabric-label">{product.fabric}</span>}
                   </td>
                   <td>
-                    <div style={{ fontWeight: 700, color: 'var(--maroon)', fontSize: '0.9rem' }}>₹{product.price.toLocaleString('en-IN')}</div>
+                    <div className="admin-price-main">₹{product.price.toLocaleString('en-IN')}</div>
                     {product.mrp && product.mrp > product.price && (
-                      <div style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', textDecoration: 'line-through' }}>₹{product.mrp.toLocaleString('en-IN')} <span style={{ color: '#059669', textDecoration: 'none', fontWeight: 600, marginLeft: 4 }}>{Math.round(((product.mrp - product.price) / product.mrp) * 100)}% off</span></div>
+                      <div className="admin-price-mrp">
+                        <span className="admin-price-original">₹{product.mrp.toLocaleString('en-IN')}</span>
+                        <span className="admin-price-discount">{Math.round(((product.mrp - product.price) / product.mrp) * 100)}% off</span>
+                      </div>
                     )}
                   </td>
                   <td>
-                    <button onClick={() => handleStockToggle(product)} className={`admin-status-badge ${product.inStock === false ? 'cancelled' : 'delivered'}`} style={{ border: 'none', cursor: 'pointer' }}>
+                    <button
+                      onClick={() => handleStockToggle(product)}
+                      className={`admin-stock-toggle ${product.inStock !== false ? 'in-stock' : 'out-of-stock'}`}
+                    >
+                      <span className="admin-stock-dot" />
                       {product.inStock === false ? 'Out of Stock' : 'In Stock'}
                     </button>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: 140 }}>
-                      {product.isNew && <span className="admin-tag new">New</span>}
-                      {product.isBestSeller && <span className="admin-tag best">Best</span>}
-                      {product.featured && <span className="admin-tag featured">Featured</span>}
-                      {!product.isNew && !product.isBestSeller && !product.featured && <span style={{ fontSize: '0.7rem', color: 'var(--ink-soft)' }}>—</span>}
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                      <button onClick={() => setDetailProduct(product)} className="admin-btn-sm" style={{ background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', color: '#374151' }}>View</button>
-                      <button onClick={() => openEdit(product)} className="admin-btn-sm edit">Edit</button>
+                    <div className="admin-actions-cell">
+                      <button
+                        onClick={() => setDetailProduct(product)}
+                        className="admin-action-btn view"
+                        title="View product"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                      <button
+                        onClick={() => openEdit(product)}
+                        className="admin-action-btn edit"
+                        title="Edit product"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
                       {deleteConfirm === product.id ? (
-                        <>
-                          <button onClick={() => handleDelete(product.id)} className="admin-btn-sm delete-confirm">Confirm</button>
-                          <button onClick={() => setDeleteConfirm(null)} className="admin-btn-sm cancel">Cancel</button>
-                        </>
+                        <div className="admin-delete-confirm">
+                          <button onClick={() => handleDelete(product.id)} className="admin-action-btn confirm-delete" title="Confirm delete">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          </button>
+                          <button onClick={() => setDeleteConfirm(null)} className="admin-action-btn cancel-delete" title="Cancel">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                        </div>
                       ) : (
-                        <button onClick={() => setDeleteConfirm(product.id)} className="admin-btn-sm delete">Delete</button>
+                        <button
+                          onClick={() => setDeleteConfirm(product.id)}
+                          className="admin-action-btn delete"
+                          title="Delete product"
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        </button>
                       )}
                     </div>
                   </td>
@@ -397,10 +436,10 @@ export default function AdminProducts() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--ink-soft)' }}>
-                    <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>📦</div>
-                    <div style={{ fontWeight: 600 }}>No products found</div>
-                    <div style={{ fontSize: '0.82rem', marginTop: 4 }}>{search ? 'Try a different search term' : 'Start by adding your first product'}</div>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '5rem 1rem', color: 'var(--ink-soft)' }}>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3, marginBottom: 12 }}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>No products found</div>
+                    <div style={{ fontSize: '0.82rem', marginTop: 6, opacity: 0.7 }}>{search ? 'Try a different search term' : 'Start by adding your first product'}</div>
                   </td>
                 </tr>
               )}
@@ -446,7 +485,6 @@ export default function AdminProducts() {
                         <div><span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 700 }}>Price</span><div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--maroon)' }}>₹{detailProduct.price.toLocaleString('en-IN')}{detailProduct.mrp ? <span style={{ fontSize: '0.8rem', color: 'var(--ink-soft)', fontWeight: 400, textDecoration: 'line-through', marginLeft: 8 }}>₹{detailProduct.mrp.toLocaleString('en-IN')}</span> : null}</div></div>
                         <div><span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 700 }}>Stock</span><div><span className={`admin-status-badge ${detailProduct.inStock === false ? 'cancelled' : 'delivered'}`} style={{ marginTop: 4 }}>{detailProduct.inStock === false ? 'Out of Stock' : 'In Stock'}</span></div></div>
                       </div>
-                      <div><span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 700 }}>Tags</span><div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>{detailProduct.isNew && <span className="admin-tag new">New</span>}{detailProduct.isBestSeller && <span className="admin-tag best">Best Seller</span>}{detailProduct.featured && <span className="admin-tag featured">Featured</span>}{!detailProduct.isNew && !detailProduct.isBestSeller && !detailProduct.featured && <span style={{ fontSize: '0.75rem', color: 'var(--ink-soft)' }}>No tags</span>}</div></div>
                       <div><span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 700 }}>Description</span><div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)', lineHeight: 1.6, marginTop: 4 }}>{detailProduct.description || 'No description'}</div></div>
                     </div>
                   </div>

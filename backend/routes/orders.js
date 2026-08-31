@@ -32,6 +32,16 @@ router.get('/track/:orderId', async (req, res) => {
   }
 });
 
+router.get('/user/:phone', async (req, res) => {
+  try {
+    const orders = await Order.find({ phone: req.params.phone }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    console.error('Get user orders error:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
 router.get('/', auth, async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });

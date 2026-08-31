@@ -268,15 +268,20 @@ export default function AdminOrders() {
                       <div className="admin-timeline">
                         {order.tracking.map((entry: OrderTracking, i: number) => (
                           <div key={i} className="admin-timeline-item">
-                            <div className="admin-timeline-dot" style={{ background: statusColors[entry.status] || 'var(--ink-soft)' }} />
-                            <div className="admin-timeline-content">
-                              <div className="admin-timeline-status">
-                                <span>{statusIcons[entry.status] || '📋'}</span> {entry.status}
-                              </div>
-                              {entry.message && <div className="admin-timeline-message">{entry.message}</div>}
+                            <div
+                              className="admin-timeline-dot"
+                              style={{
+                                background: `linear-gradient(135deg, ${statusColors[entry.status] || '#6b7280'} 0%, ${statusColors[entry.status] || '#6b7280'}dd 100%)`,
+                              }}
+                            >
+                              {statusIcons[entry.status] || '📋'}
                             </div>
-                            <div className="admin-timeline-date">
-                              {new Date(entry.timestamp).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            <div className="admin-timeline-content">
+                              <div className="admin-timeline-status">{entry.status}</div>
+                              {entry.message && <div className="admin-timeline-message">{entry.message}</div>}
+                              <div className="admin-timeline-date">
+                                {new Date(entry.timestamp).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </div>
                             </div>
                           </div>
                         ))}

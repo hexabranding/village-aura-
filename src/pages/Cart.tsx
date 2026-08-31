@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { getProduct } from '../data/products';
+import { getProduct } from '../lib/productStore';
 import type { CartItem } from '../data/products';
 import ZariDivider from '../components/ZariDivider';
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/images/logo.png';
-import { getProduct } from '../data/products';
+import { getProduct } from '../lib/productStore';
 import { api } from '../lib/api';
 import type { Category } from '../lib/api';
 

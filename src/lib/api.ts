@@ -108,6 +108,27 @@ export interface Order {
   notes?: string;
 }
 
+export interface Review {
+  id: string;
+  orderId: string;
+  productId: string;
+  phone: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface ReturnRequest {
+  id: string;
+  orderId: string;
+  productId: string;
+  phone: string;
+  reason: string;
+  description: string;
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+  createdAt: string;
+}
+
 export const api = {
   auth: {
     login: async (username: string, password: string) => {
@@ -211,6 +232,10 @@ export const api = {
       const res = await fetch(`${API_BASE}/orders/${id}`, { headers: headers() });
       return handleResponse(res);
     },
+    getByPhone: async (phone: string): Promise<Order[]> => {
+      const res = await fetch(`${API_BASE}/orders/user/${phone}`);
+      return handleResponse(res);
+    },
     track: async (orderId: string) => {
       const res = await fetch(`${API_BASE}/orders/track/${orderId}`);
       return handleResponse(res);
@@ -236,6 +261,63 @@ export const api = {
         method: 'PUT',
         headers: headers(),
         body: JSON.stringify(updates),
+      });
+      return handleResponse(res);
+    },
+  },
+
+  reviews: {
+    getByOrder: async (orderId: string): Promise<Review[]> => {
+      const res = await fetch(`${API_BASE}/reviews/order/${orderId}`);
+      return handleResponse(res);
+    },
+    getByPhone: async (phone: string): Promise<Review[]> => {
+      const res = await fetch(`${API_BASE}/reviews/phone/${phone}`);
+      return handleResponse(res);
+    },
+    create: async (review: Omit<Review, 'id' | 'createdAt'>) => {
+      const res = await fetch(`${API_BASE}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(review),
+      });
+      return handleResponse(res);
+    },
+    getAll: async (): Promise<Review[]> => {
+      const res = await fetch(`${API_BASE}/reviews`, { headers: headers() });
+      return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/reviews/${id}`, {
+        method: 'DELETE',
+        headers: headers(),
+      });
+      return handleResponse(res);
+    },
+  },
+
+  returns: {
+    getByPhone: async (phone: string): Promise<ReturnRequest[]> => {
+      const res = await fetch(`${API_BASE}/returns/phone/${phone}`);
+      return handleResponse(res);
+    },
+    create: async (returnReq: Omit<ReturnRequest, 'id' | 'status' | 'createdAt'>) => {
+      const res = await fetch(`${API_BASE}/returns`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(returnReq),
+      });
+      return handleResponse(res);
+    },
+    getAll: async (): Promise<ReturnRequest[]> => {
+      const res = await fetch(`${API_BASE}/returns`, { headers: headers() });
+      return handleResponse(res);
+    },
+    updateStatus: async (id: string, status: string) => {
+      const res = await fetch(`${API_BASE}/returns/${id}/status`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify({ status }),
       });
       return handleResponse(res);
     },
