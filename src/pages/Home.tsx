@@ -441,7 +441,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         return lp;
       });
       const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
-      setProducts([...merged, ...newProducts]);
+      setProducts([...newProducts, ...merged]);
     }).catch(() => {});
   }, []);
 

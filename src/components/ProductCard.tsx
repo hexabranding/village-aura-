@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { Product } from '../data/products';
+import { resolveUploadUrl } from '../lib/api';
 
 interface ProductCardProps {
   product: Product;
@@ -12,8 +13,9 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, index = 0, isLiked = false, onToggleLike }: ProductCardProps) {
   const [hovered, setHovered] = useState(false);
-  const primary = product.variants[0];
-  const secondaryImage = primary.images[1] ?? primary.images[0];
+  const primary = product.variants[0] ?? { images: [], colorName: '', hex: '#ccc' };
+  const img0 = resolveUploadUrl(primary.images[0] || '') || 'https://via.placeholder.com/400x500?text=No+Image';
+  const img1 = resolveUploadUrl(primary.images[1] || primary.images[0] || '') || img0;
 
   return (
     <motion.div
@@ -48,21 +50,25 @@ export default function ProductCard({ product, index = 0, isLiked = false, onTog
               position: 'relative',
               overflow: 'hidden',
               aspectRatio: '4 / 5',
+              minHeight: 320,
+              background: 'var(--ivory-deep)',
             }}
           >
             <motion.img
-              src={primary.images[0]}
+              src={img0}
               alt={product.name}
-              animate={{ opacity: hovered ? 0 : 1, scale: hovered ? 1.08 : 1 }}
+              animate={{ opacity: hovered ? 0 : 1 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.08)' : 'none' }}
+              onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x500?text=No+Image'; }}
             />
             <motion.img
-              src={secondaryImage}
+              src={img1}
               alt=""
-              animate={{ opacity: hovered ? 1 : 0, scale: hovered ? 1.08 : 1 }}
+              animate={{ opacity: hovered ? 1 : 0 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.08)' : 'none' }}
+              onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x500?text=No+Image'; }}
             />
 
             {/* Quick view overlay on hover */}

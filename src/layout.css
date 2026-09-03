@@ -302,6 +302,21 @@
    FLIPKART-STYLE FILTER — Sidebar + Drawer
    ═══════════════════════════════════════════ */
 
+.shop-grid {
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+}
+.shop-grid > div {
+  display: flex;
+  height: 100%;
+}
+.shop-grid > div > a {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 /* ─── Shop layout: sidebar + grid ─── */
 .shop-layout {
   display: flex;

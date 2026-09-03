@@ -121,7 +121,12 @@ export default function AdminProducts() {
         api.products.getAll(),
         api.categories.getAll(),
       ]);
-      setProducts(productsData);
+      const sorted = [...productsData].sort((a: any, b: any) => {
+        const at = (a as any).createdAt ? new Date((a as any).createdAt).getTime() : 0;
+        const bt = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0;
+        return bt - at;
+      });
+      setProducts(sorted);
       setCategories(categoriesData.filter((c) => c.active));
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -137,10 +142,14 @@ export default function AdminProducts() {
   const categoryNames = ['All', ...categories.map((c) => c.name)];
   const subcategoriesForCategory = categories.find((c) => c.name === form.category)?.subcategories || [];
 
-  const filtered = products.filter((p) => {
+  const filtered = [...products].filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.id.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = categoryFilter === 'All' || p.category === categoryFilter;
     return matchesSearch && matchesCategory;
+  }).sort((a: any, b: any) => {
+    const at = (a as any).createdAt ? new Date((a as any).createdAt).getTime() : 0;
+    const bt = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0;
+    return bt - at;
   });
 
   const openAdd = () => {
@@ -161,12 +170,22 @@ export default function AdminProducts() {
     if (!form.name || !form.price) return;
     try {
       if (editing) {
-        await api.products.update(editing.id, form);
+        const updated: any = await api.products.update(editing.id, form);
+        setProducts((prev) => {
+          const rest = prev.filter((p) => p.id !== editing.id);
+          const merged = updated?.id ? updated : { ...form, createdAt: new Date().toISOString() } as any;
+          return [merged, ...rest];
+        });
       } else {
-        await api.products.create(form);
+        const created: any = await api.products.create(form);
+        const newProd: any = created?.id ? created : { ...form, createdAt: new Date().toISOString() };
+        setProducts((prev) => [newProd, ...prev.filter((p) => p.id !== newProd.id)]);
+        setSearch('');
+        setCategoryFilter('All');
       }
-      await loadData();
       setShowModal(false);
+      await loadData();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Failed to save product:', error);
     }

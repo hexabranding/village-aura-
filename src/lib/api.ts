@@ -1,6 +1,11 @@
 import type { Product } from '../data/products';
 
-const API_BASE = '/api';
+export const API_BASE = '/api';
+export const resolveUploadUrl = (url: string) => {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  return url;
+};
 
 const getToken = () => localStorage.getItem('reshamAdminToken');
 

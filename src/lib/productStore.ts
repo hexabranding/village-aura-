@@ -28,7 +28,7 @@ export const loadProducts = async () => {
         return lp;
       });
       const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
-      allProducts = [...merged, ...newProducts];
+      allProducts = [...newProducts, ...merged];
     }
   } catch {
     // ignore

@@ -50,7 +50,7 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
         return lp;
       });
       const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
-      setProducts([...merged, ...newProducts]);
+      setProducts([...newProducts, ...merged]);
     }).catch(() => {});
     api.categories.getAll().then(setCategories).catch(() => {});
   }, []);
@@ -68,7 +68,7 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
     .filter(
       (p) =>
         (!activeCategory || p.category === activeCategory) &&
-        (!activeSub || p.subCategory === activeSub)
+        (!activeSub || p.subCategory === activeSub || (!p.subCategory && (p.name.toLowerCase().includes(activeSub.toLowerCase()) || p.fabric.toLowerCase().includes(activeSub.toLowerCase()))))
     )
     .filter((p) => {
       if (activeMin && p.price < Number(activeMin)) return false;
@@ -334,7 +334,7 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="shop-grid"
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem 1.5rem' }}
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem 1.5rem' }}
             >
               {filtered.map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i} isLiked={likedProducts.includes(p.id)} onToggleLike={onToggleLike} />
