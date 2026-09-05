@@ -5,6 +5,11 @@ export const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
 export const resolveUploadUrl = (url: string) => {
   if (!url) return url;
   if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (url.startsWith('/images/') || url.startsWith('images/')) return url;
+  if (url.startsWith('/api/upload') || url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+    const p = url.startsWith('/') ? url : `/${url}`;
+    return `${API_ORIGIN}${p}`;
+  }
   if (url.startsWith('/')) return `${API_ORIGIN}${url}`;
   return `${API_ORIGIN}/${url}`;
 };
