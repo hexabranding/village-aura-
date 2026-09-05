@@ -44,21 +44,23 @@ export default function AdminLogin() {
             transition={{ delay: 0.15, duration: 0.5 }}
             className="admin-login-logo"
           >
-            <img src={logo} alt="Village Aura" style={{ height: 90, width: 'auto' }} />
+            <img src={logo} alt="Village Allure" style={{ height: 120, width: 'auto' }} />
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.5 }}
+            style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic' }}
           >
-            Village Aura Admin
+            Village Allure
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.35, duration: 0.5 }}
+            style={{ letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: '0.72rem' }}
           >
-            Sign in to manage your store
+            Admin Panel — Manage your boutique
           </motion.p>
         </div>
 

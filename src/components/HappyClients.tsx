@@ -20,7 +20,7 @@ const clients: Client[] = [
   {
     name: 'Ananya Iyer',
     location: '',
-    quote: 'My bridal Banarasi was the star of the wedding. Thank you, Resham!',
+    quote: 'My bridal Banarasi was the star of the wedding. Thank you, Village Allure!',
     image: '/images/IMG_9588.PNG',
   },
   {

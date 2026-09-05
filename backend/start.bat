@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo   Resham Store Backend
+echo   Village Allure Backend
 echo ========================================
 echo.
 echo Starting server on http://localhost:5000

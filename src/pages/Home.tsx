@@ -176,7 +176,6 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
         transformOrigin: 'center center',
       }}
     >
-      {/* Video */}
       <video
         ref={videoRef}
         src={item.video}
@@ -184,7 +183,8 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
         muted
         playsInline
         loop
-        preload="auto"
+        preload="metadata"
+        onError={(e) => { (e.currentTarget as HTMLVideoElement).style.display = 'none'; }}
         style={{
           position: 'absolute',
           inset: 0,
@@ -628,6 +628,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8 }}
+        className="fixed-banner-section"
         style={{
           position: 'relative',
           height: 'clamp(280px, 50vh, 420px)',
@@ -636,13 +637,14 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         }}
       >
         <div
+          className="fixed-banner-bg"
           style={{
             position: 'absolute',
             inset: 0,
             backgroundImage: `url(${fixedBanner || 'https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop'})`,
-            backgroundSize: 'cover',
+            backgroundSize: '100% 100%',
             backgroundPosition: 'center',
-            backgroundAttachment: 'fixed',
+            backgroundRepeat: 'no-repeat',
           }}
         />
         <div

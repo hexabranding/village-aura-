@@ -59,7 +59,7 @@ export default function AdminLayout() {
 
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-header">
-          <Link to="/admin" onClick={() => setSidebarOpen(false)} className="admin-sidebar-brand"><img src={logo} alt="Village Aura" /></Link>
+          <Link to="/admin" onClick={() => setSidebarOpen(false)} className="admin-sidebar-brand"><img src={logo} alt="Village Allure" /></Link>
           <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)}>✕</button>
         </div>
         <nav className="admin-sidebar-nav">

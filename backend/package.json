@@ -1,7 +1,7 @@
 {
-  "name": "resham-backend",
+  "name": "village-allure-backend",
   "version": "1.0.0",
-  "description": "Resham Store Backend API",
+  "description": "Village Allure Backend API",
   "main": "server.js",
   "type": "module",
   "scripts": {

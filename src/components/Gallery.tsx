@@ -23,7 +23,7 @@ const fallbackImages: GalleryImage[] = [
   { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_05_20%20PM.png', title: 'Festive Glow', subtitle: 'VIEW MORE' },
   { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2004_02_42%20PM.png', title: 'Loom Legacy', subtitle: 'VIEW MORE' },
   { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2003_52_09%20PM.png', title: 'Handcrafted', subtitle: 'VIEW MORE' },
-  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2003_50_46%20PM.png', title: 'Village Aura', subtitle: 'VIEW MORE' },
+  { src: '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2003_50_46%20PM.png', title: 'Village Allure', subtitle: 'VIEW MORE' },
 ];
 
 const fadeUp = {

@@ -390,14 +390,15 @@ export default function AdminAds() {
                         <>
                           <span>📷</span>
                           <span>Click to Upload</span>
-                          <span className="admin-upload-hint">JPG, PNG, WebP — Max 5MB each</span>
+                          <span className="admin-upload-hint">All sizes — auto-optimized to cover (1920×600) · JPG/PNG/WebP Max 50MB</span>
                         </>
                       )}
                     </button>
                   </div>
                   {form.image && (
-                    <div style={{ marginTop: '0.75rem', textAlign: 'center' }}>
-                      <img src={form.image} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                    <div style={{ marginTop: '0.75rem', textAlign: 'center', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--line)' }}>
+                      <img src={form.image} alt="Preview — optimized cover" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
+                      <div style={{ fontSize: '0.7rem', color: 'var(--ink-soft)', padding: '0.4rem', background: 'var(--ivory-deep)' }}>Optimized preview — covers banner (all sizes fit)</div>
                     </div>
                   )}
                   <div style={{ marginTop: '0.5rem' }}>

@@ -1,4 +1,4 @@
-# Resham Store - Backend Setup
+# Village Allure - Backend Setup
 
 ## Quick Start
 

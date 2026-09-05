@@ -391,7 +391,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
 
           {/* WhatsApp Share Button */}
           <motion.a
-            href={`https://wa.me/?text=${encodeURIComponent(`Check out this ${product.name} from Village Aura!\n\n₹${product.price.toLocaleString('en-IN')}\n\n${window.location.origin}/product/${product.id}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`Check out this ${product.name} from Village Allure!\n\n₹${product.price.toLocaleString('en-IN')}\n\n${window.location.origin}/product/${product.id}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             whileHover={{ scale: 1.02 }}

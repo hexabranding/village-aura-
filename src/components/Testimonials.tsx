@@ -29,7 +29,7 @@ const testimonials: Testimonial[] = [
     role: 'Bride',
     category: 'Bridal Banarasi',
     rating: 5,
-    quote: 'My bridal Banarasi was the star of the wedding. So many compliments! Thank you, Resham for making my day special.',
+    quote: 'My bridal Banarasi was the star of the wedding. So many compliments! Thank you, Village Allure for making my day special.',
     image: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?w=400&h=400&fit=crop&crop=face',
   },
   {
