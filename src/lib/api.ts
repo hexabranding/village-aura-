@@ -1,6 +1,6 @@
 import type { Product } from '../data/products';
 
-export const API_BASE = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE = 'https://api.villageallure.com/api';
 export const resolveUploadUrl = (url: string) => {
   if (!url) return url;
   if (/^https?:\/\//i.test(url)) return url;
@@ -185,7 +185,7 @@ export interface Notification {
 export const api = {
   auth: {
     login: async (username: string, password: string) => {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -197,7 +197,7 @@ export const api = {
       return data;
     },
     verify: async () => {
-      const res = await fetch(`${API_BASE}/api/auth/verify`, {
+      const res = await fetch(`${API_BASE}/auth/verify`, {
         method: 'POST',
         headers: headers(),
       });
