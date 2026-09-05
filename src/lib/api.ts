@@ -185,7 +185,7 @@ export interface Notification {
 export const api = {
   auth: {
     login: async (username: string, password: string) => {
-      const res = await fetch(`${API_BASE}/auth/login`, {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -197,7 +197,7 @@ export const api = {
       return data;
     },
     verify: async () => {
-      const res = await fetch(`${API_BASE}/auth/verify`, {
+      const res = await fetch(`${API_BASE}/api/auth/verify`, {
         method: 'POST',
         headers: headers(),
       });
