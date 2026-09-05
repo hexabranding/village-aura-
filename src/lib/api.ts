@@ -1,6 +1,6 @@
 import type { Product } from '../data/products';
 
-export const API_BASE = '/api';
+export const API_BASE = import.meta.env.VITE_API_URL || '/api';
 export const resolveUploadUrl = (url: string) => {
   if (!url) return url;
   if (/^https?:\/\//i.test(url)) return url;
