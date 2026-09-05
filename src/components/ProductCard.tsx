@@ -48,6 +48,7 @@ export default function ProductCard({ product, index = 0, isLiked = false, onTog
           }}
         >
           <div
+            className="product-card-media"
             style={{
               position: 'relative',
               overflow: 'hidden',

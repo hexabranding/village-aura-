@@ -740,10 +740,6 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          style={{
-            display: 'grid',
-            gap: '2rem 1.5rem',
-          }}
         >
           {filteredProducts.map((p, i) => (
             <motion.div
@@ -751,6 +747,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.35, delay: i * 0.06 }}
+              style={{ display: 'flex', height: '100%', minWidth: 0 }}
             >
               <ProductCard
                 product={p}
