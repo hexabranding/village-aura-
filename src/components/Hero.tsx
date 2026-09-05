@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 
 const heroSlides = [
   {
@@ -132,7 +132,7 @@ export default function Hero() {
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: `url(${slide.image})`,
+            backgroundImage: `url(${resolveUploadUrl(slide.image)})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}

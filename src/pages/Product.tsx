@@ -5,7 +5,7 @@ import { getProduct, products as localProducts } from '../data/products';
 import Accordion from '../components/Accordion';
 import ProductCard from '../components/ProductCard';
 import ZariDivider from '../components/ZariDivider';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { Product as ProductType } from '../data/products';
 
 interface ProductProps {
@@ -110,7 +110,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
   }
 
   const variant = product.variants[variantIndex];
-  const currentImageSrc = variant.images[imageIndex];
+  const currentImageSrc = resolveUploadUrl(variant.images[imageIndex] || '');
 
   const handleAdd = () => {
     if (added) {
@@ -257,7 +257,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
             {variant.images.map((src, i) => (
               <motion.img
                 key={src}
-                src={src}
+                src={resolveUploadUrl(src)}
                 alt=""
                 onClick={() => setImageIndex(i)}
                 whileHover={{ scale: 1.06 }}

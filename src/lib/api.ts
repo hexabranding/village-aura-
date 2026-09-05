@@ -1,10 +1,12 @@
 import type { Product } from '../data/products';
 
 export const API_BASE = 'https://api.villageallure.com/api';
+export const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
 export const resolveUploadUrl = (url: string) => {
   if (!url) return url;
-  if (/^https?:\/\//i.test(url)) return url;
-  return url;
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (url.startsWith('/')) return `${API_ORIGIN}${url}`;
+  return `${API_ORIGIN}/${url}`;
 };
 
 const getToken = () => localStorage.getItem('reshamAdminToken');
