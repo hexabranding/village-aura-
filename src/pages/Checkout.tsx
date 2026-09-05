@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { getProduct } from '../lib/productStore';
 import type { CartItem } from '../data/products';
 import ZariDivider from '../components/ZariDivider';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 
 interface CheckoutProps {
   cart: CartItem[];
@@ -267,7 +267,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
             {items.map(({ ci, product }) => (
               <div key={`${ci.id}-${ci.colorIndex}`} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 <img
-                  src={product!.variants[ci.colorIndex]?.images[0] ?? product!.variants[0].images[0]}
+                  src={resolveUploadUrl(product!.variants[ci.colorIndex]?.images[0] ?? product!.variants[0].images[0])}
                   alt={product!.name}
                   style={{ width: 46, height: 58, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }}
                 />

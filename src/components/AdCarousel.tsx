@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 
 interface Slide {
   image: string;
@@ -97,7 +97,7 @@ export default function AdCarousel() {
             style={{
               position: 'absolute',
               inset: 0,
-              backgroundImage: `url(${slides[current].image})`,
+              backgroundImage: `url(${resolveUploadUrl(slides[current].image)})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}

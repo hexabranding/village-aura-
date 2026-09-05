@@ -1,6 +1,6 @@
 import { motion, useMotionValue } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 
 const instaPostsBase = [
   { label: 'Sarees' },
@@ -119,7 +119,7 @@ export default function Instagram() {
             const CardInner = (
               <>
                 <img
-                  src={post.src}
+                  src={resolveUploadUrl(post.src)}
                   alt={post.label}
                   style={{
                     width: '100%',

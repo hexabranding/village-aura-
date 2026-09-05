@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { Category } from '../lib/api';
 
 function InlineNameEditor({ name, onSave }: { name: string; onSave: (n: string) => void }) {
@@ -251,7 +251,7 @@ export default function AdminCategories() {
             <div className="admin-category-card-image">
               {cat.image ? (
                 <>
-                  <img src={cat.image} alt={cat.name} />
+                  <img src={resolveUploadUrl(cat.image)} alt={cat.name} />
                   {!cat.active && <div className="admin-category-card-overlay">Inactive</div>}
                 </>
               ) : (
@@ -408,7 +408,7 @@ export default function AdminCategories() {
                   </div>
                   {formImage && (
                     <div className="admin-category-modal-preview">
-                      <img src={formImage} alt="Preview" />
+                      <img src={resolveUploadUrl(formImage)} alt="Preview" />
                     </div>
                   )}
                 </div>

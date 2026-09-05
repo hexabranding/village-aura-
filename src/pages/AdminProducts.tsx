@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { Product } from '../data/products';
 import type { Category } from '../lib/api';
 
@@ -377,7 +377,7 @@ export default function AdminProducts() {
                     <div className="admin-product-cell">
                       <div className="admin-product-thumb-wrap">
                         <img
-                          src={product.variants[0]?.images[0] || 'https://via.placeholder.com/56x70?text=No+Img'}
+                          src={resolveUploadUrl(product.variants[0]?.images[0]) || 'https://via.placeholder.com/56x70?text=No+Img'}
                           alt={product.name}
                           className="admin-product-thumb"
                         />
@@ -487,7 +487,7 @@ export default function AdminProducts() {
                   <div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                       {detailProduct.variants.flatMap((v) => v.images).slice(0, 6).map((img, i) => (
-                        <img key={i} src={img} alt="" style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--line)' }} />
+                        <img key={i} src={resolveUploadUrl(img)} alt="" style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--line)' }} />
                       ))}
                       {detailProduct.variants.flatMap((v) => v.images).length === 0 && <div style={{ gridColumn: '1 / -1', height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ivory-deep)', borderRadius: 12, color: 'var(--ink-soft)', border: '1px dashed var(--line)' }}>No images</div>}
                     </div>
@@ -818,7 +818,7 @@ export default function AdminProducts() {
                           <div className="admin-image-preview-grid">
                             {variant.images.map((img, imgIndex) => (
                               <div key={imgIndex} className="admin-image-preview-item">
-                                <img src={img} alt={`Preview ${imgIndex + 1}`} />
+                                <img src={resolveUploadUrl(img)} alt={`Preview ${imgIndex + 1}`} />
                                 <button
                                   type="button"
                                   className="admin-image-remove"

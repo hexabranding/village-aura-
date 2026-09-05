@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { WatchShopItem } from '../lib/api';
 
 export default function AdminWatchShop() {
@@ -201,7 +201,7 @@ export default function AdminWatchShop() {
           >
             {item.poster ? (
               <div className="admin-ad-card-image">
-                <img src={item.poster} alt={item.name} />
+                <img src={resolveUploadUrl(item.poster)} alt={item.name} />
                 <div className="admin-tag video" style={{ position: 'absolute', top: 8, right: 8 }}>🎬 Video</div>
                 {!item.active && <div className="admin-ad-card-overlay">Inactive</div>}
               </div>
@@ -296,7 +296,7 @@ export default function AdminWatchShop() {
                     </button>
                   </div>
                   {uploadError && <div style={{ color: '#dc2626', fontSize: '0.78rem', marginTop: '0.4rem' }}>{uploadError}</div>}
-                  {form.video && <div style={{ marginTop: '0.5rem' }}><video src={form.video} controls muted style={{ width: '100%', maxHeight: 200, borderRadius: 'var(--radius-sm)' }} /></div>}
+                  {form.video && <div style={{ marginTop: '0.5rem' }}><video src={resolveUploadUrl(form.video)} controls muted style={{ width: '100%', maxHeight: 200, borderRadius: 'var(--radius-sm)' }} /></div>}
                   <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.25rem', display: 'block' }}>MP4/WebM ≤50MB. Instagram/Reels page links don't play — download as MP4 then upload.</span>
                 </div>
 
@@ -337,7 +337,7 @@ export default function AdminWatchShop() {
                   </div>
                   {form.poster && (
                     <div style={{ marginTop: '0.75rem' }}>
-                      <img src={form.poster} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                      <img src={resolveUploadUrl(form.poster)} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                     </div>
                   )}
                 </div>

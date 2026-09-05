@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { getProduct } from '../lib/productStore';
+import { resolveUploadUrl } from '../lib/api';
 import type { CartItem } from '../data/products';
 import ZariDivider from '../components/ZariDivider';
 
@@ -75,7 +76,7 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
                 >
                   <Link to={`/product/${product!.id}`} style={{ flexShrink: 0 }}>
                     <img
-                      src={product!.variants[ci.colorIndex]?.images[0] ?? product!.variants[0].images[0]}
+                      src={resolveUploadUrl(product!.variants[ci.colorIndex]?.images[0] ?? product!.variants[0].images[0])}
                       alt={product!.name}
                       style={{ width: 92, height: 115, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
                     />

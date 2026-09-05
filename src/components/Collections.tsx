@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion, useMotionValue } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { Collection } from '../data/products';
 
 interface CollectionsProps {
@@ -108,7 +108,7 @@ export default function Collections({ collections }: CollectionsProps) {
                 className="collection-card"
               >
                 <motion.img
-                  src={randImages[c.category] || c.image}
+                  src={resolveUploadUrl(randImages[c.category] || c.image)}
                   alt={c.title}
                   whileHover={{ scale: 1.1 }}
                   transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}

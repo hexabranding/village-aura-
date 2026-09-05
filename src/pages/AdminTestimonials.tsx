@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { Testimonial } from '../lib/api';
 
 export default function AdminTestimonials() {
@@ -49,7 +49,7 @@ export default function AdminTestimonials() {
       <div className="admin-ads-grid">
         {items.map((t, i) => (
           <motion.div key={t.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className={`admin-ad-card ${!t.active ? 'inactive' : ''}`}>
-            <div className="admin-ad-card-image" style={{ height: 180 }}>{t.image ? <img src={t.image} alt={t.name} style={{ objectFit: 'cover' }} /> : <div className="admin-ad-card-placeholder">💬</div>}{!t.active && <div className="admin-ad-card-overlay">Inactive</div>}</div>
+            <div className="admin-ad-card-image" style={{ height: 180 }}>{t.image ? <img src={resolveUploadUrl(t.image)} alt={t.name} style={{ objectFit: 'cover' }} /> : <div className="admin-ad-card-placeholder">💬</div>}{!t.active && <div className="admin-ad-card-overlay">Inactive</div>}</div>
             <div className="admin-ad-card-content">
               <div className="admin-ad-card-header"><h4 className="admin-ad-card-title">{t.name}</h4><span className={`admin-tag ${t.active ? 'new' : ''}`}>{t.active ? 'Active' : 'Inactive'}</span></div>
               <div className="admin-ad-card-tags"><span className="admin-ad-tag">{t.role}</span><span className="admin-ad-tag type">{t.category}</span><span className="admin-ad-tag">★ {t.rating}</span><span className="admin-ad-tag order">Order: {t.order}</span></div>
@@ -79,7 +79,7 @@ export default function AdminTestimonials() {
                   <div className="admin-form-group"><label>Rating (1-5)</label><select value={form.rating} onChange={e => setForm(f => ({ ...f, rating: Number(e.target.value) }))}>{[1,2,3,4,5].map(n => <option key={n} value={n}>{n} ★</option>)}</select></div>
                 </div>
                 <div className="admin-form-group"><label>Quote *</label><textarea rows={3} value={form.quote} onChange={e => setForm(f => ({ ...f, quote: e.target.value }))} placeholder="Client feedback..." /></div>
-                <div className="admin-form-group"><label>Client Image</label><div style={{ display: 'flex', gap: '0.5rem' }}><input value={form.image} onChange={e => setForm(f => ({ ...f, image: e.target.value }))} placeholder="Image URL or upload" style={{ flex: 1 }} /><input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleUpload(e.target.files)} /><button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} style={{ padding: '0.5rem 1rem', border: '1px solid var(--maroon)', borderRadius: 'var(--radius-sm)', background: 'var(--ivory)', color: 'var(--maroon)', cursor: 'pointer' }}>{uploading ? 'Uploading...' : 'Upload'}</button></div>{form.image && <img src={form.image} alt="preview" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', marginTop: '0.5rem' }} />}</div>
+                <div className="admin-form-group"><label>Client Image</label><div style={{ display: 'flex', gap: '0.5rem' }}><input value={form.image} onChange={e => setForm(f => ({ ...f, image: e.target.value }))} placeholder="Image URL or upload" style={{ flex: 1 }} /><input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleUpload(e.target.files)} /><button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} style={{ padding: '0.5rem 1rem', border: '1px solid var(--maroon)', borderRadius: 'var(--radius-sm)', background: 'var(--ivory)', color: 'var(--maroon)', cursor: 'pointer' }}>{uploading ? 'Uploading...' : 'Upload'}</button></div>{form.image && <img src={resolveUploadUrl(form.image)} alt="preview" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', marginTop: '0.5rem' }} />}</div>
                 <div className="admin-form-grid">
                   <div className="admin-form-group"><label>Order</label><input type="number" value={form.order} onChange={e => setForm(f => ({ ...f, order: Number(e.target.value) }))} /></div>
                   <div className="admin-form-group"><label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.4rem', cursor: 'pointer' }}><input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} /> Active (visible)</label></div>

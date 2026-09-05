@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { Ad } from '../lib/api';
 
 /**
@@ -44,7 +44,7 @@ export default function FixedAdBanner() {
         >
           <Link to={ad.link || '/shop'} style={{ display: 'block' }}>
             <img
-              src={ad.image}
+              src={resolveUploadUrl(ad.image)}
               alt={ad.title}
               style={{ width: '100%', minHeight: 220, maxHeight: 420, objectFit: 'cover', display: 'block' }}
             />

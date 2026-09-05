@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 
 interface GalleryImage {
   src: string;
@@ -114,7 +114,7 @@ export default function GalleryPage() {
             }}
           >
             <img
-              src={img.src}
+              src={resolveUploadUrl(img.src)}
               alt={img.title}
               loading="lazy"
               style={{

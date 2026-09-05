@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { Ad } from '../lib/api';
 
 export default function AdminAds() {
@@ -214,7 +214,7 @@ export default function AdminAds() {
           >
             {ad.image ? (
               <div className="admin-ad-card-image">
-                <img src={ad.image} alt={ad.title} />
+                <img src={resolveUploadUrl(ad.image)} alt={ad.title} />
                 {!ad.active && <div className="admin-ad-card-overlay">Inactive</div>}
               </div>
             ) : (
@@ -397,7 +397,7 @@ export default function AdminAds() {
                   </div>
                   {form.image && (
                     <div style={{ marginTop: '0.75rem', textAlign: 'center', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--line)' }}>
-                      <img src={form.image} alt="Preview — optimized cover" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
+                      <img src={resolveUploadUrl(form.image)} alt="Preview — optimized cover" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
                       <div style={{ fontSize: '0.7rem', color: 'var(--ink-soft)', padding: '0.4rem', background: 'var(--ivory-deep)' }}>Optimized preview — covers banner (all sizes fit)</div>
                     </div>
                   )}

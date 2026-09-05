@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { GalleryImage } from '../lib/api';
 
 export default function AdminGallery() {
@@ -157,7 +157,7 @@ export default function AdminGallery() {
           >
             {img.image ? (
               <div className="admin-ad-card-image">
-                <img src={img.image} alt={img.title} />
+                <img src={resolveUploadUrl(img.image)} alt={img.title} />
                 {!img.active && <div className="admin-ad-card-overlay">Inactive</div>}
               </div>
             ) : (
@@ -274,7 +274,7 @@ export default function AdminGallery() {
                   </div>
                   {form.image && (
                     <div style={{ marginTop: '0.75rem' }}>
-                      <img src={form.image} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                      <img src={resolveUploadUrl(form.image)} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                     </div>
                   )}
                 </div>

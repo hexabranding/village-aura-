@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api, type ReturnRequest } from '../lib/api';
+import { api, type ReturnRequest, resolveUploadUrl } from '../lib/api';
 import { getProduct } from '../lib/productStore';
 
 const statuses=['Return Requested','Under Review','More Information Required','Approved','Pickup Scheduled','Picked Up','Product Received','Quality Check','Refund Processing','Replacement Processing','Completed','Rejected','Cancelled'];
@@ -64,7 +64,7 @@ export default function AdminReturns(){
           return (
           <motion.div key={r.id} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} whileHover={{ y:-2, boxShadow:'0 8px 24px rgba(0,0,0,0.08)' }} style={{background:'white',border:'1px solid #f3f4f6',borderLeft:`4px solid ${colors[r.status]||'#999'}`,borderRadius:16,padding:'1.1rem',display:'flex',flexDirection:'column',gap:'0.7rem',boxShadow:'0 2px 12px rgba(0,0,0,0.04)',transition:'all 0.2s'}}>
             <div style={{display:'flex',gap:'0.85rem',alignItems:'flex-start'}}>
-              {thumb ? <img src={thumb} alt="" style={{width:56,height:56,objectFit:'cover',borderRadius:10,border:'1px solid #f3f4f6',flexShrink:0}}/> : <div style={{width:56,height:56,background:'#f9fafb',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem'}}>📦</div>}
+              {thumb ? <img src={resolveUploadUrl(thumb)} alt="" style={{width:56,height:56,objectFit:'cover',borderRadius:10,border:'1px solid #f3f4f6',flexShrink:0}}/> : <div style={{width:56,height:56,background:'#f9fafb',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem'}}>📦</div>}
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontWeight:700,color:'var(--maroon)',fontSize:'0.92rem',display:'flex',gap:'0.4rem',alignItems:'center',flexWrap:'wrap'}}>{r.returnId||r.id.slice(-8).toUpperCase()} <span style={{fontWeight:500,color:'var(--ink-soft)',fontSize:'0.72rem',background:'#f9fafb',padding:'0.15rem 0.5rem',borderRadius:20,border:'1px solid #f3f4f6'}}>{r.orderId}</span> <span style={{fontSize:'0.65rem',background:(colors[r.status]||'#999')+'15',color:colors[r.status]||'#111',padding:'0.25rem 0.6rem',borderRadius:20,fontWeight:700,border:`1px solid ${(colors[r.status]||'#999')}30`}}>{r.status}</span></div>
                 <div style={{fontSize:'0.82rem',fontWeight:500,marginTop:'0.2rem',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{prod?.name||r.productId}</div>
@@ -73,8 +73,8 @@ export default function AdminReturns(){
               </div>
             </div>
             <div style={{fontSize:'0.82rem'}}><strong>Reason:</strong> {r.reason}{r.otherReason?` (${r.otherReason})`:''} {r.description?` — ${r.description}`:''}</div>
-            {(r.images?.length||0)>0 && <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{r.images!.map((img,i)=><img key={i} src={img} alt="ev" style={{width:64,height:64,objectFit:'cover',borderRadius:8,border:'1px solid var(--line)'}} />)}</div>}
-            {r.video && <video src={r.video} controls style={{maxWidth:240, maxHeight:140, borderRadius:8}} />}
+            {(r.images?.length||0)>0 && <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{r.images!.map((img,i)=><img key={i} src={resolveUploadUrl(img)} alt="ev" style={{width:64,height:64,objectFit:'cover',borderRadius:8,border:'1px solid var(--line)'}} />)}</div>}
+            {r.video && <video src={resolveUploadUrl(r.video)} controls style={{maxWidth:240, maxHeight:140, borderRadius:8}} />}
             {r.refund?.amount!=null && <div style={{fontSize:'0.78rem',background:'#f0fdf4',border:'1px solid #bbf7d0',padding:'0.4rem 0.6rem',borderRadius:8}}>Refund ₹{r.refund.amount} • {r.refund.method} • {r.refund.status} {r.refund.transactionId?`• ${r.refund.transactionId}`:''}</div>}
             {r.pickup && <div style={{fontSize:'0.75rem',background:'#f9fafb',border:'1px solid #e5e7eb',padding:'0.4rem 0.6rem',borderRadius:8}}>Pickup: {r.pickup.status} {r.pickup.date?`• ${r.pickup.date}`:''} {r.pickup.courier?`• ${r.pickup.courier}`:''} {r.pickup.trackingNo?`• ${r.pickup.trackingNo}`:''}</div>}
             {r.adminMessage && <div style={{fontSize:'0.78rem',background:'#eff6ff',border:'1px solid #bfdbfe',padding:'0.5rem',borderRadius:8,color:'#1e40af'}}>{r.adminMessage}</div>}
@@ -122,8 +122,8 @@ export default function AdminReturns(){
                 <p><strong>Reason:</strong> {selected.reason} {selected.otherReason?`(${selected.otherReason})`:''}</p>
                 <p><strong>Description:</strong> {selected.description||'-'}</p>
                 <p><strong>Resolution:</strong> {selected.resolution} • <strong>Status:</strong> {selected.status}</p>
-                {selected.images?.length ? <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:'0.5rem'}}>{selected.images.map((im,i)=><img key={i} src={im} style={{width:80,height:80,objectFit:'cover',borderRadius:8}}/> )}</div> : null}
-                {selected.video && <video src={selected.video} controls style={{width:'100%',maxHeight:200,marginTop:'0.5rem',borderRadius:8}} />}
+                {selected.images?.length ? <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:'0.5rem'}}>{selected.images.map((im,i)=><img key={i} src={resolveUploadUrl(im)} style={{width:80,height:80,objectFit:'cover',borderRadius:8}}/> )}</div> : null}
+                {selected.video && <video src={resolveUploadUrl(selected.video)} controls style={{width:'100%',maxHeight:200,marginTop:'0.5rem',borderRadius:8}} />}
                 <div style={{marginTop:'0.75rem'}}><strong>Timeline</strong>{selected.tracking?.map((t:any,i:number)=><div key={i} style={{fontSize:'0.75rem',padding:'0.3rem 0',borderBottom:'1px solid #f3f4f6'}}>{new Date(t.timestamp).toLocaleString('en-IN')} — <strong>{t.status}</strong>: {t.message}</div>)}</div>
               </div>
               <div className="admin-modal-footer"><button onClick={()=>handleDelete((selected as any).id || (selected as any)._id, selected.returnId)} style={{padding:'0.5rem 1rem',background:'#fee2e2',border:'1px solid #fecaca',color:'#991b1b',borderRadius:8,fontSize:'0.82rem',fontWeight:700,cursor:'pointer',marginRight:'auto'}}>🗑️ Delete</button><button onClick={()=>setSelected(null)} className="admin-btn admin-btn-outline">Close</button></div>

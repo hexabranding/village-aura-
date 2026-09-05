@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 
 interface GalleryImage {
   src: string;
@@ -57,7 +57,7 @@ function GalleryCard({ image, index }: { image: GalleryImage; index: number }) {
       }}
     >
       <img
-        src={image.src}
+        src={resolveUploadUrl(image.src)}
         alt={image.title}
         loading="lazy"
         style={{

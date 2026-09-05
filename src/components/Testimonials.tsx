@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { Testimonial as ApiTestimonial } from '../lib/api';
 
 interface Testimonial {
@@ -156,7 +156,7 @@ export default function Testimonials() {
                     </div>
                   </div>
                   <div className="t-img-wrap">
-                    <img src={t.image} alt={t.name} loading="lazy" />
+                    <img src={resolveUploadUrl(t.image)} alt={t.name} loading="lazy" />
                   </div>
                 </div>
               </motion.div>

@@ -11,7 +11,7 @@ import TiltImage from '../components/TiltImage';
 import AdCarousel from '../components/AdCarousel';
 import Testimonials from '../components/Testimonials';
 import { products as localProducts, collections } from '../data/products';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { Product as ProductType } from '../data/products';
 
 const slideFromLeft = {
@@ -178,8 +178,8 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
     >
       <video
         ref={videoRef}
-        src={item.video}
-        poster={item.poster}
+        src={resolveUploadUrl(item.video)}
+        poster={resolveUploadUrl(item.poster)}
         muted
         playsInline
         loop
@@ -198,7 +198,7 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
 
       {/* Poster image (visible when not hovered) */}
       <img
-        src={item.poster}
+        src={resolveUploadUrl(item.poster)}
         alt={item.name}
         loading="lazy"
         style={{
@@ -588,7 +588,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           >
             {/* Left image — larger, main */}
             <TiltImage
-              src={weaver?.image1 || 'https://images.pexels.com/photos/19567892/pexels-photo-19567892.jpeg?w=500&h=650&fit=crop'}
+              src={resolveUploadUrl(weaver?.image1) || 'https://images.pexels.com/photos/19567892/pexels-photo-19567892.jpeg?w=500&h=650&fit=crop'}
               alt="Weaver at the loom"
               expanded={hoveredImage === 0}
               onHoverChange={(h) => setHoveredImage(h ? 0 : null)}
@@ -604,7 +604,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
             />
             {/* Right image — smaller, overlaps left */}
             <TiltImage
-              src={weaver?.image2 || 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=500&h=650&fit=crop'}
+              src={resolveUploadUrl(weaver?.image2) || 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=500&h=650&fit=crop'}
               alt="Close detail of zari border weaving"
               expanded={hoveredImage === 1}
               onHoverChange={(h) => setHoveredImage(h ? 1 : null)}
@@ -641,7 +641,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: `url(${fixedBanner || 'https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop'})`,
+            backgroundImage: `url(${resolveUploadUrl(fixedBanner || '') || 'https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop'})`,
             backgroundSize: '100% 100%',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -848,7 +848,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius)', aspectRatio: '5/4', cursor: 'pointer' }}
             >
               <motion.img
-                src={edit.image}
+                src={resolveUploadUrl(edit.image)}
                 alt={edit.title}
                 whileHover={{ scale: 1.08 }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}

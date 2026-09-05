@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/images/logo.png';
 import { getProduct } from '../lib/productStore';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { Category } from '../lib/api';
 
 interface HeaderProps {
@@ -590,7 +590,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                         >
                           <Link to={`/product/${p.id}`} onClick={() => setLikedOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
                             <img
-                              src={p.variants[0].images[0]}
+                              src={resolveUploadUrl(p.variants[0].images[0])}
                               alt={p.name}
                               style={{ width: 46, height: 58, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }}
                             />

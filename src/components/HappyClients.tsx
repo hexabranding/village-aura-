@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 
 interface Client {
   name: string;
@@ -79,7 +79,7 @@ function ClientCard({ client, index }: { client: Client; index: number }) {
       }}
     >
       <img
-        src={client.image}
+        src={resolveUploadUrl(client.image)}
         alt={client.name}
         loading="lazy"
         style={{
