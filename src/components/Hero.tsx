@@ -173,6 +173,7 @@ export default function Hero() {
 
       {/* Text content — left aligned */}
       <div
+        className="hero-content"
         style={{
           position: 'relative',
           zIndex: 2,
@@ -239,6 +240,7 @@ export default function Hero() {
             </motion.p>
 
             <motion.div
+              className="hero-buttons"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.65 }}
@@ -293,6 +295,7 @@ export default function Hero() {
 
         {/* Slide indicators */}
         <div
+          className="hero-indicators"
           style={{
             display: 'flex',
             gap: '0.75rem',

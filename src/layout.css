@@ -926,6 +926,42 @@
   }
 }
 
+/* ─── Hero & AdCarousel — center on mobile ─── */
+@media (max-width: 640px) {
+  .hero-content {
+    text-align: center !important;
+    margin: 0 auto !important;
+    padding: 7rem 1.25rem 2.5rem !important;
+    max-width: 100% !important;
+    align-items: center !important;
+  }
+  .hero-content h1,
+  .hero-content p {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .hero-buttons {
+    justify-content: center !important;
+  }
+  .hero-indicators {
+    justify-content: center !important;
+  }
+  .ad-carousel-content {
+    text-align: center !important;
+    align-items: center !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+  }
+  .ad-carousel-content p,
+  .ad-carousel-content h2,
+  .ad-carousel-content span {
+    text-align: center !important;
+  }
+}
+
 /* ═══════════════════════════════════════════
    ADMIN PANEL — Village Allure
    ═══════════════════════════════════════════ */

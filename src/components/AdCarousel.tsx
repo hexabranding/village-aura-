@@ -112,7 +112,7 @@ export default function AdCarousel() {
           />
           {/* Content */}
           <div
-            className="container"
+            className="container ad-carousel-content"
             style={{
               position: 'relative',
               height: '100%',
