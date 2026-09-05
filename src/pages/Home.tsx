@@ -742,7 +742,6 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           transition={{ duration: 0.4, ease: 'easeOut' }}
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '2rem 1.5rem',
           }}
         >

@@ -10,6 +10,9 @@ const orderItemSchema = new mongoose.Schema({
   id: { type: String, required: true },
   colorIndex: { type: Number, default: 0 },
   qty: { type: Number, default: 1 },
+  cancelled: { type: Boolean, default: false },
+  cancelReason: { type: String, default: '' },
+  cancelledAt: { type: Date, default: null },
 }, { _id: false });
 
 const orderSchema = new mongoose.Schema({
@@ -64,6 +67,8 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  deliveredAt: { type: Date, default: null },
+  returnDeadline: { type: Date, default: null },
   tracking: [trackingSchema],
   estimatedDelivery: {
     type: String,

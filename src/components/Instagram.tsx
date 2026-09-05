@@ -1,5 +1,6 @@
 import { motion, useMotionValue } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import { api } from '../lib/api';
 
 const instaPostsBase = [
   { label: 'Sarees' },
@@ -35,10 +36,19 @@ const SCROLL_SPEED = 30;
 export default function Instagram() {
   const x = useMotionValue(0);
   const paused = useRef(false);
-  const [posts, setPosts] = useState(() => instaPostsBase.map((p, i) => ({ ...p, src: publicImages[i % publicImages.length] })));
+  const [posts, setPosts] = useState(() => instaPostsBase.map((p, i) => ({ ...p, src: publicImages[i % publicImages.length], link: '' })));
   useEffect(() => {
-    const shuffled = [...publicImages].sort(() => 0.5 - Math.random());
-    setPosts(instaPostsBase.map((p, i) => ({ ...p, src: shuffled[i % shuffled.length] })));
+    api.instagram.getActive().then((data: any[]) => {
+      if (Array.isArray(data) && data.length > 0) {
+        setPosts(data.map((d) => ({ label: d.label || 'Instagram', src: d.image, link: d.link || '' })));
+        return;
+      }
+      const shuffled = [...publicImages].sort(() => 0.5 - Math.random());
+      setPosts(instaPostsBase.map((p, i) => ({ ...p, src: shuffled[i % shuffled.length], link: '' })));
+    }).catch(() => {
+      const shuffled = [...publicImages].sort(() => 0.5 - Math.random());
+      setPosts(instaPostsBase.map((p, i) => ({ ...p, src: shuffled[i % shuffled.length], link: '' })));
+    });
   }, []);
   const totalWidth = posts.length * (CARD_WIDTH + GAP);
 
@@ -105,7 +115,22 @@ export default function Instagram() {
         <motion.div
           style={{ x, display: 'flex', gap: `${GAP}px`, willChange: 'transform' }}
         >
-          {duplicated.map((post, i) => (
+          {duplicated.map((post, i) => {
+            const CardInner = (
+              <>
+                <img
+                  src={post.src}
+                  alt={post.label}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
+                />
+              </>
+            );
+            return (
             <motion.div
               key={`${post.label}-${i}`}
               whileHover={{ scale: 1.05, y: -4 }}
@@ -117,19 +142,11 @@ export default function Instagram() {
                 position: 'relative',
                 overflow: 'hidden',
                 borderRadius: 'var(--radius)',
-                cursor: 'pointer',
+                cursor: post.link ? 'pointer' : 'default',
               }}
+              onClick={() => post.link && window.open(post.link, '_blank')}
             >
-              <img
-                src={post.src}
-                alt={post.label}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  display: 'block',
-                }}
-              />
+              {CardInner}
               {/* Hover overlay */}
               <div
                 className="insta-overlay"
@@ -176,7 +193,8 @@ export default function Instagram() {
                 </div>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </motion.div>
       </div>
 

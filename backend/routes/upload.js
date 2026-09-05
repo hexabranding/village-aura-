@@ -21,11 +21,14 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
-  if (allowed.includes(file.mimetype)) {
-    cb(null, true);
+  const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/mov'];
+  if (allowed.includes(file.mimetype) || file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExt = ['.jpg','.jpeg','.png','.webp','.gif','.mp4','.mov','.webm','.ogg'];
+    if(allowedExt.includes(ext) || allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPG/PNG/WebP and MP4/MOV allowed'), false);
   } else {
-    cb(new Error('Only image/video files are allowed'), false);
+    cb(new Error('Only JPG/PNG/WebP and MP4/MOV allowed'), false);
   }
 };
 
@@ -40,13 +43,24 @@ router.post('/', auth, upload.array('images', 20), (req, res) => {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No images uploaded' });
     }
-
     const urls = req.files.map((file) => `/api/upload/images/${file.filename}`);
     res.json({ urls });
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).json({ error: 'Failed to upload images' });
   }
+});
+
+router.post('/return', upload.array('images', 10), (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files uploaded' });
+    for(const f of req.files){
+      if(f.mimetype.startsWith('image/') && f.size > 8*1024*1024) return res.status(400).json({ error: `${f.originalname} exceeds 8MB` });
+      if(f.mimetype.startsWith('video/') && f.size > 60*1024*1024) return res.status(400).json({ error: `${f.originalname} exceeds 60MB` });
+    }
+    const urls = req.files.map((file) => `/api/upload/images/${file.filename}`);
+    res.json({ urls });
+  } catch (error) { res.status(500).json({ error: 'Failed to upload' }); }
 });
 
 router.get('/images/:filename', (req, res) => {

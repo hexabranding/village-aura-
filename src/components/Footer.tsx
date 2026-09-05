@@ -195,7 +195,7 @@ export default function Footer() {
           gap: '0.75rem',
         }}
       >
-        <span>© {new Date().getFullYear()} Village Aura. All rights reserved.</span>
+        <span>© {new Date().getFullYear()} Village Allure. All rights reserved.</span>
         <span>Made with care, in India.</span>
       </div>
     </footer>

@@ -11,10 +11,12 @@ interface ProductCardProps {
   onToggleLike?: (id: string) => void;
 }
 
+const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='500' viewBox='0 0 400 500'%3E%3Crect width='400' height='500' fill='%23f5f0ea'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Inter,sans-serif' font-size='16' fill='%23b7a48a'%3ENo Image%3C/text%3E%3C/svg%3E";
+
 export default function ProductCard({ product, index = 0, isLiked = false, onToggleLike }: ProductCardProps) {
   const [hovered, setHovered] = useState(false);
   const primary = product.variants[0] ?? { images: [], colorName: '', hex: '#ccc' };
-  const img0 = resolveUploadUrl(primary.images[0] || '') || 'https://via.placeholder.com/400x500?text=No+Image';
+  const img0 = resolveUploadUrl(primary.images[0] || '') || PLACEHOLDER;
   const img1 = resolveUploadUrl(primary.images[1] || primary.images[0] || '') || img0;
 
   return (
@@ -60,7 +62,7 @@ export default function ProductCard({ product, index = 0, isLiked = false, onTog
               animate={{ opacity: hovered ? 0 : 1 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.08)' : 'none' }}
-              onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x500?text=No+Image'; }}
+              onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER; (e.target as HTMLImageElement).onerror=null; }}
             />
             <motion.img
               src={img1}
@@ -68,7 +70,7 @@ export default function ProductCard({ product, index = 0, isLiked = false, onTog
               animate={{ opacity: hovered ? 1 : 0 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.08)' : 'none' }}
-              onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x500?text=No+Image'; }}
+              onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER; (e.target as HTMLImageElement).onerror=null; }}
             />
 
             {/* Quick view overlay on hover */}

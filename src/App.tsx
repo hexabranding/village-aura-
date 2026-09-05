@@ -29,6 +29,8 @@ import AdminGallery from './pages/AdminGallery';
 import AdminWatchShop from './pages/AdminWatchShop';
 import AdminTestimonials from './pages/AdminTestimonials';
 import AdminHomeContent from './pages/AdminHomeContent';
+import AdminReturns from './pages/AdminReturns';
+import AdminReturnSettings from './pages/AdminReturnSettings';
 import type { CartItem } from './data/products';
 import { loadProducts } from './lib/productStore';
 
@@ -150,6 +152,8 @@ export default function App() {
                 <Route path="watch-shop" element={<AdminWatchShop />} />
                 <Route path="testimonials" element={<AdminTestimonials />} />
                 <Route path="home-content" element={<AdminHomeContent />} />
+                <Route path="returns" element={<AdminReturns />} />
+                <Route path="return-settings" element={<AdminReturnSettings />} />
               </Route>
             </Routes>
           </motion.div>

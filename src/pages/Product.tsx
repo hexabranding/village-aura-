@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProduct, products as localProducts } from '../data/products';
 import Accordion from '../components/Accordion';
@@ -20,9 +20,10 @@ const LENS_SIZE = 150;
 export default function Product({ onAddToBag, likedProducts, onToggleLike }: ProductProps) {
   const { id } = useParams();
   const [allProducts, setAllProducts] = useState<ProductType[]>(localProducts);
+  const [fetchingSingle, setFetchingSingle] = useState(false);
   const product = useMemo(() => {
     if (id) {
-      return allProducts.find((p) => p.id === id) ?? getProduct(id);
+      return allProducts.find((p) => p.id === id) ?? localProducts.find((p) => p.id === id) ?? getProduct(id);
     }
     return undefined;
   }, [id, allProducts]);
@@ -39,6 +40,14 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
       setAllProducts([...merged, ...newProducts]);
     }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (product || !id || fetchingSingle) return;
+    setFetchingSingle(true);
+    api.products.getOne(id).then((p) => {
+      if (p && p.id) setAllProducts((prev) => (prev.some((x) => x.id === p.id) ? prev : [...prev, p]));
+    }).catch(() => {}).finally(()=> setFetchingSingle(false));
+  }, [id, product, fetchingSingle]);
 
   const [variantIndex, setVariantIndex] = useState(0);
   const [imageIndex, setImageIndex] = useState(0);
@@ -95,7 +104,10 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
     setHovering(false);
   }, []);
 
-  if (!product) return <Navigate to="/shop" replace />;
+  if (!product) {
+    if (fetchingSingle) return <div style={{ padding:'4rem', textAlign:'center', color:'var(--ink-soft)' }}>Loading product...</div>;
+    return null;
+  }
 
   const variant = product.variants[variantIndex];
   const currentImageSrc = variant.images[imageIndex];
@@ -365,6 +377,17 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
               Added to bag
             </div>
           )}
+
+          <div style={{ marginTop: '1rem', background: (product as any).returnable===false ? '#fef2f2' : '#f0fdf4', border: `1px solid ${(product as any).returnable===false ? '#fecaca' : '#bbf7d0'}`, borderRadius: 10, padding: '0.85rem 1rem' }}>
+            <div style={{ fontSize:'0.82rem', fontWeight:700, color:(product as any).returnable===false ? '#991b1b' : '#166534', display:'flex', alignItems:'center', gap:'0.4rem' }}>
+              {(product as any).returnable===false ? '❌ Non-Returnable' : '↩️ 7-Day Return Policy'}
+            </div>
+            <div style={{ fontSize:'0.75rem', color:'#4b5563', marginTop:'0.35rem', lineHeight:1.6 }}>
+              {(product as any).returnable===false
+                ? ((product as any).nonReturnableReason || 'This product is non-returnable as per store policy.')
+                : `Easy returns within ${(product as any).returnWindow||7} days of delivery. Keep product unused with tags intact.`}
+            </div>
+          </div>
 
           {/* WhatsApp Share Button */}
           <motion.a

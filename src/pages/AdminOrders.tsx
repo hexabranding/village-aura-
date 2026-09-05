@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/api';
-import type { Order, OrderTracking } from '../lib/api';
+import type { Order, OrderTracking, ReturnRequest } from '../lib/api';
 
 const allStatuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
 
@@ -52,17 +52,22 @@ export default function AdminOrders() {
   const [statusMessage, setStatusMessage] = useState('');
   const [estimatedDelivery, setEstimatedDelivery] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
+  const [returns, setReturns] = useState<ReturnRequest[]>([]);
 
   const loadOrders = async () => {
     try {
-      const data = await api.orders.getAll();
+      const [data, ret] = await Promise.all([api.orders.getAll(), api.returns.getAll().catch(()=>[])]);
       setOrders(data);
-    } catch (error) {
+      setReturns(ret as ReturnRequest[]);
+    } catch (error: any) {
       console.error('Failed to load orders:', error);
-    } finally {
-      setLoading(false);
-    }
+      if (String(error.message).includes('401')) alert('Admin session expired');
+    } finally { setLoading(false); }
   };
+  const returnsByOrder = (id:string) => returns.filter((r)=>r.orderId===id);
+  const pendingCount = (id:string) => returns.filter((r)=>r.orderId===id && r.status==='Pending').length;
+  const nextFor = (s:string) => ({Pending:'Approved',Approved:'Pickup Scheduled','Pickup Scheduled':'Picked Up','Picked Up':'Completed'} as Record<string,string>)[s];
+  const handleReturnStatus = async (rid:string, st:string) => { try{ const u=await api.returns.updateStatus(rid,st); setReturns((p)=>p.map((r)=>r.id===rid?u:r)); }catch(e:any){ alert(e.message); } };
 
   useEffect(() => {
     loadOrders();
@@ -80,6 +85,11 @@ export default function AdminOrders() {
     setEstimatedDelivery(order.estimatedDelivery || '');
     setOrderNotes(order.notes || '');
     setStatusModal({ orderId: order.id, currentStatus: order.status });
+  };
+
+  const handleDelete = async (id: string, orderId: string) => {
+    if (!confirm(`Delete order ${orderId}? This cannot be undone.`)) return;
+    try { await api.orders.delete(id); setOrders((p) => p.filter((o) => (o as any).id !== id && (o as any)._id !== id && o.orderId !== orderId)); } catch (e: any) { alert(e.message || 'Delete failed'); }
   };
 
   const handleStatusUpdate = async () => {
@@ -214,11 +224,16 @@ export default function AdminOrders() {
 
               <div className="admin-order-card-price">
                 <span className="admin-order-card-total">₹{order.total.toLocaleString('en-IN')}</span>
+                {pendingCount(order.orderId) > 0 && <span style={{ marginTop: 6, display: 'inline-block', background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700 }}>↩️ {pendingCount(order.orderId)} Return Pending</span>}
+                {returnsByOrder(order.orderId).length > 0 && pendingCount(order.orderId)===0 && <span style={{ marginTop: 6, display: 'inline-block', background: '#d1fae5', color: '#065f46', padding: '2px 8px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700 }}>↩️ Returned</span>}
               </div>
 
-              <div className="admin-order-card-actions" onClick={(e) => e.stopPropagation()}>
+              <div className="admin-order-card-actions" onClick={(e) => e.stopPropagation()} style={{ display:'flex', gap:'0.4rem' }}>
                 <button onClick={() => openStatusModal(order)} className="admin-order-card-update">
                   <span>✏️</span> Update
+                </button>
+                <button onClick={() => handleDelete((order as any).id || (order as any)._id || order.orderId, order.orderId)} style={{ padding:'0.45rem 0.7rem', background:'white', border:'1px solid #fecaca', color:'#991b1b', borderRadius:8, fontSize:'0.75rem', fontWeight:700, cursor:'pointer' }}>
+                  🗑️ Delete
                 </button>
               </div>
             </div>
@@ -246,7 +261,10 @@ export default function AdminOrders() {
                     <div className="admin-order-card-detail-section">
                       <span className="admin-order-card-detail-title">Items</span>
                       {order.items?.map((item, i) => (
-                        <div key={i} className="admin-order-card-detail-text">{item.id} × {item.qty}</div>
+                        <div key={i} className="admin-order-card-detail-text" style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:'0.5rem' }}>
+                          <span>{item.id} × {item.qty}</span>
+                          {(item as any).cancelled && <span style={{ fontSize:'0.68rem', background:'#fee2e2', color:'#991b1b', padding:'2px 6px', borderRadius:10, fontWeight:700 }}>❌ CANCELLED{(item as any).cancelReason ? `: ${(item as any).cancelReason}` : ''}</span>}
+                        </div>
                       )) || <div className="admin-order-card-detail-text muted">N/A</div>}
                     </div>
                     <div className="admin-order-card-detail-section">
@@ -257,7 +275,7 @@ export default function AdminOrders() {
                   </div>
 
                   {order.notes && (
-                    <div className="admin-order-card-notes">
+                    <div className="admin-order-card-notes" style={{ background: order.notes.includes('cancelled') ? '#fee2e2' : undefined, border: order.notes.includes('cancelled') ? '1px solid #fecaca' : undefined, borderRadius: order.notes.includes('cancelled') ? 8 : undefined }}>
                       <strong>Notes:</strong> {order.notes}
                     </div>
                   )}
@@ -292,6 +310,27 @@ export default function AdminOrders() {
                   {order.estimatedDelivery && (
                     <div className="admin-order-card-eta">
                       <strong>Estimated Delivery:</strong> {order.estimatedDelivery}
+                    </div>
+                  )}
+                  {returnsByOrder(order.orderId).length > 0 && (
+                    <div style={{ marginTop: '1.2rem', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '1rem' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: '0.7rem', color: '#92400e' }}>↩️ Return Requests ({returnsByOrder(order.orderId).length})</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        {returnsByOrder(order.orderId).map((r) => (
+                          <div key={r.id} style={{ background: 'white', border: '1px solid #fde68a', borderRadius: 8, padding: '0.7rem 0.85rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '0.82rem' }}><strong>{r.productId}</strong> • {r.reason}</span>
+                              <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#fef3c7', color: '#92400e' }}>{r.status}{r.pickupDate ? ` • ${r.pickupDate}` : ''}</span>
+                            </div>
+                            {r.description && <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)', marginTop: 4 }}>{r.description}</div>}
+                            {r.adminMessage && <div style={{ fontSize: '0.78rem', background: '#eff6ff', padding: '0.4rem 0.6rem', borderRadius: 6, color: '#1e40af', marginTop: 4 }}>Admin: {r.adminMessage}</div>}
+                            <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                              {r.status !== 'Rejected' && r.status !== 'Completed' && nextFor(r.status) && <button onClick={() => handleReturnStatus(r.id, nextFor(r.status))} style={{ padding: '0.3rem 0.7rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 6, fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>→ {nextFor(r.status)}</button>}
+                              {r.status === 'Pending' && <button onClick={() => handleReturnStatus(r.id, 'Rejected')} style={{ padding: '0.3rem 0.7rem', background: 'white', border: '1px solid #fecaca', color: '#991b1b', borderRadius: 6, fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>Reject</button>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </motion.div>

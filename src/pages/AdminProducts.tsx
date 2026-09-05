@@ -28,7 +28,14 @@ const emptyProduct: Product = {
   isNew: false,
   isBestSeller: false,
   inStock: true,
-};
+  returnable: true,
+  returnWindow: 7,
+  replacementAvailable: true,
+  exchangeAvailable: false,
+  refundAvailable: true,
+  unboxingVideoRequired: false,
+  nonReturnableReason: '',
+} as any;
 
 const presetColors = [
   { name: 'Deep Maroon', hex: '#6b1e23' },
@@ -638,6 +645,21 @@ export default function AdminProducts() {
                     </div>
                   </div>
                   <div className="admin-form-group" />
+                </div>
+
+                <div style={{ background:'#fefce8', border:'1px solid #fde68a', borderRadius:10, padding:'1rem', marginBottom:'1rem' }}>
+                  <p style={{ fontSize:'0.82rem', fontWeight:700, marginBottom:'0.6rem' }}>↩️ Return Settings (overrides global)</p>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem' }}>
+                    <label style={{ display:'flex', gap:'0.5rem', alignItems:'center', fontSize:'0.82rem' }}><input type="checkbox" checked={(form as any).returnable!==false} onChange={e=>updateForm('returnable', e.target.checked)} /> Returnable</label>
+                    <label style={{ fontSize:'0.78rem' }}>Return Window (days)<input type="number" value={(form as any).returnWindow||7} onChange={e=>updateForm('returnWindow', Number(e.target.value))} style={{ width:'100%', padding:'0.4rem', border:'1px solid var(--line)', borderRadius:6, marginTop:'0.2rem' }} /></label>
+                  </div>
+                  <div style={{ display:'flex', gap:'1rem', flexWrap:'wrap', marginTop:'0.6rem' }}>
+                    <label style={{ display:'flex', gap:'0.3rem', alignItems:'center', fontSize:'0.78rem' }}><input type="checkbox" checked={(form as any).replacementAvailable!==false} onChange={e=>updateForm('replacementAvailable', e.target.checked)} /> Replacement</label>
+                    <label style={{ display:'flex', gap:'0.3rem', alignItems:'center', fontSize:'0.78rem' }}><input type="checkbox" checked={!!(form as any).exchangeAvailable} onChange={e=>updateForm('exchangeAvailable', e.target.checked)} /> Exchange</label>
+                    <label style={{ display:'flex', gap:'0.3rem', alignItems:'center', fontSize:'0.78rem' }}><input type="checkbox" checked={(form as any).refundAvailable!==false} onChange={e=>updateForm('refundAvailable', e.target.checked)} /> Refund</label>
+                    <label style={{ display:'flex', gap:'0.3rem', alignItems:'center', fontSize:'0.78rem' }}><input type="checkbox" checked={!!(form as any).unboxingVideoRequired} onChange={e=>updateForm('unboxingVideoRequired', e.target.checked)} /> Video Required</label>
+                  </div>
+                  { (form as any).returnable===false && <input value={(form as any).nonReturnableReason||''} onChange={e=>updateForm('nonReturnableReason', e.target.value)} placeholder="Reason for non-returnable" style={{ width:'100%', padding:'0.4rem', border:'1px solid var(--line)', borderRadius:6, marginTop:'0.6rem', fontSize:'0.82rem' }} />}
                 </div>
 
                 <div className="admin-form-group">

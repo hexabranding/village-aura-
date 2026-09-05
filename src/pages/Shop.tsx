@@ -307,7 +307,6 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
                 className="shop-grid"
-                style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem 1.5rem' }}
               >
                 {filtered.map((p, i) => (
                   <ProductCard key={p.id} product={p} index={i} isLiked={likedProducts.includes(p.id)} onToggleLike={onToggleLike} />
@@ -334,7 +333,6 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="shop-grid"
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem 1.5rem' }}
             >
               {filtered.map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i} isLiked={likedProducts.includes(p.id)} onToggleLike={onToggleLike} />

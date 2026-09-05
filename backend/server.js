@@ -18,8 +18,11 @@ import testimonialRoutes from './routes/testimonials.js';
 import weaverStoryRoutes from './routes/weaverStory.js';
 import curatedEditRoutes from './routes/curatedEdits.js';
 import heroSlideRoutes from './routes/heroSlides.js';
+import instagramRoutes from './routes/instagram.js';
 import reviewRoutes from './routes/reviews.js';
 import returnRoutes from './routes/returns.js';
+import returnSettingsRoutes from './routes/returnSettings.js';
+import notificationRoutes from './routes/notifications.js';
 
 dotenv.config();
 
@@ -50,8 +53,11 @@ app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/weaver-story', weaverStoryRoutes);
 app.use('/api/curated-edits', curatedEditRoutes);
 app.use('/api/hero-slides', heroSlideRoutes);
+app.use('/api/instagram', instagramRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/returns', returnRoutes);
+app.use('/api/return-settings', returnSettingsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use('/api/upload/images', express.static(path.join(__dirname, 'uploads')));
 

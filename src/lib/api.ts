@@ -101,7 +101,7 @@ export interface Order {
   email?: string;
   payment: string;
   date: string;
-  items: { id: string; colorIndex: number; qty: number }[];
+  items: { id: string; colorIndex: number; qty: number; cancelled?: boolean }[];
   status: 'Pending' | 'Processing' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
   address?: string;
   city?: string;
@@ -109,6 +109,8 @@ export interface Order {
   pincode?: string;
   tracking?: OrderTracking[];
   estimatedDelivery?: string;
+  deliveredAt?: string;
+  returnDeadline?: string;
   lastUpdated?: string;
   notes?: string;
 }
@@ -123,14 +125,60 @@ export interface Review {
   createdAt: string;
 }
 
+export interface ReturnTracking { status: string; message: string; timestamp: string; }
 export interface ReturnRequest {
   id: string;
+  returnId?: string;
   orderId: string;
   productId: string;
   phone: string;
   reason: string;
+  otherReason?: string;
   description: string;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+  qty?: number;
+  images?: string[];
+  video?: string;
+  resolution?: string;
+  status: string;
+  tracking?: ReturnTracking[];
+  adminMessage?: string;
+  pickup?: { required?: boolean; address?: string; date?: string; status?: string; courier?: string; trackingNo?: string };
+  pickupDate?: string;
+  refund?: { amount?: number; method?: string; status?: string; transactionId?: string };
+  deliveryDate?: string;
+  returnDeadline?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+export interface ReturnSettings {
+  returnWindow: number;
+  enabled: boolean;
+  replacementEnabled: boolean;
+  exchangeEnabled: boolean;
+  refundEnabled: boolean;
+  videoRequired: boolean;
+  imagesRequired: boolean;
+  maxVideoSizeMB: number;
+  maxImageSizeMB: number;
+  maxImages: number;
+  maxVideos: number;
+  nonReturnableCategories: string[];
+  returnConditions: string;
+  pickupAvailable: boolean;
+  refundMethod: string;
+  restockingFee: number;
+  instructions: string;
+  reasons: string[];
+}
+export interface Notification {
+  id: string;
+  type: 'cancellation' | 'return' | 'order' | 'general';
+  title: string;
+  message: string;
+  orderId: string;
+  productId: string;
+  phone: string;
+  read: boolean;
   createdAt: string;
 }
 
@@ -230,7 +278,7 @@ export const api = {
 
   orders: {
     getAll: async (): Promise<Order[]> => {
-      const res = await fetch(`${API_BASE}/orders`, { headers: headers() });
+      const res = await fetch(`${API_BASE}/orders?t=${Date.now()}`, { headers: headers(), cache: 'no-store' as any });
       return handleResponse(res);
     },
     getOne: async (id: string): Promise<Order> => {
@@ -238,7 +286,7 @@ export const api = {
       return handleResponse(res);
     },
     getByPhone: async (phone: string): Promise<Order[]> => {
-      const res = await fetch(`${API_BASE}/orders/user/${phone}`);
+      const res = await fetch(`${API_BASE}/orders/user/${phone}?t=${Date.now()}`, { cache: 'no-store' as any });
       return handleResponse(res);
     },
     track: async (orderId: string) => {
@@ -259,6 +307,18 @@ export const api = {
         headers: headers(),
         body: JSON.stringify(data),
       });
+      return handleResponse(res);
+    },
+    cancel: async (orderId: string, phone: string, reason?: string, productId?: string) => {
+      const res = await fetch(`${API_BASE}/orders/cancel/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, reason, productId }),
+      });
+      return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/orders/${id}`, { method: 'DELETE', headers: headers() });
       return handleResponse(res);
     },
     update: async (id: string, updates: Partial<Order>) => {
@@ -306,7 +366,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/returns/phone/${phone}`);
       return handleResponse(res);
     },
-    create: async (returnReq: Omit<ReturnRequest, 'id' | 'status' | 'createdAt'>) => {
+    create: async (returnReq: any) => {
       const res = await fetch(`${API_BASE}/returns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -318,12 +378,50 @@ export const api = {
       const res = await fetch(`${API_BASE}/returns`, { headers: headers() });
       return handleResponse(res);
     },
-    updateStatus: async (id: string, status: string) => {
+    getEligibility: async (orderId: string, productId: string) => {
+      const res = await fetch(`${API_BASE}/returns/eligibility/${orderId}/${productId}`);
+      return handleResponse(res);
+    },
+    cancel: async (id: string, phone: string) => {
+      const res = await fetch(`${API_BASE}/returns/${id}/cancel`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      return handleResponse(res);
+    },
+    uploadEvidence: async (files: FileList): Promise<string[]> => {
+      const formData = new FormData();
+      Array.from(files).forEach((f) => formData.append('images', f));
+      const res = await fetch(`${API_BASE}/upload/return`, { method: 'POST', body: formData });
+      const data = await handleResponse(res);
+      return data.urls;
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/returns/${id}`, { method: 'DELETE', headers: headers() });
+      return handleResponse(res);
+    },
+    updateStatus: async (id: string, status: string, extra?: any) => {
       const res = await fetch(`${API_BASE}/returns/${id}/status`, {
         method: 'PUT',
         headers: headers(),
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, ...extra }),
       });
+      return handleResponse(res);
+    },
+  },
+
+  returnSettings: {
+    get: async (): Promise<ReturnSettings> => {
+      const res = await fetch(`${API_BASE}/return-settings`);
+      return handleResponse(res);
+    },
+    getAdmin: async (): Promise<ReturnSettings> => {
+      const res = await fetch(`${API_BASE}/return-settings/admin`, { headers: headers() });
+      return handleResponse(res);
+    },
+    update: async (data: Partial<ReturnSettings>) => {
+      const res = await fetch(`${API_BASE}/return-settings`, { method: 'PUT', headers: headers(), body: JSON.stringify(data) });
       return handleResponse(res);
     },
   },
@@ -547,6 +645,48 @@ export const api = {
     },
     delete: async (id: string) => {
       const res = await fetch(`${API_BASE}/hero-slides/${id}`, { method: 'DELETE', headers: headers() });
+      return handleResponse(res);
+    },
+  },
+
+  instagram: {
+    getAll: async () => {
+      const res = await fetch(`${API_BASE}/instagram`, { headers: headers() });
+      return handleResponse(res);
+    },
+    getActive: async () => {
+      const res = await fetch(`${API_BASE}/instagram/active`);
+      return handleResponse(res);
+    },
+    create: async (item: any) => {
+      const res = await fetch(`${API_BASE}/instagram`, { method: 'POST', headers: headers(), body: JSON.stringify(item) });
+      return handleResponse(res);
+    },
+    update: async (id: string, updates: any) => {
+      const res = await fetch(`${API_BASE}/instagram/${id}`, { method: 'PUT', headers: headers(), body: JSON.stringify(updates) });
+      return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/instagram/${id}`, { method: 'DELETE', headers: headers() });
+      return handleResponse(res);
+    },
+  },
+
+  notifications: {
+    getAll: async (): Promise<Notification[]> => {
+      const res = await fetch(`${API_BASE}/notifications`, { headers: headers() });
+      return handleResponse(res);
+    },
+    getUnread: async () => {
+      const res = await fetch(`${API_BASE}/notifications/unread`, { headers: headers() });
+      return handleResponse(res);
+    },
+    markAllRead: async () => {
+      const res = await fetch(`${API_BASE}/notifications/read-all`, { method: 'PUT', headers: headers() });
+      return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/notifications/${id}`, { method: 'DELETE', headers: headers() });
       return handleResponse(res);
     },
   },
