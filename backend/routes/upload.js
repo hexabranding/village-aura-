@@ -9,10 +9,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = express.Router();
+const uploadDir = path.join(
+  process.env.HOME,
+  'domains',
+  'api.villageallure.com',
+  'uploads'
+);
+
+fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads'));
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -65,7 +73,7 @@ router.post('/return', upload.array('images', 10), (req, res) => {
 });
 
 router.get('/images/:filename', (req, res) => {
-  const filePath = path.join(__dirname, '../uploads', req.params.filename);
+const filePath = path.join(uploadDir, req.params.filename);
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ error: 'File not found', filename: req.params.filename });
   }
