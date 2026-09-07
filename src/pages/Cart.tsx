@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getProduct } from '../lib/productStore';
 import { resolveUploadUrl } from '../lib/api';
 import type { CartItem } from '../data/products';
@@ -12,6 +12,15 @@ interface CartProps {
 }
 
 export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
+  const navigate = useNavigate();
+  const handleCheckout = () => {
+    const user = localStorage.getItem('reshamUser');
+    if (!user) {
+      navigate('/login?redirect=/checkout');
+      return;
+    }
+    navigate('/checkout');
+  };
   const items = cart
     .map((ci) => ({ ci, product: getProduct(ci.id) }))
     .filter((row) => row.product !== undefined);
@@ -176,9 +185,9 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
                 </span>
               </div>
             </div>
-            <Link to="/checkout" className="btn btn-solid" style={{ width: '100%', justifyContent: 'center', marginTop: '1.5rem' }}>
+            <button onClick={handleCheckout} className="btn btn-solid" style={{ width: '100%', justifyContent: 'center', marginTop: '1.5rem' }}>
               Proceed to Checkout →
-            </Link>
+            </button>
             <Link to="/shop" className="eyebrow" style={{ display: 'block', textAlign: 'center', marginTop: '1rem', color: 'var(--maroon)' }}>
               Continue Shopping
             </Link>

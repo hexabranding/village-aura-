@@ -19,6 +19,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
   const [likedOpen, setLikedOpen] = useState(false);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [userOpen, setUserOpen] = useState(false);
+  const [openMobileCat, setOpenMobileCat] = useState<string | null>(null);
   const likedRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -684,18 +685,63 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
           >
             <div
               className="container"
-              style={{ display: 'flex', flexDirection: 'column', padding: '1.25rem 1.5rem', gap: '1rem' }}
+              style={{ display: 'flex', flexDirection: 'column', padding: '1.25rem 1.5rem', gap: '1rem', alignItems: 'center', textAlign: 'center' }}
             >
               {navLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  to={link.to}
-                  className="eyebrow"
-                  onClick={() => setMenuOpen(false)}
-                  style={{ color: 'var(--ink)' }}
-                >
-                  {link.label}
-                </Link>
+                <div key={link.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', textAlign: 'center', width: '100%' }}>
+                  {link.subs && link.subs.length > 0 ? (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}>
+                        <Link
+                          to={link.to}
+                          className="eyebrow"
+                          onClick={() => setMenuOpen(false)}
+                          style={{ color: 'var(--ink)', textAlign: 'center' }}
+                        >
+                          {link.label}
+                        </Link>
+                        <button
+                          onClick={() => setOpenMobileCat(openMobileCat === link.label ? null : link.label)}
+                          aria-label={`Toggle ${link.label} subcategories`}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '0.85rem', padding: '2px 6px' }}
+                        >
+                          {openMobileCat === link.label ? '▴' : '▾'}
+                        </button>
+                      </div>
+                      <AnimatePresence>
+                        {openMobileCat === link.label && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem', overflow: 'hidden' }}
+                          >
+                            {link.subs.map((sub) => (
+                              <Link
+                                key={sub}
+                                to={`${link.to.split('&')[0]}&sub=${encodeURIComponent(sub)}`}
+                                onClick={() => setMenuOpen(false)}
+                                style={{ fontSize: '0.75rem', color: 'var(--ink-soft)', letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: 'center' }}
+                              >
+                                {sub}
+                              </Link>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  ) : (
+                    <Link
+                      to={link.to}
+                      className="eyebrow"
+                      onClick={() => setMenuOpen(false)}
+                      style={{ color: 'var(--ink)', textAlign: 'center' }}
+                    >
+                      {link.label}
+                    </Link>
+                  )}
+                </div>
               ))}
             </div>
           </motion.div>

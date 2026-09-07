@@ -243,7 +243,7 @@ export default function AdminGallery() {
                     <input
                       value={form.image}
                       onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
-                      placeholder="Image URL or upload below"
+                      placeholder="Upload below"
                       style={{ flex: 1 }}
                     />
                     <input

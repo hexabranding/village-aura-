@@ -73,7 +73,7 @@ export default function GalleryPage() {
           transition={{ duration: 0.6, delay: 0.1 }}
           style={{ fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', marginTop: '0.4rem' }}
         >
-          Saree Gallery
+          Gallery
         </motion.h1>
         <motion.div
           initial={{ scaleX: 0 }}

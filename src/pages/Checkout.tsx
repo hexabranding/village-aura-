@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getProduct } from '../lib/productStore';
 import type { CartItem } from '../data/products';
@@ -21,6 +21,11 @@ interface PlacedOrder {
 }
 
 export default function Checkout({ cart, clearCart }: CheckoutProps) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const user = localStorage.getItem('reshamUser');
+    if (!user) navigate('/login?redirect=/checkout', { replace: true });
+  }, [navigate]);
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
   const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', state: 'Delhi', pincode: '' });
   const [payment, setPayment] = useState('UPI / Pay on App');

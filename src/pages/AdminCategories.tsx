@@ -394,7 +394,7 @@ export default function AdminCategories() {
                 <div className="admin-form-group">
                   <label>Image</label>
                   <div className="admin-form-image-upload-row">
-                    <input value={formImage} onChange={(e) => setFormImage(e.target.value)} placeholder="Image URL or upload below" />
+                    <input value={formImage} onChange={(e) => setFormImage(e.target.value)} placeholder="Upload below" />
                     <label className="admin-btn admin-btn-outline admin-upload-btn">
                       {formUploading ? 'Uploading...' : 'Upload'}
                       <input

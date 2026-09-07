@@ -147,7 +147,7 @@ export default function Gallery() {
           transition={{ duration: 0.6, delay: 0.1 }}
           style={{ fontSize: '2.2rem', marginTop: '0.4rem' }}
         >
-          Saree Gallery
+          Gallery
         </motion.h2>
         <motion.div
           initial={{ scaleX: 0 }}

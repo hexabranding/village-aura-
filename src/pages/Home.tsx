@@ -426,9 +426,8 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
   const [activeFilter, setActiveFilter] = useState<'new' | 'best' | 'featured'>('new');
   const [hoveredImage, setHoveredImage] = useState<number | null>(null);
   const [products, setProducts] = useState<ProductType[]>(localProducts);
-  const [fixedBanner, setFixedBanner] = useState<string | null>(null);
-  const [fixedBannerLink, setFixedBannerLink] = useState<string | null>(null);
-  const [fixedBannerOffer, setFixedBannerOffer] = useState<string | null>(null);
+  const [fixedBanners, setFixedBanners] = useState<any[]>([]);
+  const [fixedIndex, setFixedIndex] = useState(0);
   const [weaver, setWeaver] = useState<any>(null);
   const [curated, setCurated] = useState<any[] | null>(null);
 
@@ -448,14 +447,32 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
   useEffect(() => {
     api.ads.getActive().then((ads) => {
       const fixed = ads.filter((ad) => ad.type === 'fixed' && ad.position !== 'sidebar' && ad.image).sort((a, b) => (a.order || 0) - (b.order || 0));
-      if (fixed.length > 0) {
-        setFixedBanner(fixed[0].image);
-        setFixedBannerLink(fixed[0].link || null);
-        setFixedBannerOffer((fixed[0] as any).offer || null);
-      }
+      if (fixed.length > 0) setFixedBanners(fixed);
     }).catch(() => {});
     api.weaverStory.get().then(setWeaver).catch(() => {});
     api.curatedEdits.getActive().then((d) => { if (d.length) setCurated(d); }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (fixedBanners.length <= 1) return;
+    const id = setInterval(() => setFixedIndex((i) => (i + 1) % fixedBanners.length), 4000);
+    return () => clearInterval(id);
+  }, [fixedBanners.length]);
+
+  useEffect(() => {
+    const el = document.querySelector('.home-marquee-track') as HTMLElement | null;
+    if (!el) return;
+    const parent = document.querySelector('.home-marquee') as HTMLElement | null;
+    if (!parent) return;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = '';
+      }
+    }, { threshold: 0 });
+    io.observe(parent);
+    return () => io.disconnect();
   }, []);
 
   const newArrivals = products.filter((p) => p.isNew);
@@ -496,10 +513,12 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         }}
       >
         <div
+          className="home-marquee-track"
           style={{
             display: 'flex',
             whiteSpace: 'nowrap',
             animation: 'marquee 8s linear infinite',
+            willChange: 'transform',
           }}
         >
           {[...Array(3)].map((_, i) => (
@@ -529,6 +548,46 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           0% { transform: translateX(0); }
           100% { transform: translateX(-33.33%); }
         }
+        .home-marquee-track { animation-play-state: running !important; }
+        @media (max-width: 768px) {
+          .home-marquee-track { animation: marquee 4s linear infinite !important; will-change: transform; }
+        }
+        @media (max-width: 768px) {
+          .weaver-text {
+            text-align: center !important;
+            align-items: center !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          .weaver-text p {
+            margin-left: auto !important;
+            margin-right: auto !important;
+            text-align: center !important;
+          }
+          .weaver-text h2 {
+            text-align: center !important;
+          }
+          .weaver-text > div {
+            justify-content: center !important;
+          }
+          .weaver-text div[style*="60px"] {
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+          .curated-overlay {
+            text-align: center !important;
+            align-items: center !important;
+            display: flex !important;
+            flex-direction: column !important;
+            left: 1rem !important;
+            right: 1rem !important;
+          }
+          .curated-overlay p {
+            margin-left: auto !important;
+            margin-right: auto !important;
+            text-align: center !important;
+          }
+        }
       `}</style>
 
       {/* ─── Weaver Story ─── */}
@@ -539,6 +598,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.4 }}
+            className="weaver-text"
             style={{ flex: '1 1 320px' }}
           >
             <span className="eyebrow">{weaver?.eyebrow || 'By Hand, By Name'}</span>
@@ -622,7 +682,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         </div>
       </ParallaxSection>
 
-      {/* ─── Banner Section — Fixed Ad Background ─── */}
+      {/* ─── Banner Section — Fixed Ad Carousel ─── */}
       <motion.section
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -636,31 +696,32 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           display: 'block',
         }}
       >
-        <div
-          className="fixed-banner-bg"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundImage: `url(${resolveUploadUrl(fixedBanner || '') || 'https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop'})`,
-            backgroundSize: '100% 100%',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(180deg, rgba(36,27,21,0.35) 0%, rgba(36,27,21,0.25) 100%)',
-          }}
-        />
-        {fixedBannerOffer && (
-          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 2, background: 'var(--gold)', color: 'var(--ink)', padding: '0.5rem 1.2rem', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', boxShadow: '0 4px 18px rgba(0,0,0,0.25)' }}>
-            {fixedBannerOffer}
-          </div>
-        )}
-        {fixedBannerLink && (
-          <Link to={fixedBannerLink} style={{ position: 'absolute', inset: 0, zIndex: 1 }} aria-label="Fixed banner link" />
+        {(fixedBanners.length ? fixedBanners : [{ image: '', link: '', offer: '' }]).map((banner, idx) => {
+          const active = fixedBanners.length ? idx === fixedIndex : true;
+          const img = banner.image || 'https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop';
+          return (
+            <div key={idx} style={{ position: 'absolute', inset: 0, opacity: active ? 1 : 0, transition: 'opacity 0.7s ease', pointerEvents: active ? 'auto' : 'none' }}>
+              <div className="fixed-banner-bg" style={{ position: 'absolute', inset: 0, backgroundImage: `url(${resolveUploadUrl(img)})`, backgroundSize: '100% 100%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(36,27,21,0.35) 0%, rgba(36,27,21,0.25) 100%)' }} />
+              {(banner as any).offer && (
+                <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 2, background: 'var(--gold)', color: 'var(--ink)', padding: '0.5rem 1.2rem', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', boxShadow: '0 4px 18px rgba(0,0,0,0.25)' }}>
+                  {(banner as any).offer}
+                </div>
+              )}
+              {banner.link && <Link to={banner.link} style={{ position: 'absolute', inset: 0, zIndex: 1 }} aria-label="Fixed banner link" />}
+            </div>
+          );
+        })}
+        {fixedBanners.length > 1 && (
+          <>
+            <button onClick={() => setFixedIndex((i) => (i - 1 + fixedBanners.length) % fixedBanners.length)} aria-label="Previous banner" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 3, width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.85)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>‹</button>
+            <button onClick={() => setFixedIndex((i) => (i + 1) % fixedBanners.length)} aria-label="Next banner" style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 3, width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.85)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>›</button>
+            <div style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', zIndex: 3, display: 'flex', gap: '0.5rem' }}>
+              {fixedBanners.map((_, i) => (
+                <button key={i} onClick={() => setFixedIndex(i)} aria-label={`Go to banner ${i + 1}`} style={{ width: fixedIndex === i ? 22 : 8, height: 8, borderRadius: 99, border: 'none', background: fixedIndex === i ? 'var(--gold)' : 'rgba(255,255,255,0.7)', cursor: 'pointer', transition: 'all 0.3s ease', padding: 0 }} />
+              ))}
+            </div>
+          </>
         )}
       </motion.section>
 
@@ -861,7 +922,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
                   background: 'linear-gradient(0deg, rgba(36,27,21,0.82) 0%, rgba(36,27,21,0.15) 50%, transparent 80%)',
                 }}
               />
-              <div style={{ position: 'absolute', left: '1.75rem', right: '1.75rem', bottom: '1.75rem', color: 'var(--ivory)' }}>
+              <div className="curated-overlay" style={{ position: 'absolute', left: '1.75rem', right: '1.75rem', bottom: '1.75rem', color: 'var(--ivory)' }}>
                 <motion.span
                   className="eyebrow"
                   initial={{ opacity: 0, x: -10 }}

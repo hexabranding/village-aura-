@@ -306,7 +306,7 @@ export default function AdminWatchShop() {
                     <input
                       value={form.poster}
                       onChange={(e) => setForm((f) => ({ ...f, poster: e.target.value }))}
-                      placeholder="Image URL or upload below"
+                      placeholder="upload below"
                       style={{ flex: 1 }}
                     />
                     <input

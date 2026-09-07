@@ -178,7 +178,7 @@ export default function Footer() {
         }}
       >
         <span>© {new Date().getFullYear()} Village Allure — All rights reserved.</span>
-        <span style={{ color: 'var(--gold-soft)', letterSpacing: '0.12em' }}>Made with care, in India ✦</span>
+        <span style={{ color: 'var(--gold-soft)', letterSpacing: '0.12em' }}></span>
       </div>
     </footer>
   );

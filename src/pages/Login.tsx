@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ZariDivider from '../components/ZariDivider';
 
@@ -9,11 +9,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirect = new URLSearchParams(location.search).get('redirect') || (location.state as { from?: string } | null)?.from || null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('reshamUser', JSON.stringify({ email, name: email.split('@')[0] || 'Member' }));
-    navigate('/');
+    navigate(redirect || '/');
   };
 
   const inputStyle: React.CSSProperties = {
@@ -203,7 +205,7 @@ export default function Login() {
           style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--ink-soft)' }}
         >
           New to Village Allure?{' '}
-          <Link to="/signup" style={{ color: 'var(--maroon)', fontWeight: 600, borderBottom: '1px solid var(--gold)' }}>
+          <Link to={redirect ? `/signup?redirect=${encodeURIComponent(redirect)}` : '/signup'} style={{ color: 'var(--maroon)', fontWeight: 600, borderBottom: '1px solid var(--gold)' }}>
             Create an account
           </Link>
         </motion.div>
