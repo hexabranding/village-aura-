@@ -159,7 +159,13 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
             src={logo}
             alt="Village Allure"
             className="header-logo"
-            style={{ height: 'clamp(50px, 12vw, 145px)', width: 'auto' }}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            width={290}
+            height={145}
+            onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.style.display='none'; } }}
+            style={{ height: 'clamp(50px, 12vw, 145px)', width: 'auto', aspectRatio: '2 / 1' }}
           />
         </Link>
 
@@ -593,6 +599,11 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                             <img
                               src={resolveUploadUrl(p.variants[0].images[0])}
                               alt={p.name}
+                              loading="lazy"
+                              decoding="async"
+                              width={46}
+                              height={58}
+                              onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200'; } }}
                               style={{ width: 46, height: 58, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }}
                             />
                             <div style={{ minWidth: 0 }}>

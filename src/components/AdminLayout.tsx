@@ -59,7 +59,7 @@ export default function AdminLayout() {
 
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-header">
-          <Link to="/admin" onClick={() => setSidebarOpen(false)} className="admin-sidebar-brand"><img src={logo} alt="Village Allure" /></Link>
+          <Link to="/admin" onClick={() => setSidebarOpen(false)} className="admin-sidebar-brand"><img src={logo} alt="Village Allure" loading="eager" decoding="async" width={120} height={60} onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} style={{aspectRatio:'2 / 1'}} /></Link>
           <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)}>✕</button>
         </div>
         <nav className="admin-sidebar-nav">

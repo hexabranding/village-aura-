@@ -110,9 +110,14 @@ export default function Collections({ collections }: CollectionsProps) {
                 <motion.img
                   src={resolveUploadUrl(randImages[c.category] || c.image)}
                   alt={c.title}
+                  loading="lazy"
+                  decoding="async"
+                  width={250}
+                  height={333}
+                  onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=publicImages[0]; } }}
                   whileHover={{ scale: 1.1 }}
                   transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '3 / 4' }}
                 />
                 <div
                   style={{

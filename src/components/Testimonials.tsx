@@ -156,7 +156,7 @@ export default function Testimonials() {
                     </div>
                   </div>
                   <div className="t-img-wrap">
-                    <img src={resolveUploadUrl(t.image)} alt={t.name} loading="lazy" />
+                    <img src={resolveUploadUrl(t.image)} alt={`${t.name} — ${t.category} testimonial`} loading="lazy" decoding="async" width={118} height={118} onError={(e) => { const t2 = e.target as HTMLImageElement; if (!t2.dataset.fallback) { t2.dataset.fallback='1'; t2.src=testimonials[0].image; } }} style={{ aspectRatio: '1 / 1' }} />
                   </div>
                 </div>
               </motion.div>

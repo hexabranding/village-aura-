@@ -251,7 +251,7 @@ export default function AdminCategories() {
             <div className="admin-category-card-image">
               {cat.image ? (
                 <>
-                  <img src={resolveUploadUrl(cat.image)} alt={cat.name} />
+                  <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(cat.image)} alt={cat.name} />
                   {!cat.active && <div className="admin-category-card-overlay">Inactive</div>}
                 </>
               ) : (
@@ -408,7 +408,7 @@ export default function AdminCategories() {
                   </div>
                   {formImage && (
                     <div className="admin-category-modal-preview">
-                      <img src={resolveUploadUrl(formImage)} alt="Preview" />
+                      <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(formImage)} alt="Preview" />
                     </div>
                   )}
                 </div>

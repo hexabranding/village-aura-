@@ -55,9 +55,13 @@ export default function SafeVideo({ src, poster, alt, style, className, muted = 
         <div ref={containerRef} style={style} className={className}>
           <img
             src={resolvedPoster || fallbackPoster}
-            alt={alt || ''}
-            style={{ width: '100%', height: '100%', objectFit: (style as any)?.objectFit || 'cover' }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            alt={alt || 'Video poster fallback'}
+            loading="lazy"
+            decoding="async"
+            width={500}
+            height={900}
+            onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.style.display='none'; } }}
+            style={{ width: '100%', height: '100%', objectFit: (style as any)?.objectFit || 'cover', aspectRatio: '500 / 900' }}
           />
         </div>
       );
@@ -83,9 +87,13 @@ export default function SafeVideo({ src, poster, alt, style, className, muted = 
       ) : resolvedPoster ? (
         <img
           src={resolvedPoster}
-          alt={alt || ''}
-          style={{ width: '100%', height: '100%', objectFit: (style as any)?.objectFit || 'cover' }}
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          alt={alt || 'Video poster fallback'}
+          loading="lazy"
+          decoding="async"
+          width={500}
+          height={900}
+          onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.style.display='none'; } }}
+          style={{ width: '100%', height: '100%', objectFit: (style as any)?.objectFit || 'cover', aspectRatio: '500 / 900' }}
         />
       ) : null}
     </div>

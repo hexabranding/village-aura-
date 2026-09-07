@@ -60,18 +60,26 @@ export default function ProductCard({ product, index = 0, isLiked = false, onTog
             <motion.img
               src={img0}
               alt={product.name}
+              loading="lazy"
+              decoding="async"
+              width={400}
+              height={500}
               animate={{ opacity: hovered ? 0 : 1 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.08)' : 'none' }}
-              onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER; (e.target as HTMLImageElement).onerror=null; }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.08)' : 'none', aspectRatio: '4 / 5' }}
+              onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src = PLACEHOLDER; } }}
             />
             <motion.img
               src={img1}
-              alt=""
+              alt={`${product.name} alternate view`}
+              loading="lazy"
+              decoding="async"
+              width={400}
+              height={500}
               animate={{ opacity: hovered ? 1 : 0 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.08)' : 'none' }}
-              onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER; (e.target as HTMLImageElement).onerror=null; }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.08)' : 'none', aspectRatio: '4 / 5' }}
+              onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src = PLACEHOLDER; } }}
             />
 
             {/* Quick view overlay on hover */}

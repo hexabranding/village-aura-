@@ -67,6 +67,12 @@ export default function TiltImage({ src, alt, style, expanded = false, onHoverCh
       <motion.img
         src={src}
         alt={alt}
+        loading="eager"
+        fetchPriority="high"
+        decoding="async"
+        width={500}
+        height={650}
+        onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.style.display='none'; } }}
         animate={{
           scale: expanded ? 1.06 : 1,
         }}
@@ -77,6 +83,7 @@ export default function TiltImage({ src, alt, style, expanded = false, onHoverCh
           objectFit: 'cover',
           display: 'block',
           pointerEvents: 'none',
+          aspectRatio: '500 / 650',
         }}
       />
       {/* Glow edge overlay */}

@@ -121,11 +121,17 @@ export default function Instagram() {
                 <img
                   src={resolveUploadUrl(post.src)}
                   alt={post.label}
+                  loading="lazy"
+                  decoding="async"
+                  width={260}
+                  height={340}
+                  onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=publicImages[0]; } }}
                   style={{
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
                     display: 'block',
+                    aspectRatio: '260 / 340',
                   }}
                 />
               </>

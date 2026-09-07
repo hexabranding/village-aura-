@@ -162,11 +162,17 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
                   key={`${variantIndex}-${imageIndex}`}
                   src={currentImageSrc}
                   alt={`${product.name} — ${variant.colorName}`}
+                  loading={imageIndex===0 ? "eager" : "lazy"}
+                  fetchPriority={imageIndex===0 ? "high" as any : "auto" as any}
+                  decoding="async"
+                  width={800}
+                  height={1000}
+                  onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=800'; } }}
                   initial={{ opacity: 0, scale: 1.02 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.4, ease: 'easeOut' }}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', aspectRatio: '4 / 5' }}
                 />
               </AnimatePresence>
 
@@ -258,7 +264,12 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
               <motion.img
                 key={src}
                 src={resolveUploadUrl(src)}
-                alt=""
+                alt={`${product.name} thumbnail ${i + 1}`}
+                loading="lazy"
+                decoding="async"
+                width={70}
+                height={88}
+                onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.style.display='none'; } }}
                 onClick={() => setImageIndex(i)}
                 whileHover={{ scale: 1.06 }}
                 whileTap={{ scale: 0.95 }}
@@ -271,6 +282,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
                   borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
                   transition: 'opacity 0.3s ease',
+                  aspectRatio: '70 / 88',
                 }}
               />
             ))}

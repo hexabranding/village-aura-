@@ -117,12 +117,17 @@ export default function GalleryPage() {
               src={resolveUploadUrl(img.src)}
               alt={img.title}
               loading="lazy"
+              decoding="async"
+              width={400}
+              height={533}
+              onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=fallbackImages[0].src; } }}
               style={{
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
                 display: 'block',
                 transition: 'transform 0.5s ease',
+                aspectRatio: '3 / 4',
               }}
             />
             <div

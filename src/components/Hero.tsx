@@ -133,9 +133,14 @@ export default function Hero() {
         >
           <img
             src={resolveUploadUrl(slide.image)}
-            alt=""
+            alt={`${slide.eyebrow} — ${slide.headline.join(' ')}`}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            width={1920}
+            height={1080}
             onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=heroSlides[0].image; } }}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '16 / 9' }}
           />
         </motion.div>
       </AnimatePresence>

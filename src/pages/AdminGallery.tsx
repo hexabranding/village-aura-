@@ -157,7 +157,7 @@ export default function AdminGallery() {
           >
             {img.image ? (
               <div className="admin-ad-card-image">
-                <img src={resolveUploadUrl(img.image)} alt={img.title} />
+                <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(img.image)} alt={img.title} />
                 {!img.active && <div className="admin-ad-card-overlay">Inactive</div>}
               </div>
             ) : (
@@ -274,7 +274,7 @@ export default function AdminGallery() {
                   </div>
                   {form.image && (
                     <div style={{ marginTop: '0.75rem' }}>
-                      <img src={resolveUploadUrl(form.image)} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                      <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(form.image)} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                     </div>
                   )}
                 </div>

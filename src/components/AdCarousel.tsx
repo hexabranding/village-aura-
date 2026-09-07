@@ -95,9 +95,13 @@ export default function AdCarousel() {
           {/* Background image */}
           <img
             src={resolveUploadUrl(slides[current].image)}
-            alt=""
+            alt={slides[current].title || 'Featured collection banner'}
+            loading="lazy"
+            decoding="async"
+            width={1400}
+            height={500}
             onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=fallbackSlides[0].image; } }}
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '14 / 5' }}
           />
           {/* Overlay */}
           <div

@@ -201,7 +201,7 @@ export default function AdminWatchShop() {
           >
             {item.poster ? (
               <div className="admin-ad-card-image">
-                <img src={resolveUploadUrl(item.poster)} alt={item.name} />
+                <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(item.poster)} alt={item.name} />
                 <div className="admin-tag video" style={{ position: 'absolute', top: 8, right: 8 }}>🎬 Video</div>
                 {!item.active && <div className="admin-ad-card-overlay">Inactive</div>}
               </div>
@@ -337,7 +337,7 @@ export default function AdminWatchShop() {
                   </div>
                   {form.poster && (
                     <div style={{ marginTop: '0.75rem' }}>
-                      <img src={resolveUploadUrl(form.poster)} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                      <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(form.poster)} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                     </div>
                   )}
                 </div>

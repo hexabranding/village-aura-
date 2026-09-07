@@ -45,8 +45,13 @@ export default function FixedAdBanner() {
           <Link to={ad.link || '/shop'} style={{ display: 'block' }}>
             <img
               src={resolveUploadUrl(ad.image)}
-              alt={ad.title}
-              style={{ width: '100%', minHeight: 220, maxHeight: 420, objectFit: 'cover', display: 'block' }}
+              alt={ad.title || 'Promotional banner'}
+              loading="lazy"
+              decoding="async"
+              width={1200}
+              height={420}
+              onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/30677843/pexels-photo-30677843.jpeg?w=1400&h=500&fit=crop'; } }}
+              style={{ width: '100%', minHeight: 220, maxHeight: 420, objectFit: 'cover', display: 'block', aspectRatio: '1200 / 420' }}
             />
             <div
               style={{

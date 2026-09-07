@@ -62,7 +62,12 @@ export default function Footer() {
               src={logo}
               alt="Village Allure"
               className="footer-logo"
-              style={{ height: 'clamp(60px, 12vw, 140px)', width: 'auto', marginTop: '-1rem', transform: 'translateY(-8px)' }}
+              loading="lazy"
+              decoding="async"
+              width={280}
+              height={140}
+              onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.style.display='none'; } }}
+              style={{ height: 'clamp(60px, 12vw, 140px)', width: 'auto', marginTop: '-1rem', transform: 'translateY(-8px)', aspectRatio: '2 / 1' }}
             />
           </motion.div>
           <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.92rem', lineHeight: 1.85, color: 'rgba(255,255,255,0.88)', maxWidth: 300, marginTop: '-1rem', letterSpacing: '0.01em', fontStyle: 'italic', fontWeight: 400 }}>

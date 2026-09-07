@@ -44,7 +44,7 @@ export default function AdminLogin() {
             transition={{ delay: 0.15, duration: 0.5 }}
             className="admin-login-logo"
           >
-            <img src={logo} alt="Village Allure" style={{ height: 120, width: 'auto' }} />
+            <img src={logo} alt="Village Allure" loading="eager" fetchPriority="high" decoding="async" width={240} height={120} onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} style={{ height: 120, width: 'auto', aspectRatio:'2 / 1' }} />
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 10 }}

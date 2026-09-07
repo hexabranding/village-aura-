@@ -212,6 +212,9 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
         src={resolveUploadUrl(item.poster)}
         alt={item.name}
         loading="lazy"
+        decoding="async"
+        width={500}
+        height={900}
         onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback = '1'; t.src = fallbackWatchShopItems[0].poster; } }}
         style={{
           position: 'absolute',
@@ -221,6 +224,7 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
           objectFit: 'cover',
           opacity: hasVideo && inView && isHovered ? 0 : 1,
           transition: 'opacity 400ms ease',
+          aspectRatio: '9 / 16',
         }}
       />
 
@@ -713,7 +717,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           const img = banner.image || 'https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop';
           return (
             <div key={idx} style={{ position: 'absolute', inset: 0, opacity: active ? 1 : 0, transition: 'opacity 0.7s ease', pointerEvents: active ? 'auto' : 'none' }}>
-              <img src={resolveUploadUrl(img)} alt="" onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop'; } }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={resolveUploadUrl(img)} alt="Village Allure promotional banner" loading="lazy" decoding="async" width={1920} height={600} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop'; } }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '1920 / 600' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(36,27,21,0.35) 0%, rgba(36,27,21,0.25) 100%)' }} />
               {(banner as any).offer && (
                 <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 2, background: 'var(--gold)', color: 'var(--ink)', padding: '0.5rem 1.2rem', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', boxShadow: '0 4px 18px rgba(0,0,0,0.25)' }}>
@@ -923,9 +927,14 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               <motion.img
                 src={resolveUploadUrl(edit.image)}
                 alt={edit.title}
+                loading="lazy"
+                decoding="async"
+                width={900}
+                height={700}
+                onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/30677843/pexels-photo-30677843.jpeg?w=900&h=700&fit=crop'; } }}
                 whileHover={{ scale: 1.08 }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '900 / 700' }}
               />
               <div
                 style={{
