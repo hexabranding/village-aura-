@@ -5,7 +5,6 @@ import { getProduct } from '../lib/productStore';
 import type { CartItem } from '../data/products';
 import ZariDivider from '../components/ZariDivider';
 import { api, resolveUploadUrl } from '../lib/api';
-import { scrollToTop } from '../lib/smoothScroll';
 
 interface CheckoutProps {
   cart: CartItem[];
@@ -90,7 +89,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
         payment,
         date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       });
-      scrollToTop(1200);
+      window.scrollTo(0, 0);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to place order. Please try again.';
       setError(message);

@@ -33,7 +33,6 @@ import AdminReturns from './pages/AdminReturns';
 import AdminReturnSettings from './pages/AdminReturnSettings';
 import type { CartItem } from './data/products';
 import { loadProducts } from './lib/productStore';
-import { scrollToTop } from './lib/smoothScroll';
 
 export default function App() {
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -106,7 +105,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    scrollToTop(1200);
+    window.scrollTo(0, 0);
   }, [location.pathname, location.search]);
 
   const isAdminRoute = location.pathname.startsWith('/admin');

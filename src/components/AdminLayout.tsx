@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, type Notification } from '../lib/api';
@@ -26,38 +26,6 @@ export default function AdminLayout() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const isSwiping = useRef(false);
-
-  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
-
-  useEffect(() => {
-    document.body.style.overflow = sidebarOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [sidebarOpen]);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    isSwiping.current = false;
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!sidebarOpen) return;
-    const deltaX = touchStartX.current - e.touches[0].clientX;
-    const deltaY = Math.abs(touchStartY.current - e.touches[0].clientY);
-    if (deltaX > 30 && deltaY < 60) {
-      isSwiping.current = true;
-    }
-  }, [sidebarOpen]);
-
-  const handleTouchEnd = useCallback(() => {
-    if (isSwiping.current && sidebarOpen) {
-      closeSidebar();
-    }
-    isSwiping.current = false;
-  }, [sidebarOpen, closeSidebar]);
 
   const loadNotifs = async () => {
     try {
@@ -86,33 +54,19 @@ export default function AdminLayout() {
   return (
     <div className="admin-layout">
       <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="admin-overlay"
-            onClick={closeSidebar}
-          />
-        )}
+        {sidebarOpen && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="admin-overlay" onClick={() => setSidebarOpen(false)} />}
       </AnimatePresence>
 
-      <aside
-        className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-header">
-          <Link to="/admin" onClick={closeSidebar} className="admin-sidebar-brand"><img src={logo} alt="Village Allure" /></Link>
-          <button className="admin-sidebar-close" onClick={closeSidebar} aria-label="Close sidebar">✕</button>
+          <Link to="/admin" onClick={() => setSidebarOpen(false)} className="admin-sidebar-brand"><img src={logo} alt="Village Allure" /></Link>
+          <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)}>✕</button>
         </div>
         <nav className="admin-sidebar-nav">
           {navItems.map((item) => {
             const active = isActive(item.to);
             return (
-              <Link key={item.to} to={item.to} onClick={closeSidebar} className={`admin-nav-item ${active ? 'active' : ''}`}>
+              <Link key={item.to} to={item.to} onClick={() => setSidebarOpen(false)} className={`admin-nav-item ${active ? 'active' : ''}`}>
                 <span className="admin-nav-icon">{item.icon}</span>
                 <span className="admin-nav-label">{item.label}</span>
                 {item.to === '/admin/orders' && notifCount > 0 && <span style={{ marginLeft:'auto', background:'#ef4444', color:'white', fontSize:'0.6rem', padding:'1px 5px', borderRadius:10, fontWeight:700 }}>{notifCount}</span>}
@@ -123,14 +77,14 @@ export default function AdminLayout() {
         </nav>
         <div className="admin-sidebar-footer">
           <div className="admin-sidebar-divider" />
-          <Link to="/" className="admin-nav-item admin-nav-footer" onClick={closeSidebar}><span className="admin-nav-icon">🏪</span><span className="admin-nav-label">View Store</span></Link>
+          <Link to="/" className="admin-nav-item admin-nav-footer" onClick={() => setSidebarOpen(false)}><span className="admin-nav-icon">🏪</span><span className="admin-nav-label">View Store</span></Link>
           <button className="admin-nav-item admin-nav-footer admin-logout-btn" onClick={handleLogout}><span className="admin-nav-icon">🚪</span><span className="admin-nav-label">Logout</span></button>
         </div>
       </aside>
 
       <div className="admin-main">
         <header className="admin-header">
-          <button className="admin-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">☰</button>
+          <button className="admin-menu-btn" onClick={() => setSidebarOpen(true)}>☰</button>
           <div className="admin-header-left"><h2 className="admin-page-title">{currentLabel}</h2></div>
           <div className="admin-header-right">
             <div className="admin-header-time">{new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</div>

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, resolveUploadUrl } from '../lib/api';
-import { scrollToTop } from '../lib/smoothScroll';
 import type { Product } from '../data/products';
 import type { Category } from '../lib/api';
 
@@ -193,7 +192,7 @@ export default function AdminProducts() {
       }
       setShowModal(false);
       await loadData();
-      scrollToTop(1200);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Failed to save product:', error);
     }

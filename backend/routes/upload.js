@@ -89,7 +89,7 @@ const filePath = path.join(uploadDir, req.params.filename);
 });
 
 router.get('/debug', (req, res) => {
-const dir = uploadDir;
+  const dir = path.join(__dirname, '../uploads');
   try {
     const files = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
     res.json({ dir, exists: fs.existsSync(dir), count: files.length, sample: files.slice(0, 10) });
