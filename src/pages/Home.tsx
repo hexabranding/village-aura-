@@ -450,13 +450,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
   useEffect(() => {
     api.products.getAll().then((apiProducts) => {
       if (apiProducts.length === 0) return;
-      const merged = localProducts.map((lp) => {
-        const apiP = apiProducts.find((p) => p.id === lp.id);
-        if (apiP && apiP.variants.some((v) => v.images.length > 0)) return apiP;
-        return lp;
-      });
-      const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
-      setProducts([...newProducts, ...merged]);
+      setProducts(apiProducts);
     }).catch(() => {});
   }, []);
 

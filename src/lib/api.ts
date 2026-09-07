@@ -1,17 +1,17 @@
 import type { Product } from '../data/products';
 
-export const API_BASE = 'https://api.villageallure.com/api';
-export const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
+export const API_BASE = (import.meta as unknown as { env: { DEV: boolean; VITE_API_BASE?: string } }).env.DEV ? '/api' : ((import.meta as unknown as { env: { VITE_API_BASE?: string } }).env.VITE_API_BASE || 'https://api.villageallure.com/api');
+export const API_ORIGIN = API_BASE.startsWith('/') ? '' : API_BASE.replace(/\/api\/?$/, '');
 export const resolveUploadUrl = (url: string) => {
   if (!url) return url;
   if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
   if (url.startsWith('/images/') || url.startsWith('images/')) return url;
   if (url.startsWith('/api/upload') || url.startsWith('/uploads/') || url.startsWith('uploads/')) {
     const p = url.startsWith('/') ? url : `/${url}`;
-    return `${API_ORIGIN}${p}`;
+    return API_ORIGIN ? `${API_ORIGIN}${p}` : p;
   }
-  if (url.startsWith('/')) return `${API_ORIGIN}${url}`;
-  return `${API_ORIGIN}/${url}`;
+  if (url.startsWith('/')) return API_ORIGIN ? `${API_ORIGIN}${url}` : url;
+  return API_ORIGIN ? `${API_ORIGIN}/${url}` : `/${url}`;
 };
 
 const getToken = () => localStorage.getItem('reshamAdminToken');
