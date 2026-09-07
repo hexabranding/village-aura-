@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import auth from '../middleware/auth.js';
 
@@ -65,7 +66,28 @@ router.post('/return', upload.array('images', 10), (req, res) => {
 
 router.get('/images/:filename', (req, res) => {
   const filePath = path.join(__dirname, '../uploads', req.params.filename);
-  res.sendFile(filePath);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'File not found', filename: req.params.filename });
+  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Cache-Control', 'public, max-age=2592000');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('sendFile error:', err);
+      if (!res.headersSent) res.status(404).json({ error: 'File not found' });
+    }
+  });
+});
+
+router.get('/debug', (req, res) => {
+  const dir = path.join(__dirname, '../uploads');
+  try {
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+    res.json({ dir, exists: fs.existsSync(dir), count: files.length, sample: files.slice(0, 10) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 export default router;
