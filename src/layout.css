@@ -105,7 +105,7 @@
     font-size: 0.78rem !important;
   }
   .home-marquee > div {
-    animation-duration: 5s !important;
+    animation-duration: 30s !important;
   }
   .footer-grid {
     grid-template-columns: 1fr !important;

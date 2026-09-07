@@ -97,7 +97,7 @@ export default function Collections({ collections }: CollectionsProps) {
               style={{ flexShrink: 0, width: CARD_W }}
             >
               <Link
-                to={`/shop?category=${encodeURIComponent(c.category)}`}
+                to="/gallery"
                 style={{
                   position: 'relative',
                   display: 'block',
