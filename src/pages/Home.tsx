@@ -525,13 +525,18 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         <div
           className="home-marquee-track"
           style={{
-            display: 'flex',
+            display: 'inline-flex',
             whiteSpace: 'nowrap',
-            animation: 'marquee 8s linear infinite',
+            flexWrap: 'nowrap',
+            width: 'max-content',
+            minWidth: '200%',
+            animation: 'marquee 12s linear infinite',
             willChange: 'transform',
+            transform: 'translate3d(0,0,0)',
+            backfaceVisibility: 'hidden',
           }}
         >
-          {[...Array(3)].map((_, i) => (
+          {[...Array(6)].map((_, i) => (
             <span
               key={i}
               style={{
@@ -542,6 +547,8 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
                 textTransform: 'uppercase',
                 color: 'var(--gold)',
                 padding: '0 3rem',
+                flexShrink: 0,
+                display: 'inline-block',
               }}
             >
               ✦ Free Shipping on Orders Above ₹2999 &nbsp;&nbsp;&nbsp;
@@ -555,12 +562,15 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
 
       <style>{`
         @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-33.33%); }
+          0% { transform: translate3d(0,0,0); }
+          100% { transform: translate3d(-33.33%,0,0); }
         }
-        .home-marquee-track { animation-play-state: running !important; }
+        .home-marquee-track { animation-play-state: running !important; transform: translate3d(0,0,0); }
         @media (max-width: 768px) {
-          .home-marquee-track { animation: marquee 4s linear infinite !important; will-change: transform; }
+          .home-marquee-track { animation: marquee 6s linear infinite !important; will-change: transform; }
+        }
+        @media (min-width: 769px) {
+          .home-marquee-track { animation: marquee 12s linear infinite !important; }
         }
         @media (max-width: 768px) {
           .weaver-text {
