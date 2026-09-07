@@ -93,14 +93,11 @@ export default function AdCarousel() {
           }}
         >
           {/* Background image */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              backgroundImage: `url(${resolveUploadUrl(slides[current].image)})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
+          <img
+            src={resolveUploadUrl(slides[current].image)}
+            alt=""
+            onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=fallbackSlides[0].image; } }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
           />
           {/* Overlay */}
           <div

@@ -296,7 +296,7 @@ export default function AdminWatchShop() {
                     </button>
                   </div>
                   {uploadError && <div style={{ color: '#dc2626', fontSize: '0.78rem', marginTop: '0.4rem' }}>{uploadError}</div>}
-                  {form.video && <div style={{ marginTop: '0.5rem' }}><video src={resolveUploadUrl(form.video)} controls muted style={{ width: '100%', maxHeight: 200, borderRadius: 'var(--radius-sm)' }} /></div>}
+                  {form.video && <div style={{ marginTop: '0.5rem' }}>{/videos\.pexels\.com/i.test(form.video) ? <div style={{ padding: '1rem', background: 'var(--ivory-deep)', border: '1px dashed var(--line)', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', color: 'var(--ink-soft)', textAlign: 'center' }}>⚠️ External Pexels video blocked (403). Please upload MP4 to backend.</div> : <video src={resolveUploadUrl(form.video)} controls muted playsInline preload="metadata" onError={(e) => { const v = e.currentTarget; v.style.display='none'; const p = v.parentElement; if (p && !p.querySelector('.video-fallback')) { const d=document.createElement('div'); d.className='video-fallback'; d.textContent='⚠️ Video failed to load — check upload or re-upload MP4.'; d.style.cssText='padding:1rem;background:var(--ivory-deep);border:1px dashed var(--line);border-radius:8px;font-size:0.8rem;color:var(--ink-soft);text-align:center'; p.appendChild(d); } }} style={{ width: '100%', maxHeight: 200, borderRadius: 'var(--radius-sm)' }} />}</div>}
                   <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.25rem', display: 'block' }}>MP4/WebM ≤50MB. Instagram/Reels page links don't play — download as MP4 then upload.</span>
                 </div>
 

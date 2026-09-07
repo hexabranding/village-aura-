@@ -274,6 +274,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
                 <img
                   src={resolveUploadUrl(product!.variants[ci.colorIndex]?.images[0] ?? product!.variants[0].images[0])}
                   alt={product!.name}
+                  onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200'; } }}
                   style={{ width: 46, height: 58, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }}
                 />
                 <div style={{ flex: 1, minWidth: 0, fontSize: '0.82rem', lineHeight: 1.3 }}>

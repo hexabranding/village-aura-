@@ -60,6 +60,7 @@ function GalleryCard({ image, index }: { image: GalleryImage; index: number }) {
         src={resolveUploadUrl(image.src)}
         alt={image.title}
         loading="lazy"
+        onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback = '1'; t.src = fallbackImages[0].src; } }}
         style={{
           width: '100%',
           height: '100%',

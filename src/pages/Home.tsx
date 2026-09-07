@@ -101,62 +101,71 @@ const fallbackWatchShopItems: WatchShopItem[] = [
     name: 'Kanjivaram Silk — Magenta Bloom',
     price: '₹18,500',
     poster: 'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg?w=500&h=900&fit=crop',
-    video: 'https://videos.pexels.com/video-files/3191572/3191572-uhd_2560_1440_30fps.mp4',
+    video: '',
   },
   {
     id: 'temple-kemp-necklace',
     name: 'Temple Kemp Necklace Set',
     price: '₹6,400',
     poster: 'https://images.pexels.com/photos/32780784/pexels-photo-32780784.jpeg?w=500&h=900&fit=crop',
-    video: 'https://videos.pexels.com/video-files/3191568/3191568-uhd_2560_1440_30fps.mp4',
+    video: '',
   },
   {
     id: 'brocade-potli-clutch',
     name: 'Brocade Potli Clutch',
     price: '₹2,800',
     poster: 'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?w=500&h=900&fit=crop',
-    video: 'https://videos.pexels.com/video-files/3191572/3191572-uhd_2560_1440_30fps.mp4',
+    video: '',
   },
   {
     id: 'chanderi-anarkali-set',
     name: 'Chanderi Anarkali Suit Set',
     price: '₹6,200',
     poster: 'https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg?w=500&h=900&fit=crop',
-    video: 'https://videos.pexels.com/video-files/3191568/3191568-uhd_2560_1440_30fps.mp4',
+    video: '',
   },
 ];
 
 function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [mobilePlaying, setMobilePlaying] = useState(false);
+  const [hasVideoError, setHasVideoError] = useState(false);
+  const [inView, setInView] = useState(false);
+  const isUnreliable = /videos\.pexels\.com/i.test(item.video) || /pexels\.com\/video-files/i.test(item.video);
+  const hasVideo = !!item.video && !hasVideoError && !isUnreliable;
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || !hasVideo) return;
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setInView(true); io.disconnect(); } }, { rootMargin: '200px', threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasVideo]);
+
+  useEffect(() => { setHasVideoError(false); }, [item.video]);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
+    if (!hasVideo || !inView) return;
     const v = videoRef.current;
-    if (v) {
-      v.muted = true;
-      v.play().catch(() => {});
-    }
+    if (v) { v.muted = true; v.play().catch(() => {}); }
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
+    if (videoRef.current) { videoRef.current.pause(); videoRef.current.currentTime = 0; }
   };
 
   const handleMobileTap = () => {
-    if (!mobilePlaying) {
-      setMobilePlaying(true);
-      videoRef.current?.play().catch(() => {});
-    }
+    if (!hasVideo || !inView) return;
+    if (!mobilePlaying) { setMobilePlaying(true); videoRef.current?.play().catch(() => {}); }
   };
 
   return (
     <motion.div
+      ref={cardRef as any}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
@@ -176,38 +185,41 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
         transformOrigin: 'center center',
       }}
     >
-      <video
-        ref={videoRef}
-        src={resolveUploadUrl(item.video)}
-        poster={resolveUploadUrl(item.poster)}
-        muted
-        playsInline
-        loop
-        preload="metadata"
-        onError={(e) => { (e.currentTarget as HTMLVideoElement).style.display = 'none'; }}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          opacity: isHovered ? 1 : 0,
-          transition: 'opacity 400ms ease',
-        }}
-      />
+      {hasVideo && inView ? (
+        <video
+          ref={videoRef}
+          src={resolveUploadUrl(item.video)}
+          poster={resolveUploadUrl(item.poster)}
+          muted
+          playsInline
+          loop
+          preload="metadata"
+          onError={() => setHasVideoError(true)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: isHovered ? 1 : 0,
+            transition: 'opacity 400ms ease',
+          }}
+        />
+      ) : null}
 
       {/* Poster image (visible when not hovered) */}
       <img
         src={resolveUploadUrl(item.poster)}
         alt={item.name}
         loading="lazy"
+        onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback = '1'; t.src = fallbackWatchShopItems[0].poster; } }}
         style={{
           position: 'absolute',
           inset: 0,
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          opacity: isHovered ? 0 : 1,
+          opacity: hasVideo && inView && isHovered ? 0 : 1,
           transition: 'opacity 400ms ease',
         }}
       />
@@ -701,7 +713,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           const img = banner.image || 'https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop';
           return (
             <div key={idx} style={{ position: 'absolute', inset: 0, opacity: active ? 1 : 0, transition: 'opacity 0.7s ease', pointerEvents: active ? 'auto' : 'none' }}>
-              <div className="fixed-banner-bg" style={{ position: 'absolute', inset: 0, backgroundImage: `url(${resolveUploadUrl(img)})`, backgroundSize: '100% 100%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }} />
+              <img src={resolveUploadUrl(img)} alt="" onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop'; } }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(36,27,21,0.35) 0%, rgba(36,27,21,0.25) 100%)' }} />
               {(banner as any).offer && (
                 <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 2, background: 'var(--gold)', color: 'var(--ink)', padding: '0.5rem 1.2rem', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', boxShadow: '0 4px 18px rgba(0,0,0,0.25)' }}>

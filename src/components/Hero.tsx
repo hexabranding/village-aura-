@@ -129,14 +129,15 @@ export default function Hero() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundImage: `url(${resolveUploadUrl(slide.image)})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
+          style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
+        >
+          <img
+            src={resolveUploadUrl(slide.image)}
+            alt=""
+            onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=heroSlides[0].image; } }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </motion.div>
       </AnimatePresence>
 
       {/* Dark overlay for text readability */}
