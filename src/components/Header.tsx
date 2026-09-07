@@ -159,13 +159,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
             src={logo}
             alt="Village Allure"
             className="header-logo"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            width={290}
-            height={145}
-            onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.style.display='none'; } }}
-            style={{ height: 'clamp(50px, 12vw, 145px)', width: 'auto', aspectRatio: '2 / 1' }}
+            style={{ height: 'clamp(50px, 12vw, 145px)', width: 'auto' }}
           />
         </Link>
 

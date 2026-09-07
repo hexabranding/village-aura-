@@ -1,6 +1,6 @@
 import type { Product } from '../data/products';
 
-export const API_BASE = (import.meta as unknown as { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://api.villageallure.com/api');
+export const API_BASE = 'https://api.villageallure.com/api';
 export const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
 export const resolveUploadUrl = (url: string) => {
   if (!url) return url;
