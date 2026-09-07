@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api, resolveUploadUrl } from '../lib/api';
+import { scrollToTop } from '../lib/smoothScroll';
 
 interface GalleryImage {
   src: string;
@@ -40,7 +41,7 @@ export default function GalleryPage() {
   const [images, setImages] = useState<GalleryImage[]>(fallbackImages);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    scrollToTop(1200);
     api.gallery.getActive().then((data) => {
       if (data.length > 0) {
         setImages(data.map((img) => ({
@@ -90,6 +91,7 @@ export default function GalleryPage() {
       </div>
 
       <div
+        className="gallery-page-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',

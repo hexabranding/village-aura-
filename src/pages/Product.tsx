@@ -7,6 +7,7 @@ import ProductCard from '../components/ProductCard';
 import ZariDivider from '../components/ZariDivider';
 import { api, resolveUploadUrl } from '../lib/api';
 import type { Product as ProductType } from '../data/products';
+import { scrollToTop } from '../lib/smoothScroll';
 
 interface ProductProps {
   onAddToBag: (productId: string, colorIndex: number, qty: number) => void;
@@ -58,7 +59,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
 
   // Scroll to top when product changes
   useEffect(() => {
-    window.scrollTo(0, 0);
+    scrollToTop(1200);
   }, [id]);
 
   // Zoom state
@@ -629,7 +630,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
             <h2 style={{ fontSize: '2rem', marginTop: '0.4rem' }}>More from {product.category}</h2>
           </div>
           <div
-            className="shop-grid"
+            className="shop-grid related-grid"
             style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem 1.5rem' }}
           >
             {related.map((p, i) => (

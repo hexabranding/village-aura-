@@ -530,7 +530,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
             flexWrap: 'nowrap',
             width: 'max-content',
             minWidth: '200%',
-            animation: 'marquee 12s linear infinite',
+            animation: 'marquee 50s linear infinite',
             willChange: 'transform',
             transform: 'translate3d(0,0,0)',
             backfaceVisibility: 'hidden',
@@ -567,10 +567,17 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
         }
         .home-marquee-track { animation-play-state: running !important; transform: translate3d(0,0,0); }
         @media (max-width: 768px) {
-          .home-marquee-track { animation: marquee 6s linear infinite !important; will-change: transform; }
+          .home-marquee-track { animation: marquee 50s linear infinite !important; will-change: transform; }
+          .fixed-banner-section { height: clamp(180px, 35vh, 260px) !important; }
+          .fixed-banner-section img { object-fit: cover !important; object-position: center !important; }
+          .fixed-banner-section button[aria-label="Previous banner"],
+          .fixed-banner-section button[aria-label="Next banner"] { width: 28px !important; height: 28px !important; font-size: 0.9rem !important; }
+        }
+        @media (max-width: 400px) {
+          .home-marquee-track { animation: marquee 50s linear infinite !important; }
         }
         @media (min-width: 769px) {
-          .home-marquee-track { animation: marquee 12s linear infinite !important; }
+          .home-marquee-track { animation: marquee 50s linear infinite !important; }
         }
         @media (max-width: 768px) {
           .weaver-text {
