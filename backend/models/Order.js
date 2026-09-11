@@ -48,7 +48,7 @@ const orderSchema = new mongoose.Schema({
   items: [orderItemSchema],
   status: {
     type: String,
-    enum: ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'],
+    enum: ['Pending', 'Processing', 'Dispatched', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'],
     default: 'Pending',
   },
   address: {
@@ -71,6 +71,10 @@ const orderSchema = new mongoose.Schema({
   returnDeadline: { type: Date, default: null },
   tracking: [trackingSchema],
   estimatedDelivery: {
+    type: String,
+    default: '',
+  },
+  trackingLink: {
     type: String,
     default: '',
   },

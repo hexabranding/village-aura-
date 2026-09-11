@@ -109,13 +109,14 @@ export interface Order {
   payment: string;
   date: string;
   items: { id: string; colorIndex: number; qty: number; cancelled?: boolean }[];
-  status: 'Pending' | 'Processing' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
+  status: 'Pending' | 'Processing' | 'Dispatched' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
   address?: string;
   city?: string;
   state?: string;
   pincode?: string;
   tracking?: OrderTracking[];
   estimatedDelivery?: string;
+  trackingLink?: string;
   deliveredAt?: string;
   returnDeadline?: string;
   lastUpdated?: string;
@@ -308,7 +309,7 @@ export const api = {
       });
       return handleResponse(res);
     },
-    updateStatus: async (id: string, data: { status: string; message?: string; estimatedDelivery?: string; notes?: string }) => {
+    updateStatus: async (id: string, data: { status: string; message?: string; estimatedDelivery?: string; notes?: string; trackingLink?: string }) => {
       const res = await fetch(`${API_BASE}/orders/${id}/status`, {
         method: 'PUT',
         headers: headers(),

@@ -6,6 +6,7 @@ import type { OrderTracking } from '../lib/api';
 const statusColors: Record<string, string> = {
   Pending: '#f59e0b',
   Processing: '#3b82f6',
+  Dispatched: '#0ea5e9',
   Shipped: '#8b5cf6',
   'Out for Delivery': '#f97316',
   Delivered: '#10b981',
@@ -15,6 +16,7 @@ const statusColors: Record<string, string> = {
 const statusIcons: Record<string, string> = {
   Pending: '⏳',
   Processing: '⚙',
+  Dispatched: '📋',
   Shipped: '🚚',
   'Out for Delivery': '🛵',
   Delivered: '✅',

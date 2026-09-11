@@ -21,6 +21,7 @@ export interface Product {
   description: string;
   details: string[];
   care: string[];
+  shippingReturns?: string;
   variants: ProductVariant[];
   featured?: boolean;
   isNew?: boolean;

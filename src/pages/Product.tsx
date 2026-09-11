@@ -469,7 +469,7 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
                 {
                   title: 'Shipping & Returns',
                   content:
-                    'Ships in 3–5 business days, made-to-order pieces in 10–14 days. Easy returns within 7 days of delivery for unworn, tag-intact sarees.',
+                    (product as any).shippingReturns || 'Ships in 3–5 business days, made-to-order pieces in 10–14 days. Easy returns within 7 days of delivery for unworn, tag-intact sarees.',
                 },
               ]}
             />

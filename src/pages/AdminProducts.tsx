@@ -23,6 +23,7 @@ const emptyProduct: Product = {
   description: '',
   details: [],
   care: [],
+  shippingReturns: '',
   variants: [{ ...emptyVariant }],
   featured: false,
   isNew: false,
@@ -665,6 +666,42 @@ export default function AdminProducts() {
                 <div className="admin-form-group">
                   <label>Description</label>
                   <textarea rows={3} value={form.description} onChange={(e) => updateForm('description', e.target.value)} placeholder="Product description..." />
+                </div>
+
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                  <div className="admin-form-group">
+                    <label>Piece Details</label>
+                    <textarea
+                      rows={4}
+                      value={form.details.join('\n')}
+                      onChange={(e) => updateForm('details', e.target.value.split('\n').filter(Boolean))}
+                      placeholder={"One detail per line, e.g.\nLength: 5.5 meters\nBlouse: Running material\nWeight: 600 grams"}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                  <div className="admin-form-group">
+                    <label>Fabric & Care</label>
+                    <textarea
+                      rows={4}
+                      value={form.care.join('\n')}
+                      onChange={(e) => updateForm('care', e.target.value.split('\n').filter(Boolean))}
+                      placeholder={"One care instruction per line, e.g.\nDry clean only\nStore in a cotton bag\nAvoid direct sunlight"}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                  <div className="admin-form-group">
+                    <label>Shipping & Returns</label>
+                    <textarea
+                      rows={3}
+                      value={(form as any).shippingReturns || ''}
+                      onChange={(e) => updateForm('shippingReturns', e.target.value)}
+                      placeholder="e.g. Ships in 3–5 business days. Easy returns within 7 days of delivery."
+                    />
+                  </div>
                 </div>
 
                 <div className="admin-variants-section">

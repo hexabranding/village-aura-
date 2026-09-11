@@ -131,7 +131,7 @@ router.post('/', async (req, res) => {
 
 router.put('/:id/status', auth, async (req, res) => {
   try {
-    const { status, message, estimatedDelivery, notes } = req.body;
+    const { status, message, estimatedDelivery, notes, trackingLink } = req.body;
 
     const order = await Order.findById(req.params.id);
     if (!order) {
@@ -141,6 +141,7 @@ router.put('/:id/status', auth, async (req, res) => {
     order.status = status;
     if (notes !== undefined) order.notes = notes;
     if (estimatedDelivery !== undefined) order.estimatedDelivery = estimatedDelivery;
+    if (trackingLink !== undefined) order.trackingLink = trackingLink;
     order.lastUpdated = new Date().toISOString();
     if (status === 'Delivered') {
       order.deliveredAt = new Date();
@@ -151,13 +152,38 @@ router.put('/:id/status', auth, async (req, res) => {
       }
     }
 
+    const trackingMsg = status === 'Dispatched' && trackingLink
+      ? `Your order ${order.orderId} has been dispatched! Track it here: ${trackingLink}`
+      : message || `Status updated to ${status}`;
+
     order.tracking.push({
       status,
       timestamp: new Date(),
-      message: message || `Status updated to ${status}`,
+      message: trackingMsg,
     });
 
     await order.save();
+
+    if (status === 'Dispatched') {
+      const notifMsg = `Order ${order.orderId} dispatched for ${order.name}. Phone: ${order.phone}${order.email ? ', Email: ' + order.email : ''}. Tracking: ${trackingLink || 'N/A'}`;
+      await Notification.create({
+        type: 'order',
+        title: 'Order Dispatched',
+        message: notifMsg,
+        orderId: order.orderId,
+        phone: order.phone,
+      });
+
+      const whatsappMsg = encodeURIComponent(`Hi ${order.name}, your order ${order.orderId} has been dispatched! Track your shipment here: ${trackingLink || 'Tracking link will be updated soon.'}`);
+      const whatsappUrl = order.phone ? `https://wa.me/91${order.phone.replace(/\D/g, '')}?text=${whatsappMsg}` : '';
+
+      const emailSubject = encodeURIComponent(`Your Order ${order.orderId} has been Dispatched!`);
+      const emailBody = encodeURIComponent(`Hi ${order.name},\n\nYour order ${order.orderId} has been dispatched!\n\nTrack your shipment here: ${trackingLink || 'Tracking link will be updated soon.'}\n\nThank you for shopping with Village Aura!`);
+      const emailUrl = order.email ? `mailto:${order.email}?subject=${emailSubject}&body=${emailBody}` : '';
+
+      return res.json({ order, whatsappUrl, emailUrl });
+    }
+
     res.json(order);
   } catch (error) {
     console.error('Update order status error:', error);

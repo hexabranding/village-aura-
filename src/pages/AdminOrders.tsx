@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/api';
 import type { Order, OrderTracking, ReturnRequest } from '../lib/api';
 
-const allStatuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
+const allStatuses = ['Pending', 'Processing', 'Dispatched', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
 
 const statusColors: Record<string, string> = {
   Pending: '#f59e0b',
   Processing: '#3b82f6',
+  Dispatched: '#0ea5e9',
   Shipped: '#8b5cf6',
   'Out for Delivery': '#f97316',
   Delivered: '#10b981',
@@ -17,6 +18,7 @@ const statusColors: Record<string, string> = {
 const statusIcons: Record<string, string> = {
   Pending: '⏳',
   Processing: '⚙',
+  Dispatched: '📋',
   Shipped: '🚚',
   'Out for Delivery': '🛵',
   Delivered: '✅',
@@ -26,6 +28,7 @@ const statusIcons: Record<string, string> = {
 const statusGradients: Record<string, string> = {
   Pending: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
   Processing: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+  Dispatched: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
   Shipped: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)',
   'Out for Delivery': 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)',
   Delivered: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
@@ -35,6 +38,7 @@ const statusGradients: Record<string, string> = {
 const statusTextColors: Record<string, string> = {
   Pending: '#92400e',
   Processing: '#1e40af',
+  Dispatched: '#0c4a6e',
   Shipped: '#5b21b6',
   'Out for Delivery': '#9a3412',
   Delivered: '#065f46',
@@ -52,6 +56,7 @@ export default function AdminOrders() {
   const [statusMessage, setStatusMessage] = useState('');
   const [estimatedDelivery, setEstimatedDelivery] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
+  const [trackingLink, setTrackingLink] = useState('');
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
 
   const loadOrders = async () => {
@@ -84,6 +89,7 @@ export default function AdminOrders() {
     setStatusMessage('');
     setEstimatedDelivery(order.estimatedDelivery || '');
     setOrderNotes(order.notes || '');
+    setTrackingLink((order as any).trackingLink || '');
     setStatusModal({ orderId: order.id, currentStatus: order.status });
   };
 
@@ -95,14 +101,24 @@ export default function AdminOrders() {
   const handleStatusUpdate = async () => {
     if (!statusModal) return;
     try {
-      await api.orders.updateStatus(statusModal.orderId, {
+      const result: any = await api.orders.updateStatus(statusModal.orderId, {
         status: newStatus,
         message: statusMessage || `Status updated to ${newStatus}`,
         estimatedDelivery,
         notes: orderNotes,
+        trackingLink: newStatus === 'Dispatched' ? trackingLink : undefined,
       });
       await loadOrders();
       setStatusModal(null);
+
+      if (newStatus === 'Dispatched' && result) {
+        if (result.whatsappUrl) {
+          window.open(result.whatsappUrl, '_blank');
+        }
+        if (result.emailUrl) {
+          setTimeout(() => window.open(result.emailUrl, '_blank'), 500);
+        }
+      }
     } catch (error) {
       console.error('Failed to update order status:', error);
     }
@@ -112,6 +128,7 @@ export default function AdminOrders() {
     total: orders.length,
     pending: orders.filter((o) => o.status === 'Pending').length,
     processing: orders.filter((o) => o.status === 'Processing').length,
+    dispatched: orders.filter((o) => o.status === 'Dispatched').length,
     shipped: orders.filter((o) => o.status === 'Shipped').length,
     outForDelivery: orders.filter((o) => o.status === 'Out for Delivery').length,
     delivered: orders.filter((o) => o.status === 'Delivered').length,
@@ -387,6 +404,21 @@ export default function AdminOrders() {
                   <label>Status Message</label>
                   <input value={statusMessage} onChange={(e) => setStatusMessage(e.target.value)} placeholder={`e.g. Order has been ${newStatus.toLowerCase()}`} />
                 </div>
+
+                {newStatus === 'Dispatched' && (
+                  <div className="admin-form-group" style={{ background: '#e0f2fe', border: '1px solid #7dd3fc', borderRadius: 8, padding: '0.8rem' }}>
+                    <label style={{ fontWeight: 700, marginBottom: '0.4rem', display: 'block' }}>📦 Tracking Link</label>
+                    <input
+                      value={trackingLink}
+                      onChange={(e) => setTrackingLink(e.target.value)}
+                      placeholder="e.g. https://www.dtdc.in/trackshipment..."
+                      style={{ width: '100%' }}
+                    />
+                    <p style={{ fontSize: '0.72rem', color: '#0369a1', marginTop: '0.4rem', marginBottom: 0 }}>
+                      Customer will receive this link via WhatsApp & Email
+                    </p>
+                  </div>
+                )}
 
                 <div className="admin-form-group">
                   <label>Estimated Delivery</label>

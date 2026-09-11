@@ -21,6 +21,7 @@ interface LocalOrder {
 const statusColors: Record<string, string> = {
   Pending: '#f59e0b',
   Processing: '#3b82f6',
+  Dispatched: '#0ea5e9',
   Shipped: '#8b5cf6',
   'Out for Delivery': '#f97316',
   Delivered: '#10b981',
@@ -30,6 +31,7 @@ const statusColors: Record<string, string> = {
 const statusIcons: Record<string, string> = {
   Pending: '⏳',
   Processing: '⚙️',
+  Dispatched: '📋',
   Shipped: '🚚',
   'Out for Delivery': '🛵',
   Delivered: '✅',
@@ -457,9 +459,9 @@ export default function Orders() {
                           const fallback = (!order.tracking || order.tracking.length === 0) ? [{ status: order.status, timestamp: new Date().toISOString(), message: order.status === 'Pending' ? 'Order placed — awaiting processing' : order.status }] : order.tracking;
                           const isFull = !!showFullTimeline[order.orderId];
                           const displayTracking = isFull ? fallback : fallback.slice(-1);
-                          const orderRoadmap = ['Pending','Processing','Shipped','Out for Delivery','Delivered'];
-                          const oCol: Record<string,string> = { Pending:'#f59e0b', Processing:'#3b82f6', Shipped:'#8b5cf6', 'Out for Delivery':'#f97316', Delivered:'#10b981', Cancelled:'#ef4444' };
-                          const oIco: Record<string,string> = { Pending:'⏳', Processing:'⚙️', Shipped:'🚚', 'Out for Delivery':'🛵', Delivered:'✅', Cancelled:'❌' };
+const orderRoadmap = ['Pending','Processing','Dispatched','Shipped','Out for Delivery','Delivered'];
+                           const oCol: Record<string,string> = { Pending:'#f59e0b', Processing:'#3b82f6', Dispatched:'#0ea5e9', Shipped:'#8b5cf6', 'Out for Delivery':'#f97316', Delivered:'#10b981', Cancelled:'#ef4444' };
+                           const oIco: Record<string,string> = { Pending:'⏳', Processing:'⚙️', Dispatched:'📋', Shipped:'🚚', 'Out for Delivery':'🛵', Delivered:'✅', Cancelled:'❌' };
                           const oIdx = orderRoadmap.indexOf(order.status);
                           return (
                           <div style={{ marginTop: '1.25rem' }}>
