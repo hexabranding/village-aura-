@@ -48,6 +48,7 @@ export default function FixedAdBanner() {
               alt={ad.title || 'Promotional banner'}
               loading="lazy"
               decoding="async"
+              crossOrigin="anonymous"
               width={1200}
               height={420}
               onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/30677843/pexels-photo-30677843.jpeg?w=1400&h=500&fit=crop'; } }}

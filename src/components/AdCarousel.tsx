@@ -98,6 +98,7 @@ export default function AdCarousel() {
             alt={slides[current].title || 'Featured collection banner'}
             loading="lazy"
             decoding="async"
+            crossOrigin="anonymous"
             width={1400}
             height={500}
             onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=fallbackSlides[0].image; } }}

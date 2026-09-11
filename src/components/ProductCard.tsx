@@ -62,6 +62,7 @@ export default function ProductCard({ product, index = 0, isLiked = false, onTog
               alt={product.name}
               loading="lazy"
               decoding="async"
+              crossOrigin="anonymous"
               width={400}
               height={500}
               animate={{ opacity: hovered ? 0 : 1 }}
@@ -74,6 +75,7 @@ export default function ProductCard({ product, index = 0, isLiked = false, onTog
               alt={`${product.name} alternate view`}
               loading="lazy"
               decoding="async"
+              crossOrigin="anonymous"
               width={400}
               height={500}
               animate={{ opacity: hovered ? 1 : 0 }}

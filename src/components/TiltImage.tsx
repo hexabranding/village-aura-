@@ -70,6 +70,7 @@ export default function TiltImage({ src, alt, style, expanded = false, onHoverCh
         loading="eager"
         fetchPriority="high"
         decoding="async"
+        crossOrigin="anonymous"
         width={500}
         height={650}
         onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.style.display='none'; } }}

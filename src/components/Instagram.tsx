@@ -123,6 +123,7 @@ export default function Instagram() {
                   alt={post.label}
                   loading="lazy"
                   decoding="async"
+                  crossOrigin="anonymous"
                   width={260}
                   height={340}
                   onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=publicImages[0]; } }}

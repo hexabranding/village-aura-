@@ -112,6 +112,7 @@ export default function Collections({ collections }: CollectionsProps) {
                   alt={c.title}
                   loading="lazy"
                   decoding="async"
+                  crossOrigin="anonymous"
                   width={250}
                   height={333}
                   onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=publicImages[0]; } }}

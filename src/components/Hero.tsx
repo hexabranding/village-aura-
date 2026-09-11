@@ -137,6 +137,7 @@ export default function Hero() {
             loading="eager"
             fetchPriority="high"
             decoding="async"
+            crossOrigin="anonymous"
             width={1920}
             height={1080}
             onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=heroSlides[0].image; } }}

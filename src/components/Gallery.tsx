@@ -61,6 +61,7 @@ function GalleryCard({ image, index }: { image: GalleryImage; index: number }) {
         alt={image.title}
         loading="lazy"
         decoding="async"
+        crossOrigin="anonymous"
         width={400}
         height={500}
         onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback = '1'; t.src = fallbackImages[0].src; } }}

@@ -595,6 +595,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                               alt={p.name}
                               loading="lazy"
                               decoding="async"
+                              crossOrigin="anonymous"
                               width={46}
                               height={58}
                               onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200'; } }}

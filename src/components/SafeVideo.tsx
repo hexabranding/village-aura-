@@ -58,6 +58,7 @@ export default function SafeVideo({ src, poster, alt, style, className, muted = 
             alt={alt || 'Video poster fallback'}
             loading="lazy"
             decoding="async"
+            crossOrigin="anonymous"
             width={500}
             height={900}
             onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.style.display='none'; } }}
@@ -81,6 +82,7 @@ export default function SafeVideo({ src, poster, alt, style, className, muted = 
           controls={controls}
           playsInline={playsInline}
           preload={preload as any}
+          crossOrigin="anonymous"
           onError={() => setHasError(true)}
           style={{ width: '100%', height: '100%', objectFit: (style as any)?.objectFit || 'cover', display: 'block' }}
         />
@@ -90,6 +92,7 @@ export default function SafeVideo({ src, poster, alt, style, className, muted = 
           alt={alt || 'Video poster fallback'}
           loading="lazy"
           decoding="async"
+          crossOrigin="anonymous"
           width={500}
           height={900}
           onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.style.display='none'; } }}
