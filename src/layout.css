@@ -1080,16 +1080,17 @@
 }
 
 .admin-nav-item.active {
-  color: var(--gold);
+  color: #fff;
+  background: rgba(107, 30, 35, 0.55);
 }
 
 .admin-nav-active-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(201, 169, 110, 0.22) 0%, rgba(107, 30, 35, 0.18) 100%);
+  background: linear-gradient(135deg, rgba(107, 30, 35, 0.6) 0%, rgba(80, 20, 28, 0.5) 100%);
   border-radius: 10px;
   z-index: -1;
-  box-shadow: inset 0 0 0 1px rgba(201, 169, 110, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(107, 30, 35, 0.3);
 }
 
 .admin-nav-label {
@@ -1110,8 +1111,8 @@
 }
 
 .admin-nav-item.active .admin-nav-icon {
-  background: rgba(201, 169, 110, 0.25);
-  box-shadow: 0 0 12px rgba(201, 169, 110, 0.2);
+  background: rgba(107, 30, 35, 0.7);
+  box-shadow: 0 0 12px rgba(107, 30, 35, 0.3);
 }
 
 .admin-nav-item:hover .admin-nav-icon {
