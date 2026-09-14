@@ -23,6 +23,7 @@ import reviewRoutes from './routes/reviews.js';
 import returnRoutes from './routes/returns.js';
 import returnSettingsRoutes from './routes/returnSettings.js';
 import notificationRoutes from './routes/notifications.js';
+import paymentRoutes from './routes/payments.js';
 
 dotenv.config();
 
@@ -84,6 +85,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/returns', returnRoutes);
 app.use('/api/return-settings', returnSettingsRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

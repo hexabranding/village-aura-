@@ -1,10 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getProduct } from '../lib/productStore';
 import type { CartItem } from '../data/products';
 import ZariDivider from '../components/ZariDivider';
 import { api, resolveUploadUrl } from '../lib/api';
+
+declare global {
+  interface Window {
+    Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
+  }
+}
+
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (response: RazorpayResponse) => void;
+  prefill?: { name?: string; contact?: string; email?: string };
+  theme?: { color?: string };
+  modal?: { ondismiss?: () => void };
+}
+
+interface RazorpayInstance {
+  open: () => void;
+  on: (event: string, callback: (response: { error: { description: string } }) => void) => void;
+}
+
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
 
 interface CheckoutProps {
   cart: CartItem[];
@@ -43,57 +73,100 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
+  const finalizeOrder = useCallback(async (orderItems: { id: string; colorIndex: number; qty: number }[], paymentMethod: string) => {
+    const result = await api.orders.create({
+      total,
+      name: form.name,
+      phone: form.phone,
+      payment: paymentMethod,
+      items: orderItems,
+      address: form.address,
+      city: form.city,
+      state: form.state,
+      pincode: form.pincode,
+    });
+    clearCart();
+    const savedUser = localStorage.getItem('reshamUser');
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      localStorage.setItem('reshamUser', JSON.stringify({ ...user, phone: form.phone, name: form.name || user.name }));
+    } else {
+      localStorage.setItem('reshamUser', JSON.stringify({ email: '', name: form.name, phone: form.phone }));
+    }
+    const localOrder = {
+      orderId: result.orderId,
+      total,
+      name: form.name,
+      phone: form.phone,
+      payment: paymentMethod,
+      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      status: 'Pending',
+      items: orderItems,
+    };
+    const existingOrders = JSON.parse(localStorage.getItem('reshamOrders') || '[]');
+    existingOrders.unshift(localOrder);
+    localStorage.setItem('reshamOrders', JSON.stringify(existingOrders));
+    setPlaced({
+      orderId: result.orderId,
+      total,
+      name: form.name,
+      phone: form.phone,
+      payment: paymentMethod,
+      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+    });
+    window.scrollTo(0, 0);
+  }, [total, form, clearCart]);
+
+  const openRazorpay = useCallback(async (orderItems: { id: string; colorIndex: number; qty: number }[]) => {
+    const amountInPaise = total * 100;
+    const orderData = await api.payments.createOrder(amountInPaise, `order_${Date.now()}`);
+
+    const options: RazorpayOptions = {
+      key: (import.meta as unknown as { env: { VITE_RAZORPAY_KEY_ID?: string } }).env.VITE_RAZORPAY_KEY_ID || '',
+      amount: orderData.amount,
+      currency: orderData.currency,
+      name: 'Village Aura',
+      description: `Order Payment - ${items.length} item(s)`,
+      order_id: orderData.orderId,
+      handler: async (response: RazorpayResponse) => {
+        try {
+          await api.payments.verify(response);
+          await finalizeOrder(orderItems, 'Paid via Razorpay');
+        } catch {
+          setError('Payment verification failed. Please contact support.');
+          setLoading(false);
+        }
+      },
+      prefill: {
+        name: form.name,
+        contact: form.phone,
+      },
+      theme: { color: '#6b1e23' },
+      modal: {
+        ondismiss: () => {
+          setLoading(false);
+        },
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.on('payment.failed', () => {
+      setError('Payment failed. Please try again.');
+      setLoading(false);
+    });
+    rzp.open();
+  }, [total, items, form, finalizeOrder]);
+
   const placeOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
       const orderItems = cart.map((ci) => ({ id: ci.id, colorIndex: ci.colorIndex, qty: ci.qty }));
-      const result = await api.orders.create({
-        total,
-        name: form.name,
-        phone: form.phone,
-        payment,
-        items: orderItems,
-        address: form.address,
-        city: form.city,
-        state: form.state,
-        pincode: form.pincode,
-      });
-      clearCart();
-      const savedUser = localStorage.getItem('reshamUser');
-      if (savedUser) {
-        const user = JSON.parse(savedUser);
-        localStorage.setItem('reshamUser', JSON.stringify({ ...user, phone: form.phone, name: form.name || user.name }));
-      } else {
-        localStorage.setItem('reshamUser', JSON.stringify({ email: '', name: form.name, phone: form.phone }));
-      }
-      const localOrder = {
-        orderId: result.orderId,
-        total,
-        name: form.name,
-        phone: form.phone,
-        payment,
-        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-        status: 'Pending',
-        items: cart.map((ci) => ({ id: ci.id, colorIndex: ci.colorIndex, qty: ci.qty })),
-      };
-      const existingOrders = JSON.parse(localStorage.getItem('reshamOrders') || '[]');
-      existingOrders.unshift(localOrder);
-      localStorage.setItem('reshamOrders', JSON.stringify(existingOrders));
-      setPlaced({
-        orderId: result.orderId,
-        total,
-        name: form.name,
-        phone: form.phone,
-        payment,
-        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-      });
-      window.scrollTo(0, 0);
+      await openRazorpay(orderItems);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to place order. Please try again.';
       setError(message);
-    } finally {
       setLoading(false);
     }
   };
@@ -236,7 +309,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
           <div>
             <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Payment Method</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              {['UPI / Pay on App', 'Credit / Debit Card'].map((m) => (
+              {['Razorpay - UPI / Cards / Netbanking'].map((m) => (
                 <label
                   key={m}
                   style={{
@@ -263,6 +336,9 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
                 </label>
               ))}
             </div>
+            <p style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.6rem', lineHeight: 1.6 }}>
+              Secure payment powered by Razorpay. Supports UPI, Credit/Debit Cards, Netbanking, and Wallets.
+            </p>
           </div>
         </div>
 
@@ -312,7 +388,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
             <p style={{ color: '#c0392b', fontSize: '0.82rem', textAlign: 'center', marginTop: '0.75rem' }}>{error}</p>
           )}
           <button type="submit" disabled={loading} className="btn btn-solid" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem', opacity: loading ? 0.7 : 1 }}>
-            {loading ? 'Placing Order...' : `Place Order — ₹${total.toLocaleString('en-IN')}`}
+            {loading ? 'Processing...' : `Pay ₹${total.toLocaleString('en-IN')} via Razorpay`}
           </button>
           <Link to="/cart" className="eyebrow" style={{ display: 'block', textAlign: 'center', marginTop: '1rem', color: 'var(--maroon)' }}>
             ← Back to Bag

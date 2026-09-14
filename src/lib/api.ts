@@ -698,4 +698,23 @@ export const api = {
       return handleResponse(res);
     },
   },
+
+  payments: {
+    createOrder: async (amount: number, receipt?: string) => {
+      const res = await fetch(`${API_BASE}/payments/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, currency: 'INR', receipt }),
+      });
+      return handleResponse(res);
+    },
+    verify: async (data: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+      const res = await fetch(`${API_BASE}/payments/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    },
+  },
 };

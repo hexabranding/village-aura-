@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 const uploadDir = path.join(
-  process.env.HOME,
+  process.env.HOME || process.env.USERPROFILE || '.',
   'domains',
   'api.villageallure.com',
   'uploads'
