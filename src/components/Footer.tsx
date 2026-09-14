@@ -29,9 +29,7 @@ export default function Footer() {
   ];
   return (
     <footer style={{ background: 'linear-gradient(180deg, var(--maroon-deep) 0%, #2a0e12 100%)', color: 'var(--ivory-deep)', marginTop: 'clamp(3rem, 6vw, 6rem)', position: 'relative', overflow: 'hidden' }}>
-      <div aria-hidden style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', overflow: 'hidden' }}>
-        <span className="village-watermark" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.8rem, 10vw, 8.5rem)', fontWeight: 700, fontStyle: 'italic', color: 'rgba(201,169,110,0.09)', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap', userSelect: 'none' }}>village_allure</span>
-      </div>
+
       <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(201,169,110,0.08) 0%, transparent 60%)', pointerEvents: 'none' }} />
       <div className="container" style={{ paddingTop: '3.5rem' }}>
         <ZariDivider tone="ivory" />
@@ -71,7 +69,7 @@ export default function Footer() {
             />
           </motion.div>
           <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.92rem', lineHeight: 1.85, color: 'rgba(255,255,255,0.88)', maxWidth: 300, marginTop: '-1rem', letterSpacing: '0.01em', fontStyle: 'italic', fontWeight: 400 }}>
-            Handwoven sarees from India's weaving houses — <span style={{ color: 'var(--gold-soft)', fontStyle: 'normal', fontWeight: 600 }}>Kanchipuram • Banaras • Chanderi • Bengal</span> — brought to your door with the story of the loom intact.
+            Handwoven sarees from India's weaving houses <span style={{ color: 'var(--gold-soft)', fontStyle: 'normal', fontWeight: 600 }}></span> brought to your door with the story of the loom intact.
           </p>
         </motion.div>
         <motion.div variants={fadeUp} transition={{ duration: 0.5 }}>
@@ -82,7 +80,7 @@ export default function Footer() {
               { name: 'Sarees', path: '/shop?category=Sarees' },
               { name: 'Jewellery', path: '/shop?category=Jewellery' },
               { name: 'Bags', path: '/shop?category=Bags' },
-              { name: 'Unstitched Suit Sets', path: '/shop?category=Unstitched%20Suit%20Sets' },
+              { name: 'Suit Sets', path: '/shop?category=Unstitched%20Suit%20Sets' },
               { name: 'Gallery', path: '/gallery' },
             ].map((item) => (
               <motion.li

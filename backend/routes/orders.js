@@ -178,7 +178,7 @@ router.put('/:id/status', auth, async (req, res) => {
       const whatsappUrl = order.phone ? `https://wa.me/91${order.phone.replace(/\D/g, '')}?text=${whatsappMsg}` : '';
 
       const emailSubject = encodeURIComponent(`Your Order ${order.orderId} has been Dispatched!`);
-      const emailBody = encodeURIComponent(`Hi ${order.name},\n\nYour order ${order.orderId} has been dispatched!\n\nTrack your shipment here: ${trackingLink || 'Tracking link will be updated soon.'}\n\nThank you for shopping with Village Aura!`);
+      const emailBody = encodeURIComponent(`Hi ${order.name},\n\nYour order ${order.orderId} has been dispatched!\n\nTrack your shipment here: ${trackingLink || 'Tracking link will be updated soon.'}\n\nThank you for shopping with Village Allure!`);
       const emailUrl = order.email ? `mailto:${order.email}?subject=${emailSubject}&body=${emailBody}` : '';
 
       return res.json({ order, whatsappUrl, emailUrl });

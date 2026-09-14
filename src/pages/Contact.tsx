@@ -33,8 +33,25 @@ export default function Contact() {
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await fetch('https://formspree.io/f/mzeblogq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          _subject: `Contact Form - ${subject}`,
+          _replyto: email,
+          _template: 'table',
+          name,
+          email,
+          subject,
+          message,
+        }),
+      });
+    } catch {
+      // silent fail
+    }
     setSent(true);
     setTimeout(() => setSent(false), 3000);
     setName('');

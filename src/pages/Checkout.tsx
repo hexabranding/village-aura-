@@ -57,8 +57,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     if (!user) navigate('/login?redirect=/checkout', { replace: true });
   }, [navigate]);
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
-  const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', state: 'Delhi', pincode: '' });
-  const [payment, setPayment] = useState('UPI / Pay on App');
+  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', city: '', state: 'Delhi', pincode: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -77,6 +76,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     const result = await api.orders.create({
       total,
       name: form.name,
+      email: form.email,
       phone: form.phone,
       payment: paymentMethod,
       items: orderItems,
@@ -89,9 +89,9 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     const savedUser = localStorage.getItem('reshamUser');
     if (savedUser) {
       const user = JSON.parse(savedUser);
-      localStorage.setItem('reshamUser', JSON.stringify({ ...user, phone: form.phone, name: form.name || user.name }));
+      localStorage.setItem('reshamUser', JSON.stringify({ ...user, email: form.email, phone: form.phone, name: form.name || user.name }));
     } else {
-      localStorage.setItem('reshamUser', JSON.stringify({ email: '', name: form.name, phone: form.phone }));
+      localStorage.setItem('reshamUser', JSON.stringify({ email: form.email, name: form.name, phone: form.phone }));
     }
     const localOrder = {
       orderId: result.orderId,
@@ -106,16 +106,42 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     const existingOrders = JSON.parse(localStorage.getItem('reshamOrders') || '[]');
     existingOrders.unshift(localOrder);
     localStorage.setItem('reshamOrders', JSON.stringify(existingOrders));
+
+    const orderDate = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    const itemNames = items.map(({ ci, product }) => `${product!.name} x${ci.qty}`).join(', ');
+    try {
+      await fetch('https://formspree.io/f/mzeblogq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          _subject: `Order Confirmed - ${result.orderId}`,
+          _replyto: form.email,
+          _template: 'table',
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          orderId: result.orderId,
+          items: itemNames,
+          total: `₹${total.toLocaleString('en-IN')}`,
+          address: `${form.address}, ${form.city}, ${form.state} - ${form.pincode}`,
+          payment: paymentMethod,
+          date: orderDate,
+        }),
+      });
+    } catch {
+      // silent fail – order already placed
+    }
+
     setPlaced({
       orderId: result.orderId,
       total,
       name: form.name,
       phone: form.phone,
       payment: paymentMethod,
-      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      date: orderDate,
     });
     window.scrollTo(0, 0);
-  }, [total, form, clearCart]);
+  }, [total, form, clearCart, items]);
 
   const openRazorpay = useCallback(async (orderItems: { id: string; colorIndex: number; qty: number }[]) => {
     const amountInPaise = total * 100;
@@ -125,7 +151,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
       key: (import.meta as unknown as { env: { VITE_RAZORPAY_KEY_ID?: string } }).env.VITE_RAZORPAY_KEY_ID || '',
       amount: orderData.amount,
       currency: orderData.currency,
-      name: 'Village Aura',
+      name: 'Village Allure',
       description: `Order Payment - ${items.length} item(s)`,
       order_id: orderData.orderId,
       handler: async (response: RazorpayResponse) => {
@@ -139,6 +165,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
       },
       prefill: {
         name: form.name,
+        email: form.email,
         contact: form.phone,
       },
       theme: { color: '#6b1e23' },
@@ -271,9 +298,13 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
                 <input required value={form.name} onChange={set('name')} placeholder="Your name" style={inputStyle} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label className="eyebrow" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>Phone Number</label>
-                <input required value={form.phone} onChange={set('phone')} placeholder="10-digit mobile" pattern="[0-9]{10}" maxLength={10} style={inputStyle} />
+                <label className="eyebrow" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>Email Address</label>
+                <input required type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" style={inputStyle} />
               </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '1rem' }}>
+              <label className="eyebrow" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>Phone Number (WhatsApp Number)</label>
+              <input required value={form.phone} onChange={set('phone')} placeholder="10-digit mobile" pattern="[0-9]{10}" maxLength={10} style={inputStyle} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '1rem' }}>
               <label className="eyebrow" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>Full Address</label>
@@ -287,16 +318,42 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                 <label className="eyebrow" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>State</label>
                 <select value={form.state} onChange={set('state')} style={inputStyle}>
-                  <option>Delhi</option>
-                  <option>Maharashtra</option>
-                  <option>Karnataka</option>
-                  <option>West Bengal</option>
-                  <option>Uttar Pradesh</option>
-                  <option>Rajasthan</option>
+                  <option>Andhra Pradesh</option>
+                  <option>Arunachal Pradesh</option>
+                  <option>Assam</option>
+                  <option>Bihar</option>
+                  <option>Chhattisgarh</option>
+                  <option>Goa</option>
                   <option>Gujarat</option>
+                  <option>Haryana</option>
+                  <option>Himachal Pradesh</option>
+                  <option>Jharkhand</option>
+                  <option>Karnataka</option>
+                  <option>Kerala</option>
+                  <option>Madhya Pradesh</option>
+                  <option>Maharashtra</option>
+                  <option>Manipur</option>
+                  <option>Meghalaya</option>
+                  <option>Mizoram</option>
+                  <option>Nagaland</option>
+                  <option>Odisha</option>
+                  <option>Punjab</option>
+                  <option>Rajasthan</option>
+                  <option>Sikkim</option>
                   <option>Tamil Nadu</option>
                   <option>Telangana</option>
-                  <option>Other</option>
+                  <option>Tripura</option>
+                  <option>Uttar Pradesh</option>
+                  <option>Uttarakhand</option>
+                  <option>West Bengal</option>
+                  <option>Andaman and Nicobar Islands</option>
+                  <option>Chandigarh</option>
+                  <option>Dadra and Nagar Haveli and Daman and Diu</option>
+                  <option>Delhi</option>
+                  <option>Jammu and Kashmir</option>
+                  <option>Ladakh</option>
+                  <option>Lakshadweep</option>
+                  <option>Puducherry</option>
                 </select>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
@@ -306,40 +363,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
             </div>
           </div>
 
-          <div>
-            <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Payment Method</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              {['Razorpay - UPI / Cards / Netbanking'].map((m) => (
-                <label
-                  key={m}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.9rem 1rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: payment === m ? '1px solid var(--maroon)' : '1px solid var(--line)',
-                    background: payment === m ? 'rgba(107,30,35,0.04)' : 'var(--ivory-deep)',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    transition: 'border-color 0.2s ease',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={payment === m}
-                    onChange={() => setPayment(m)}
-                    style={{ accentColor: 'var(--maroon)', width: 16, height: 16 }}
-                  />
-                  {m}
-                </label>
-              ))}
-            </div>
-            <p style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.6rem', lineHeight: 1.6 }}>
-              Secure payment powered by Razorpay. Supports UPI, Credit/Debit Cards, Netbanking, and Wallets.
-            </p>
-          </div>
+
         </div>
 
         <div style={{ background: 'var(--ivory-deep)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: '1.5rem', position: 'sticky', top: '120px' }}>
@@ -388,7 +412,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
             <p style={{ color: '#c0392b', fontSize: '0.82rem', textAlign: 'center', marginTop: '0.75rem' }}>{error}</p>
           )}
           <button type="submit" disabled={loading} className="btn btn-solid" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem', opacity: loading ? 0.7 : 1 }}>
-            {loading ? 'Processing...' : `Pay ₹${total.toLocaleString('en-IN')} via Razorpay`}
+            {loading ? 'Processing...' : `Pay ₹${total.toLocaleString('en-IN')} `}
           </button>
           <Link to="/cart" className="eyebrow" style={{ display: 'block', textAlign: 'center', marginTop: '1rem', color: 'var(--maroon)' }}>
             ← Back to Bag
