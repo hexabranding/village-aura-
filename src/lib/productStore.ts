@@ -20,15 +20,27 @@ export const getProduct = (id: string): Product | undefined => {
 export const loadProducts = async () => {
   if (loaded) return;
   try {
-    const apiProducts = await api.products.getAll();
+    const [apiProducts, cats] = await Promise.all([api.products.getAll(), api.categories.getAll()]);
     if (apiProducts.length > 0) {
+      const validNames = new Set(cats.map((c) => c.name));
+      const validSubMap: Record<string, boolean> = {};
+      cats.forEach((c) => {
+        c.subcategories.forEach((sub) => {
+          validSubMap[`${c.name}::${sub}`] = true;
+        });
+      });
       const merged = localProducts.map((lp) => {
         const apiP = apiProducts.find((p) => p.id === lp.id);
         if (apiP && apiP.variants.some((v) => v.images.length > 0)) return apiP;
         return lp;
       });
       const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
-      allProducts = [...newProducts, ...merged];
+      const all = [...newProducts, ...merged];
+      allProducts = all.filter((p) => {
+        if (!validNames.has(p.category)) return false;
+        if (p.subCategory && !validSubMap[`${p.category}::${p.subCategory}`]) return false;
+        return true;
+      });
     }
   } catch {
     // ignore

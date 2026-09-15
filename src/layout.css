@@ -1815,6 +1815,19 @@
   background: #f5f5f5;
 }
 
+.admin-input-error {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.admin-field-error {
+  display: block;
+  color: #dc2626;
+  font-size: 0.72rem;
+  margin-top: 0.3rem;
+  font-weight: 500;
+}
+
 /* ─── Empty State ─── */
 .admin-empty {
   text-align: center;

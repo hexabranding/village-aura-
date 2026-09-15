@@ -450,9 +450,11 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
   const [curated, setCurated] = useState<any[] | null>(null);
 
   useEffect(() => {
-    api.products.getAll().then((apiProducts) => {
+    Promise.all([api.products.getAll(), api.categories.getAll()]).then(([apiProducts, cats]) => {
       if (apiProducts.length === 0) return;
-      setProducts(apiProducts);
+      const validNames = new Set(cats.map((c) => c.name));
+      const filtered = apiProducts.filter((p) => validNames.has(p.category));
+      setProducts(filtered);
     }).catch(() => {});
   }, []);
 

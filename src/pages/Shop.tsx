@@ -42,17 +42,30 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    api.products.getAll().then((apiProducts) => {
+    Promise.all([api.products.getAll(), api.categories.getAll()]).then(([apiProducts, cats]) => {
+      setCategories(cats);
       if (apiProducts.length === 0) return;
+      const validNames = new Set(cats.map((c) => c.name));
+      const validSubMap: Record<string, boolean> = {};
+      cats.forEach((c) => {
+        c.subcategories.forEach((sub) => {
+          validSubMap[`${c.name}::${sub}`] = true;
+        });
+      });
       const merged = localProducts.map((lp) => {
         const apiP = apiProducts.find((p) => p.id === lp.id);
         if (apiP && apiP.variants.some((v) => v.images.length > 0)) return apiP;
         return lp;
       });
       const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
-      setProducts([...newProducts, ...merged]);
+      const all = [...newProducts, ...merged];
+      const filtered = all.filter((p) => {
+        if (!validNames.has(p.category)) return false;
+        if (p.subCategory && !validSubMap[`${p.category}::${p.subCategory}`]) return false;
+        return true;
+      });
+      setProducts(filtered);
     }).catch(() => {});
-    api.categories.getAll().then(setCategories).catch(() => {});
   }, []);
   const activeCategory = searchParams.get('category');
   const activeSub = activeCategory ? searchParams.get('sub') : null;

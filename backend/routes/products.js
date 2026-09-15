@@ -1,13 +1,28 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import Category from '../models/Category.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
+    const categories = await Category.find().select('name subcategories');
+    const validCategoryNames = new Set(categories.map((c) => c.name));
+    const validSubCategoryMap = {};
+    categories.forEach((c) => {
+      c.subcategories.forEach((sub) => {
+        validSubCategoryMap[`${c.name}::${sub}`] = true;
+      });
+    });
+
     const products = await Product.find().sort({ createdAt: -1 });
-    res.json(products);
+    const filtered = products.filter((p) => {
+      if (!validCategoryNames.has(p.category)) return false;
+      if (p.subCategory && !validSubCategoryMap[`${p.category}::${p.subCategory}`]) return false;
+      return true;
+    });
+    res.json(filtered);
   } catch (error) {
     console.error('Get products error:', error);
     res.status(500).json({ error: 'Failed to fetch products' });

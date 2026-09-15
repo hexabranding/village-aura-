@@ -29,15 +29,17 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
   }, [id, allProducts]);
 
   useEffect(() => {
-    api.products.getAll().then((apiProducts) => {
+    Promise.all([api.products.getAll(), api.categories.getAll()]).then(([apiProducts, cats]) => {
       if (apiProducts.length === 0) return;
+      const validNames = new Set(cats.map((c) => c.name));
       const merged = localProducts.map((lp) => {
         const apiP = apiProducts.find((p) => p.id === lp.id);
         if (apiP && apiP.variants.some((v) => v.images.length > 0)) return apiP;
         return lp;
       });
       const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
-      setAllProducts([...merged, ...newProducts]);
+      const all = [...merged, ...newProducts];
+      setAllProducts(all.filter((p) => validNames.has(p.category)));
     }).catch(() => {});
   }, []);
 

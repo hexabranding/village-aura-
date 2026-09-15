@@ -122,6 +122,7 @@ export default function AdminProducts() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeVariantTab, setActiveVariantTab] = useState(0);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const loadData = async () => {
     try {
@@ -174,8 +175,18 @@ export default function AdminProducts() {
     setShowModal(true);
   };
 
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!form.name.trim()) newErrors.name = 'Product name is required';
+    if (!form.price || form.price <= 0) newErrors.price = 'Valid selling price is required';
+    if (!form.category) newErrors.category = 'Category is required';
+    if (!form.variants[0]?.colorName.trim()) newErrors.colorName = 'Color name is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSave = async () => {
-    if (!form.name || !form.price) return;
+    if (!validate()) return;
     try {
       if (editing) {
         const updated: any = await api.products.update(editing.id, form);
@@ -191,6 +202,7 @@ export default function AdminProducts() {
         setSearch('');
         setCategoryFilter('All');
       }
+      setErrors({});
       setShowModal(false);
       await loadData();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -550,7 +562,8 @@ export default function AdminProducts() {
                 <div className="admin-form-grid">
                   <div className="admin-form-group">
                     <label>Product Name *</label>
-                    <input value={form.name} onChange={(e) => updateForm('name', e.target.value)} placeholder="e.g. Kanjivaram Silk Saree" />
+                    <input value={form.name} onChange={(e) => { updateForm('name', e.target.value); setErrors((prev) => ({ ...prev, name: '' })); }} placeholder="e.g. Kanjivaram Silk Saree" className={errors.name ? 'admin-input-error' : ''} />
+                    {errors.name && <span className="admin-field-error">{errors.name}</span>}
                   </div>
                   <div className="admin-form-group">
                     <label>Product ID</label>
@@ -566,12 +579,15 @@ export default function AdminProducts() {
                       onChange={(e) => {
                         updateForm('category', e.target.value);
                         updateForm('subCategory', '');
+                        setErrors((prev) => ({ ...prev, category: '' }));
                       }}
+                      className={errors.category ? 'admin-input-error' : ''}
                     >
                       {categories.map((c) => (
                         <option key={c.id} value={c.name}>{c.name}</option>
                       ))}
                     </select>
+                    {errors.category && <span className="admin-field-error">{errors.category}</span>}
                   </div>
                   <div className="admin-form-group">
                     <label>Sub Category</label>
@@ -595,7 +611,8 @@ export default function AdminProducts() {
                   </div>
                   <div className="admin-form-group">
                     <label>Selling Price (₹) *</label>
-                    <input type="number" value={form.price || ''} onChange={(e) => updateForm('price', Number(e.target.value))} />
+                    <input type="number" value={form.price || ''} onChange={(e) => { updateForm('price', Number(e.target.value)); setErrors((prev) => ({ ...prev, price: '' })); }} className={errors.price ? 'admin-input-error' : ''} />
+                    {errors.price && <span className="admin-field-error">{errors.price}</span>}
                   </div>
                 </div>
 
@@ -745,9 +762,11 @@ export default function AdminProducts() {
                             <label>Color Name *</label>
                             <input
                               value={variant.colorName}
-                              onChange={(e) => updateVariant(vIndex, 'colorName', e.target.value)}
+                              onChange={(e) => { updateVariant(vIndex, 'colorName', e.target.value); setErrors((prev) => ({ ...prev, colorName: '' })); }}
                               placeholder="e.g. Deep Maroon"
+                              className={errors.colorName ? 'admin-input-error' : ''}
                             />
+                            {errors.colorName && <span className="admin-field-error">{errors.colorName}</span>}
                           </div>
                           <div className="admin-form-group">
                             <label>Color</label>
