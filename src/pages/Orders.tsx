@@ -67,10 +67,9 @@ export default function Orders() {
   const [returnQty, setReturnQty] = useState(1);
   const [returnImages, setReturnImages] = useState<string[]>([]);
   const [returnVideo, setReturnVideo] = useState('');
-  const [returnResolution, setReturnResolution] = useState('Refund');
+  const [returnResolution, setReturnResolution] = useState('Replacement');
   const [returnSettings, setReturnSettings] = useState<any>(null);
   const [eligibility, setEligibility] = useState<Record<string, any>>({});
-  const [showOrderReturnForm, setShowOrderReturnForm] = useState<string | null>(null);
   const [showFullTimeline, setShowFullTimeline] = useState<Record<string,boolean>>({});
   const [uploadingReturn, setUploadingReturn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -109,8 +108,10 @@ export default function Orders() {
   useEffect(()=>{
     const phone = user?.phone || phoneInput;
     if(!phone || phone.length<10) return;
-    const id=setInterval(()=>{ api.orders.getByPhone(phone).then(setApiOrders).catch(()=>{}); api.returns.getByPhone(phone).then(setReturns).catch(()=>{}); }, 10000);
-    const onFocus=()=>{ api.orders.getByPhone(phone).then(setApiOrders).catch(()=>{}); };
+    const refresh=()=>{ api.orders.getByPhone(phone).then(setApiOrders).catch(()=>{}); api.returns.getByPhone(phone).then(setReturns).catch(()=>{}); };
+    refresh();
+    const id=setInterval(refresh, 5000);
+    const onFocus=()=>{ refresh(); };
     window.addEventListener('focus', onFocus);
     return()=>{ clearInterval(id); window.removeEventListener('focus', onFocus); };
   }, [user?.phone, phoneInput]);
@@ -194,7 +195,7 @@ export default function Orders() {
         qty: returnQty, images: returnImages, video: returnVideo, resolution: returnResolution, productPrice,
       });
       await fetchReviewsAndReturns(user.phone);
-      setShowReturnForm(null); setReturnReason(''); setReturnOtherReason(''); setReturnDescription(''); setReturnQty(1); setReturnImages([]); setReturnVideo(''); setReturnResolution('Refund');
+      setShowReturnForm(null); setReturnReason(''); setReturnOtherReason(''); setReturnDescription(''); setReturnQty(1); setReturnImages([]); setReturnVideo(''); setReturnResolution('Replacement');
       setSubmitSuccess('return'); setTimeout(() => setSubmitSuccess(null), 3000);
     } catch (err:any) { alert(err.message||'Return failed'); } finally { setSubmitting(false); }
   };
@@ -208,21 +209,6 @@ export default function Orders() {
   };
   const getReturn = (orderId: string, productId: string) => returns.find((r) => r.orderId === orderId && r.productId === productId);
   const hasOrderReturn = (orderId: string) => returns.some((r) => r.orderId === orderId);
-  const handleSubmitOrderReturn = async (orderId: string) => {
-    if (!user?.phone || !returnReason) return;
-    const order = allOrders.find((o) => o.orderId === orderId);
-    if (!order) return;
-    setSubmitting(true);
-    try {
-      for (const item of order.items) {
-        if (hasReturnRequest(orderId, item.id)) continue;
-        await api.returns.create({ orderId, productId: item.id, phone: user.phone, reason: returnReason, description: returnDescription.trim() });
-      }
-      await fetchReviewsAndReturns(user.phone);
-      setShowOrderReturnForm(null); setReturnReason(''); setReturnDescription('');
-      setSubmitSuccess('return'); setTimeout(() => setSubmitSuccess(null), 3000);
-    } catch (err) { console.error(err); } finally { setSubmitting(false); }
-  };
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (phoneInput.length >= 10) {
@@ -290,6 +276,7 @@ export default function Orders() {
           >
             My Orders
           </motion.h1>
+          <button onClick={()=>{ const phone=user?.phone||phoneInput; if(phone&&phone.length>=10){ api.orders.getByPhone(phone).then(setApiOrders).catch(()=>{}); api.returns.getByPhone(phone).then(setReturns).catch(()=>{}); } }} style={{ marginTop:'0.5rem', padding:'0.35rem 0.9rem', background:'white', border:'1px solid var(--line)', borderRadius:20, fontSize:'0.72rem', fontWeight:600, cursor:'pointer', color:'var(--ink-soft)', display:'inline-flex', alignItems:'center', gap:'0.3rem' }}>🔄 Refresh</button>
           <ZariDivider />
         </div>
 
@@ -554,47 +541,45 @@ const orderRoadmap = ['Pending','Processing','Dispatched','Shipped','Out for Del
                                 </div>
                               );
                             })()}
-                            <div style={{ background: 'white', border: '1px solid #fecaca', borderRadius: 'var(--radius-sm)', padding: '1rem', marginBottom: '1rem' }}>
-                              {hasOrderReturn(order.orderId) ? (
-                                <div>
-                                  {(() => {
+                              {hasOrderReturn(order.orderId) && (() => {
                                     const ros = returns.filter((r) => r.orderId === order.orderId);
                                     const ro = ros[0];
-                                    const roadmap = ['Pending','Approved','Pickup Scheduled','Picked Up','Completed'];
-                                    const col: Record<string,string> = { Pending:'#f59e0b', Approved:'#3b82f6', 'Pickup Scheduled':'#8b5cf6', 'Picked Up':'#f97316', Completed:'#10b981', Rejected:'#ef4444' };
-                                    const ico: Record<string,string> = { Pending:'📋', Approved:'✅', Rejected:'❌', 'Pickup Scheduled':'📦', 'Picked Up':'🚚', Completed:'🏁' };
+                                    if(!ro) return null;
+                                    const col: Record<string,string> = { 'Return Requested':'#f59e0b','Under Review':'#3b82f6','More Information Required':'#eab308', 'Approved':'#10b981','Pickup Scheduled':'#8b5cf6','Picked Up':'#f97316','Product Received':'#06b6d4','Quality Check':'#a855f7','Replacement Processing':'#6366f1', 'Completed':'#10b981', 'Rejected':'#ef4444', 'Cancelled':'#6b7280' };
+                                    const ico: Record<string,string> = { 'Return Requested':'📋','Under Review':'👀','More Information Required':'❓', 'Approved':'✅', 'Rejected':'❌','Pickup Scheduled':'📦','Picked Up':'🚚','Product Received':'📥','Quality Check':'🔍','Replacement Processing':'🔄', 'Completed':'🏁', 'Cancelled':'✕' };
+                                    const statusSteps = ['Return Requested','Under Review','Approved','Pickup Scheduled','Picked Up','Product Received','Quality Check','Replacement Processing','Completed'];
+                                    const currentIdx = statusSteps.indexOf(ro.status);
                                     return (
-                                      <div>
-                                        <div style={{ fontSize:'0.78rem', fontWeight:700, color:'#92400e' }}>↩️ Return Requested — {ros.length} item(s) • <span style={{ color:'#fff', background: col[ro.status]||'#92400e', padding:'2px 8px', borderRadius:12 }}>{ico[ro.status]||''} {ro.status}{ro.pickupDate?` • ${ro.pickupDate}`:''}</span></div>
-                                        {ro.adminMessage && <div style={{ fontSize:'0.75rem', background:'#eff6ff', border:'1px solid #bfdbfe', padding:'0.4rem 0.6rem', borderRadius:6, color:'#1e40af', marginTop:6 }}>Admin: {ro.adminMessage}</div>}
-                                        <div style={{ display:'flex', gap:3, flexWrap:'wrap', marginTop:6 }}>{roadmap.map(s=> <span key={s} style={{ fontSize:'0.58rem', padding:'2px 5px', borderRadius:20, background: roadmap.indexOf(s) <= roadmap.indexOf(ro.status) ? col[s]+'22' : '#f3f4f6', border:`1px solid ${roadmap.indexOf(s) <= roadmap.indexOf(ro.status) ? col[s]+'50' : '#e5e7eb'}` }}>{ico[s]} {s}</span>)}{ro.status==='Rejected' && <span style={{ fontSize:'0.58rem', background:'#fee2e2', color:'#991b1b', padding:'2px 5px', borderRadius:20 }}>Rejected</span>}</div>
+                                      <div style={{ background:'white', border:'1px solid #e5e7eb', borderRadius:12, padding:'1rem', marginBottom:'0.75rem', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+                                        <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'0.5rem', flexWrap:'wrap' }}>
+                                          <span style={{ fontSize:'0.85rem', fontWeight:700, color:'#111827' }}>↩️ Return — {ros.length} item(s)</span>
+                                          <span style={{ fontSize:'0.75rem', color:'#fff', background: col[ro.status]||'#6b7280', padding:'0.25rem 0.7rem', borderRadius:20, fontWeight:700 }}>{ico[ro.status]||''} {ro.status}</span>
+                                        </div>
+                                        <div style={{ background:'#f3f4f6', borderRadius:20, height:5, marginBottom:'0.6rem', overflow:'hidden' }}>
+                                          <div style={{ background: col[ro.status]||'#6b7280', height:'100%', borderRadius:20, width: currentIdx>=0 ? `${((currentIdx+1)/statusSteps.length)*100}%` : '5%' }} />
+                                        </div>
+                                        {ro.adminMessage && <div style={{ fontSize:'0.78rem', background:'#eff6ff', border:'1px solid #bfdbfe', padding:'0.4rem 0.6rem', borderRadius:8, color:'#1e40af', marginBottom:'0.5rem' }}>💬 {ro.adminMessage}</div>}
+                                        {ro.tracking && ro.tracking.length>0 && (
+                                          <div style={{ borderLeft:'3px solid #e5e7eb', marginLeft:6 }}>
+                                            {ro.tracking!.map((t:any,i:number)=>{
+                                              const isLast = i===ro.tracking!.length-1;
+                                              return (
+                                                <div key={i} style={{ position:'relative', paddingBottom: i<ro.tracking!.length-1 ? 10 : 0 }}>
+                                                  <div style={{ position:'absolute', left:-9, top:2, width:12, height:12, borderRadius:'50%', background: isLast ? (col[t.status]||'#6b7280') : '#d1d5db', border:'2px solid white', zIndex:1 }} />
+                                                  <div style={{ marginLeft:12, padding:'0.15rem 0' }}>
+                                                    <span style={{ fontSize:'0.72rem', fontWeight: isLast?700:500, color: isLast ? (col[t.status]||'#333') : '#6b7280' }}>{ico[t.status]||'•'} {t.status}</span>
+                                                    <span style={{ fontSize:'0.6rem', color:'#9ca3af', marginLeft:6 }}>{new Date(t.timestamp).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+                                                    {t.message && <div style={{ fontSize:'0.65rem', color:'#9ca3af', marginTop:1 }}>{t.message}</div>}
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
                                       </div>
                                     );
-                                  })()}
-                                </div>
-                              ) : showOrderReturnForm === order.orderId ? (
-                                <div>
-                                  <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#991b1b', marginBottom: '0.5rem' }}>Return Entire Order</p>
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.6rem' }}>
-                                    {returnReasons.map((r) => (
-                                      <label key={r} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '0.45rem 0.6rem', background: returnReason === r ? '#fee2e2' : 'white', border: `1px solid ${returnReason === r ? '#fca5a5' : 'var(--line)'}`, borderRadius: 'var(--radius-sm)', fontSize: '0.82rem', cursor: 'pointer' }}>
-                                        <input type="radio" name={`order-return-${order.orderId}`} checked={returnReason === r} onChange={() => setReturnReason(r)} style={{ accentColor: '#dc2626' }} />{r}
-                                      </label>
-                                    ))}
-                                  </div>
-                                  <textarea value={returnDescription} onChange={(e) => setReturnDescription(e.target.value)} placeholder="Details (optional)" style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--line)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem', minHeight: 60 }} />
-                                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.6rem' }}>
-                                    <button onClick={() => { setShowOrderReturnForm(null); setReturnReason(''); setReturnDescription(''); }} style={{ padding: '0.45rem 0.9rem', border: '1px solid var(--line)', background: 'white', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem', cursor: 'pointer' }}>Cancel</button>
-                                    <button onClick={() => handleSubmitOrderReturn(order.orderId)} disabled={!returnReason || submitting} style={{ padding: '0.45rem 1rem', background: returnReason ? '#dc2626' : '#d1d5db', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem', fontWeight: 600, cursor: returnReason ? 'pointer' : 'not-allowed' }}>{submitting ? 'Submitting...' : 'Submit Return'}</button>
-                                  </div>
-                                </div>
-                              ) : (() => {
-                                const anyElig = order.items.some(it=>{ const e=eligibility[`${order.orderId}-${it.id}`]; return !e || e.eligible; });
-                                if(!anyElig) return <div style={{ textAlign:'center', fontSize:'0.78rem', color:'#9ca3af', background:'#f9fafb', padding:'0.7rem', borderRadius:8, border:'1px solid #e5e7eb' }}>Return window closed (7 days expired) — no returns available.</div>;
-                                return <button onClick={() => setShowOrderReturnForm(order.orderId)} style={{ width: '100%', padding: '0.7rem 1rem', background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', color: '#991b1b', border: '1px solid #fca5a5', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>↩️ Return Entire Order - Found Issue?</button>;
                               })()}
-                            </div>
-                            <p style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--ink)', marginBottom: '1rem' }}>Order Items <span style={{ fontWeight: 400, fontSize: '0.78rem', color: 'var(--ink-soft)' }}>(or return individual items)</span></p>
+                            <p style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--ink)', marginBottom: '1rem' }}>Order Items</p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                               {order.items.map((item, idx) => {
                                 const product = getProduct(item.id);
@@ -696,26 +681,86 @@ const orderRoadmap = ['Pending','Processing','Dispatched','Shipped','Out for Del
                                         </span>
                                       )}
                                       {returnReq && (
-                                        <div style={{ flex: 1, minWidth: 220 }}>
+                                        <div style={{ flex: 1, minWidth: 280 }}>
                                           {(() => {
                                             const ro = getReturn(order.orderId, item.id);
-                                            if (!ro) return <span style={{ fontSize: '0.7rem', color: '#92400e', background: '#fef3c7', padding: '0.3rem 0.6rem', borderRadius: 20, fontWeight: 700 }}>Return Requested</span>;
-                                             const roadmap = ['Return Requested','Under Review','Approved','Pickup Scheduled','Picked Up','Product Received','Quality Check','Refund Processing','Completed'];
-                                             const col: Record<string,string> = { 'Return Requested':'#f59e0b','Under Review':'#3b82f6', Approved:'#3b82f6','Pickup Scheduled':'#8b5cf6','Picked Up':'#f97316','Product Received':'#06b6d4','Quality Check':'#eab308','Refund Processing':'#10b981', Completed:'#10b981', Rejected:'#ef4444', Cancelled:'#6b7280' };
-                                             const ico: Record<string,string> = { 'Return Requested':'📋','Under Review':'👀', Approved:'✅', Rejected:'❌','Pickup Scheduled':'📦','Picked Up':'🚚','Product Received':'📥','Quality Check':'🔍','Refund Processing':'💸', Completed:'🏁', Cancelled:'✕' };
+                                            if (!ro) return <span style={{ fontSize: '0.75rem', color: '#92400e', background: '#fef3c7', padding: '0.4rem 0.8rem', borderRadius: 20, fontWeight: 700 }}>Return Requested</span>;
+                                             const col: Record<string,string> = { 'Return Requested':'#f59e0b','Under Review':'#3b82f6','More Information Required':'#eab308', 'Approved':'#10b981','Pickup Scheduled':'#8b5cf6','Picked Up':'#f97316','Product Received':'#06b6d4','Quality Check':'#a855f7','Replacement Processing':'#6366f1', 'Completed':'#10b981', 'Rejected':'#ef4444', 'Cancelled':'#6b7280' };
+                                             const ico: Record<string,string> = { 'Return Requested':'📋','Under Review':'👀','More Information Required':'❓', 'Approved':'✅', 'Rejected':'❌','Pickup Scheduled':'📦','Picked Up':'🚚','Product Received':'📥','Quality Check':'🔍','Replacement Processing':'🔄', 'Completed':'🏁', 'Cancelled':'✕' };
+                                             const statusSteps = ['Return Requested','Under Review','Approved','Pickup Scheduled','Picked Up','Product Received','Quality Check','Replacement Processing','Completed'];
+                                             const currentIdx = statusSteps.indexOf(ro.status);
                                              return (
-                                               <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                                                 <div style={{ display:'flex', gap:'0.4rem', flexWrap:'wrap', alignItems:'center' }}>
-                                                   <span style={{ fontSize:'0.7rem', color:'#fff', background: col[ro.status]||'#92400e', padding:'0.3rem 0.6rem', borderRadius:20, fontWeight:700 }}>{ico[ro.status]||''} {ro.status}</span>
-                                                   {ro.returnId && <span style={{ fontSize:'0.65rem', background:'#f3f4f6', padding:'0.2rem 0.5rem', borderRadius:12, border:'1px solid #e5e7eb' }}>{ro.returnId}</span>}
-                                                   {ro.pickup?.trackingNo && <span style={{ fontSize:'0.65rem', color:'#1e40af' }}>Pickup: {ro.pickup.trackingNo}</span>}
-                                                    {(ro.refund?.amount||0)>0 && <span style={{ fontSize:'0.65rem', color:'#166534', background:'#dcfce7', padding:'0.2rem 0.5rem', borderRadius:12 }}>Refund ₹{ro.refund!.amount}</span>}
-                                                  </div>
-                                                  {ro.adminMessage && <span style={{ fontSize:'0.72rem', background:'#eff6ff', border:'1px solid #bfdbfe', color:'#1e40af', padding:'0.3rem 0.6rem', borderRadius:6 }}>{ro.adminMessage}</span>}
-                                                  <div style={{ display:'flex', gap:3, flexWrap:'wrap' }}>{roadmap.map(s=> <span key={s} style={{ fontSize:'0.52rem', padding:'2px 4px', borderRadius:20, background: roadmap.indexOf(s) <= roadmap.indexOf(ro.status) ? col[s]+'22' : '#f3f4f6', border:`1px solid ${roadmap.indexOf(s) <= roadmap.indexOf(ro.status) ? col[s]+'50' : '#e5e7eb'}` }}>{ico[s]} {s}</span>)}{ro.status==='Rejected' && <span style={{ fontSize:'0.55rem', background:'#fee2e2', color:'#991b1b', padding:'2px 5px', borderRadius:20, border:'1px solid #fecaca' }}>Rejected</span>}</div>
-                                                  {(ro.images?.length||0)>0 && <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>{ro.images!.slice(0,3).map((img:string,i:number)=><img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" key={i} src={resolveUploadUrl(img)} alt="evidence" style={{ width:36, height:36, objectFit:'cover', borderRadius:6, border:'1px solid var(--line)' }} />)}{ro.video && <span style={{ fontSize:'0.6rem', background:'#000', color:'white', padding:'0.2rem 0.4rem', borderRadius:6 }}>▶ Video</span>}</div>}
-                                                  {ro.tracking && ro.tracking.length>0 && <div style={{ display:'flex', flexDirection:'column', gap:2 }}>{ro.tracking.slice(-4).map((t:any,i:number)=>(<span key={i} style={{ fontSize:'0.62rem', color:'#6b7280' }}>{ico[t.status]||'•'} {t.status}: {t.message} • {new Date(t.timestamp).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>))}</div>}
-                                                  {['Return Requested','Under Review'].includes(ro.status) && <button onClick={async()=>{ if(!confirm('Cancel this return request?')) return; try{ await api.returns.cancel((ro as any).id||(ro as any)._id, user?.phone||phoneInput); await fetchReviewsAndReturns(user?.phone||phoneInput); }catch(e:any){ alert(e.message); } }} style={{ alignSelf:'flex-start', marginTop:4, padding:'0.3rem 0.7rem', background:'white', border:'1px solid #fecaca', color:'#991b1b', borderRadius:12, fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}>Cancel Return</button>}
+                                               <div style={{ background:'white', border:'1px solid #e5e7eb', borderRadius:12, padding:'1rem', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+                                                 <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'0.75rem', flexWrap:'wrap' }}>
+                                                   <span style={{ fontSize:'0.85rem', fontWeight:700, color:'#111827' }}>↩️ Return Status</span>
+                                                   <span style={{ fontSize:'0.75rem', color:'#fff', background: col[ro.status]||'#6b7280', padding:'0.25rem 0.7rem', borderRadius:20, fontWeight:700 }}>{ico[ro.status]||''} {ro.status}</span>
+                                                   {ro.returnId && <span style={{ fontSize:'0.65rem', color:'#9ca3af', background:'#f3f4f6', padding:'0.2rem 0.5rem', borderRadius:8 }}>{ro.returnId}</span>}
+                                                 </div>
+
+                                                 {/* Progress bar */}
+                                                 <div style={{ background:'#f3f4f6', borderRadius:20, height:6, marginBottom:'0.75rem', overflow:'hidden' }}>
+                                                   <div style={{ background: col[ro.status]||'#6b7280', height:'100%', borderRadius:20, transition:'width 0.5s ease', width: currentIdx>=0 ? `${((currentIdx+1)/statusSteps.length)*100}%` : '5%' }} />
+                                                 </div>
+
+                                                 {/* Status badges */}
+                                                 <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginBottom:'0.75rem' }}>
+                                                   {statusSteps.map((s,i)=>{
+                                                     const done = i<=currentIdx;
+                                                     const isCurrent = s===ro.status;
+                                                     return <span key={s} style={{ fontSize:'0.65rem', padding:'0.25rem 0.5rem', borderRadius:16, fontWeight: isCurrent?700:500, background: done ? col[s]+'18' : '#f9fafb', color: done ? col[s] : '#9ca3af', border:`1px solid ${done ? col[s]+'40' : '#e5e7eb'}` }}>{ico[s]} {s}</span>;
+                                                   })}
+                                                   {ro.status==='Rejected' && <span style={{ fontSize:'0.65rem', padding:'0.25rem 0.5rem', borderRadius:16, fontWeight:700, background:'#fee2e2', color:'#dc2626', border:'1px solid #fecaca' }}>❌ Rejected</span>}
+                                                   {ro.status==='Cancelled' && <span style={{ fontSize:'0.65rem', padding:'0.25rem 0.5rem', borderRadius:16, fontWeight:700, background:'#f3f4f6', color:'#6b7280', border:'1px solid #e5e7eb' }}>✕ Cancelled</span>}
+                                                 </div>
+
+                                                 {ro.adminMessage && <div style={{ fontSize:'0.78rem', background:'#eff6ff', border:'1px solid #bfdbfe', color:'#1e40af', padding:'0.5rem 0.75rem', borderRadius:8, marginBottom:'0.75rem' }}>💬 <strong>Admin:</strong> {ro.adminMessage}</div>}
+
+                                                 {(ro.images?.length||0)>0 && <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:'0.75rem' }}>{ro.images!.map((img:string,i:number)=><img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" key={i} src={resolveUploadUrl(img)} alt="evidence" style={{ width:48, height:48, objectFit:'cover', borderRadius:8, border:'1px solid #e5e7eb' }} />)}{ro.video && <span style={{ fontSize:'0.65rem', background:'#111', color:'white', padding:'0.25rem 0.5rem', borderRadius:6 }}>▶ Video</span>}</div>}
+
+                                                 {ro.pickup && (ro.pickup.date || ro.pickup.courier || ro.pickup.trackingNo) && (
+                                                   <div style={{ background:'#f0f9ff', border:'1px solid #bae6fd', borderRadius:10, padding:'0.6rem 0.8rem', fontSize:'0.78rem', color:'#0c4a6e', marginBottom:'0.75rem' }}>
+                                                     <div style={{ fontWeight:700, marginBottom:4, fontSize:'0.82rem' }}>📦 Pickup Details</div>
+                                                     {ro.pickup.date && <div style={{ marginTop:2 }}>📅 <strong>{new Date(ro.pickup.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</strong></div>}
+                                                     {ro.pickup.courier && <div>🚚 {ro.pickup.courier}</div>}
+                                                     {ro.pickup.trackingNo && <div>🔢 {ro.pickup.trackingNo}</div>}
+                                                   </div>
+                                                 )}
+
+                                                 {ro.resolution==='Replacement' && ro.status==='Completed' && <div style={{ background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:10, padding:'0.6rem 0.8rem', fontSize:'0.82rem', color:'#166534', marginBottom:'0.75rem' }}>🔄 <strong>Replacement Delivered!</strong> Your replacement product has been delivered.</div>}
+                                                 {ro.resolution==='Exchange' && ro.status==='Completed' && <div style={{ background:'#fefce8', border:'1px solid #fde68a', borderRadius:10, padding:'0.6rem 0.8rem', fontSize:'0.82rem', color:'#854d0e', marginBottom:'0.75rem' }}>🔁 <strong>Exchange Completed!</strong> Your exchange has been processed.</div>}
+
+                                                 {ro.status==='More Information Required' && (
+                                                   <div style={{ background:'#fefce8', border:'1px solid #fde68a', borderRadius:10, padding:'0.7rem 0.8rem', marginBottom:'0.75rem' }}>
+                                                     <div style={{ fontSize:'0.82rem', fontWeight:700, color:'#92400e' }}>⚠️ More Information Required</div>
+                                                     <div style={{ fontSize:'0.75rem', color:'#78716c', marginTop:4 }}>{ro.adminMessage || 'Please provide more details or re-upload evidence.'}</div>
+                                                     <button onClick={()=>{ setShowReturnForm(`${order.orderId}-${item.id}`); }} style={{ marginTop:8, padding:'0.4rem 1rem', background:'#f59e0b', color:'white', border:'none', borderRadius:8, fontSize:'0.75rem', fontWeight:600, cursor:'pointer' }}>Update Return</button>
+                                                   </div>
+                                                 )}
+
+                                                 {/* Timeline */}
+                                                 {ro.tracking && ro.tracking.length>0 && (
+                                                   <div style={{ marginTop:'0.25rem' }}>
+                                                     <div style={{ fontSize:'0.82rem', fontWeight:700, color:'#111827', marginBottom:'0.5rem', display:'flex', alignItems:'center', gap:'0.4rem' }}>📋 Tracking Timeline</div>
+                                                      <div style={{ borderLeft:'3px solid #e5e7eb', marginLeft:6, paddingLeft:0 }}>
+                                                        {ro.tracking!.map((t:any,i:number)=>{
+                                                          const isLast = i===ro.tracking!.length-1;
+                                                          const stepCol = col[t.status]||'#6b7280';
+                                                          return (
+                                                            <div key={i} style={{ position:'relative', paddingBottom: i<ro.tracking!.length-1 ? 14 : 0 }}>
+                                                             <div style={{ position:'absolute', left:-9, top:2, width:14, height:14, borderRadius:'50%', background: isLast ? stepCol : '#d1d5db', border:'3px solid white', boxShadow: isLast ? `0 0 0 2px ${stepCol}40` : 'none', zIndex:1 }} />
+                                                             <div style={{ marginLeft:14, background: isLast ? '#f9fafb' : 'transparent', border: isLast ? `1px solid ${stepCol}30` : 'none', borderRadius: isLast ? 8 : 0, padding: isLast ? '0.5rem 0.6rem' : '0.2rem 0' }}>
+                                                               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:4 }}>
+                                                                 <span style={{ fontSize:'0.78rem', fontWeight: isLast ? 700 : 600, color: isLast ? stepCol : '#6b7280' }}>{ico[t.status]||'•'} {t.status}</span>
+                                                                 <span style={{ fontSize:'0.65rem', color:'#9ca3af', whiteSpace:'nowrap' }}>{new Date(t.timestamp).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+                                                               </div>
+                                                               {t.message && <div style={{ fontSize:'0.72rem', color:'#6b7280', marginTop:2, lineHeight:1.4 }}>{t.message}</div>}
+                                                             </div>
+                                                           </div>
+                                                         );
+                                                       })}
+                                                     </div>
+                                                   </div>
+                                                 )}
                                                </div>
                                              );
                                           })()}
@@ -845,8 +890,8 @@ const orderRoadmap = ['Pending','Processing','Dispatched','Shipped','Out for Del
                                             <div style={{ marginTop:'0.75rem' }}>
                                               <label style={{ fontSize:'0.75rem', fontWeight:600 }}>Preferred Resolution</label>
                                               <div style={{ display:'flex', gap:'0.5rem', marginTop:'0.3rem' }}>
-                                                {['Refund','Replacement','Exchange'].map(r=>{
-                                                  const enabled = r==='Refund'? (returnSettings?.refundEnabled!==false) : r==='Replacement'? returnSettings?.replacementEnabled : returnSettings?.exchangeEnabled;
+                                                {['Replacement','Exchange'].map(r=>{
+                                                  const enabled = r==='Replacement'? returnSettings?.replacementEnabled : returnSettings?.exchangeEnabled;
                                                   if(!enabled) return null;
                                                   return <button key={r} onClick={()=>setReturnResolution(r)} style={{ flex:1, padding:'0.5rem', borderRadius:8, border: returnResolution===r?'2px solid #dc2626':'1px solid var(--line)', background: returnResolution===r?'#fee2e2':'white', fontSize:'0.75rem', fontWeight:600, cursor:'pointer' }}>{r}</button>
                                                 })}
@@ -856,7 +901,7 @@ const orderRoadmap = ['Pending','Processing','Dispatched','Shipped','Out for Del
                                             <div style={{ background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:8, padding:'0.7rem', marginTop:'0.75rem' }}>
                                               <p style={{ fontSize:'0.78rem', fontWeight:700, color:'#166534' }}>Summary</p>
                                               <div style={{ fontSize:'0.75rem', color:'#4b5563', lineHeight:1.6, marginTop:'0.3rem' }}>
-                                                Product: {product?.name}<br/>Qty: {returnQty} • Reason: {returnReason}{returnReason==='Other' && returnOtherReason?` (${returnOtherReason})`:''}<br/>Resolution: {returnResolution} • Refund: ₹{((product?.price||0)*returnQty).toLocaleString('en-IN')}<br/>Photos: {returnImages.length} • Video: {returnVideo?'Yes':'No'}
+                                                Product: {product?.name}<br/>Qty: {returnQty} • Reason: {returnReason}{returnReason==='Other' && returnOtherReason?` (${returnOtherReason})`:''}<br/>Resolution: {returnResolution}<br/>Photos: {returnImages.length} • Video: {returnVideo?'Yes':'No'}
                                               </div>
                                             </div>
                                             <div style={{ display:'flex', gap:'0.5rem', marginTop:'0.9rem', justifyContent:'flex-end' }}>

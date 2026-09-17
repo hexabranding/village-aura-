@@ -152,7 +152,6 @@ export interface ReturnRequest {
   adminMessage?: string;
   pickup?: { required?: boolean; address?: string; date?: string; status?: string; courier?: string; trackingNo?: string };
   pickupDate?: string;
-  refund?: { amount?: number; method?: string; status?: string; transactionId?: string };
   deliveryDate?: string;
   returnDeadline?: string;
   createdAt: string;
@@ -163,7 +162,6 @@ export interface ReturnSettings {
   enabled: boolean;
   replacementEnabled: boolean;
   exchangeEnabled: boolean;
-  refundEnabled: boolean;
   videoRequired: boolean;
   imagesRequired: boolean;
   maxVideoSizeMB: number;
@@ -173,7 +171,6 @@ export interface ReturnSettings {
   nonReturnableCategories: string[];
   returnConditions: string;
   pickupAvailable: boolean;
-  refundMethod: string;
   restockingFee: number;
   instructions: string;
   reasons: string[];
@@ -714,6 +711,54 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+      return handleResponse(res);
+    },
+  },
+
+  customers: {
+    register: async (data: { name: string; email: string; phone?: string; password: string }) => {
+      const res = await fetch(`${API_BASE}/customers/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await handleResponse(res);
+      if (result.token) {
+        localStorage.setItem('reshamCustomerToken', result.token);
+        localStorage.setItem('reshamUser', JSON.stringify(result.customer));
+      }
+      return result;
+    },
+    login: async (email: string, password: string) => {
+      const res = await fetch(`${API_BASE}/customers/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const result = await handleResponse(res);
+      if (result.token) {
+        localStorage.setItem('reshamCustomerToken', result.token);
+        localStorage.setItem('reshamUser', JSON.stringify(result.customer));
+      }
+      return result;
+    },
+    logout: () => {
+      localStorage.removeItem('reshamCustomerToken');
+      localStorage.removeItem('reshamUser');
+    },
+    getProfile: async () => {
+      const token = localStorage.getItem('reshamCustomerToken');
+      const res = await fetch(`${API_BASE}/customers/profile`, {
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      return handleResponse(res);
+    },
+    getAll: async () => {
+      const res = await fetch(`${API_BASE}/customers`, { headers: headers() });
+      return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_BASE}/customers/${id}`, { method: 'DELETE', headers: headers() });
       return handleResponse(res);
     },
   },

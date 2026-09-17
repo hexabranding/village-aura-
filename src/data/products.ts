@@ -27,6 +27,7 @@ export interface Product {
   isNew?: boolean;
   isBestSeller?: boolean;
   inStock?: boolean;
+  quantity?: number;
 }
 
 const publicImages = [

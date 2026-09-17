@@ -9,21 +9,21 @@ const heroSlides = [
     headline: ['Six yards,', 'one lifetime of moments.'],
     cta: { label: 'Shop the Weave', to: '/shop' },
     ctaSecondary: { label: 'Sarees', to: '/shop?category=Sarees' },
-    image: 'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg?w=1920&h=1080&fit=crop',
+    image: '',
   },
   {
     eyebrow: 'New Arrivals — Just Off the Loom',
     headline: ['Fresh weaves,', 'crafted this season.'],
     cta: { label: 'New Arrivals', to: '/shop' },
     ctaSecondary: { label: 'Jewellery', to: '/shop?category=Jewellery' },
-    image: 'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg?w=1920&h=1080&fit=crop',
+    image: '',
   },
   {
     eyebrow: 'The Wedding Edit — Banarasi Heritage',
     headline: ['Woven for the', 'day you remember.'],
     cta: { label: 'Explore Suit Sets', to: '/shop?category=Unstitched%20Suit%20Sets' },
     ctaSecondary: { label: 'All Collections', to: '/shop' },
-    image: 'https://images.pexels.com/photos/1229414/pexels-photo-1229414.jpeg?w=1920&h=1080&fit=crop',
+    image: '',
   },
 ];
 
@@ -185,7 +185,7 @@ export default function Hero() {
           position: 'relative',
           zIndex: 2,
           padding: 'clamp(7rem, 14vh, 11rem) clamp(2rem, 6vw, 6rem)',
-          maxWidth: 'min(700px, 90vw)',
+          maxWidth: 'min(900px, 90vw)',
           textAlign: 'left',
         }}
       >
@@ -200,6 +200,7 @@ export default function Hero() {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
           >
+            {slide.eyebrow && (
             <motion.span
               initial={{ opacity: 0, y: 12, letterSpacing: '0.5em' }}
               animate={{ opacity: 1, y: 0, letterSpacing: '0.3em' }}
@@ -214,7 +215,9 @@ export default function Hero() {
             >
               {slide.eyebrow}
             </motion.span>
+            )}
 
+            {(slide.headline.length > 0 || slide.eyebrow) && (
             <h1
               style={{
                 fontSize: 'clamp(1.8rem, 5.5vw, 4.8rem)',
@@ -231,7 +234,9 @@ export default function Hero() {
                 </span>
               ))}
             </h1>
+            )}
 
+            {slide.headline.length > 0 && (
             <motion.p
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -245,7 +250,9 @@ export default function Hero() {
             >
               {slide.headline[0]}
             </motion.p>
+            )}
 
+            {(slide.cta?.label || slide.ctaSecondary?.label) && (
             <motion.div
               className="hero-buttons"
               initial={{ opacity: 0, y: 16 }}
@@ -253,6 +260,7 @@ export default function Hero() {
               transition={{ duration: 0.7, delay: 0.65 }}
               style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}
             >
+              {slide.cta?.label && (
               <motion.div whileHover={{ scale: 1.05, x: 3 }} whileTap={{ scale: 0.97 }}>
                 <Link
                   to={slide.cta.to}
@@ -274,6 +282,8 @@ export default function Hero() {
                   {slide.cta.label} →
                 </Link>
               </motion.div>
+              )}
+              {slide.ctaSecondary?.label && (
               <motion.div whileHover={{ scale: 1.05, x: 3 }} whileTap={{ scale: 0.97 }}>
                 <Link
                   to={slide.ctaSecondary.to}
@@ -296,39 +306,45 @@ export default function Hero() {
                   {slide.ctaSecondary.label}
                 </Link>
               </motion.div>
+              )}
             </motion.div>
+            )}
           </motion.div>
         </AnimatePresence>
+      </div>
 
-        {/* Slide indicators */}
-        <div
-          className="hero-indicators"
-          style={{
-            display: 'flex',
-            gap: '0.75rem',
-            marginTop: '3.5rem',
-            alignItems: 'center',
-          }}
-        >
-          {slides.map((_, i) => (
-            <motion.button
-              key={i}
-              onClick={() => goTo(i)}
-              whileHover={{ scale: 1.3 }}
-              whileTap={{ scale: 0.9 }}
-              style={{
-                width: i === current ? 36 : 10,
-                height: 10,
-                borderRadius: 5,
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.4s ease',
-                background: i === current ? 'var(--gold)' : 'rgba(255,255,255,0.4)',
-              }}
-              aria-label={`Go to slide ${i + 1}`}
-            />
-          ))}
-        </div>
+      {/* Slide indicators - positioned at center-bottom of hero */}
+      <div
+        className="hero-indicators"
+        style={{
+          position: 'absolute',
+          bottom: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: '0.75rem',
+          alignItems: 'center',
+          zIndex: 10,
+        }}
+      >
+        {slides.map((_, i) => (
+          <motion.button
+            key={i}
+            onClick={() => goTo(i)}
+            whileHover={{ scale: 1.3 }}
+            whileTap={{ scale: 0.9 }}
+            style={{
+              width: i === current ? 36 : 10,
+              height: 10,
+              borderRadius: 5,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.4s ease',
+              background: i === current ? 'var(--gold)' : 'rgba(255,255,255,0.4)',
+            }}
+            aria-label={`Go to slide ${i + 1}`}
+          />
+        ))}
       </div>
     </section>
   );

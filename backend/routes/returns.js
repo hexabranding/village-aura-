@@ -26,8 +26,16 @@ async function getSettings(){
 
 router.get('/phone/:phone', async (req, res) => {
   try {
-    const returns = await Return.find({ phone: req.params.phone }).sort({ createdAt: -1 });
-    res.json(returns);
+    const raw = String(req.params.phone).trim();
+    const digits = raw.replace(/[^0-9]/g, '');
+    const last10 = digits.length > 10 ? digits.slice(-10) : digits;
+    const returns = await Return.find({}).sort({ createdAt: -1 });
+    const matched = returns.filter(r => {
+      const rp = String(r.phone).replace(/[^0-9]/g, '');
+      const rLast10 = rp.length > 10 ? rp.slice(-10) : rp;
+      return rLast10 === last10;
+    });
+    res.json(matched);
   } catch (e) { res.status(500).json({ error: 'Failed to fetch returns' }); }
 });
 
@@ -90,11 +98,9 @@ router.post('/', async (req, res) => {
     if(videoRequired && !video) return res.status(400).json({ error:'Unboxing video required for this return' });
     if(settings.imagesRequired && (!images || images.length===0)) return res.status(400).json({ error:'Product images required' });
     if(images && images.length > (settings.maxImages||5)) return res.status(400).json({ error:`Max ${settings.maxImages} images allowed` });
-    const finalResolution = resolution || 'Refund';
+    const finalResolution = resolution || 'Replacement';
     if(finalResolution==='Replacement' && !settings.replacementEnabled && !product?.replacementAvailable) return res.status(400).json({ error:'Replacement not enabled' });
     if(finalResolution==='Exchange' && !settings.exchangeEnabled && !product?.exchangeAvailable) return res.status(400).json({ error:'Exchange not enabled' });
-    if(finalResolution==='Refund' && !settings.refundEnabled && !product?.refundAvailable) return res.status(400).json({ error:'Refund not enabled' });
-    const refundAmount = product ? product.price * reqQty : 0;
     const returnReq = new Return({
       orderId: order.orderId,
       phone: order.phone,
@@ -111,7 +117,6 @@ router.post('/', async (req, res) => {
       tracking: [{ status:'Return Requested', message:`Return requested: ${reason}`, timestamp: new Date() }],
       deliveryDate: delivered,
       returnDeadline: deadline,
-      refund: { amount: refundAmount, method: settings.refundMethod, status:'Pending' },
       pickup: { required: settings.pickupAvailable, status:'Pending' },
     });
     await returnReq.save();
@@ -146,8 +151,8 @@ router.delete('/:id', auth, async (req, res) => {
 
 router.put('/:id/status', auth, async (req, res) => {
   try{
-    const { status, adminMessage, pickupDate, pickupCourier, pickupTrackingNo, refundStatus, refundTransactionId, refundAmount, message } = req.body;
-    const allowed=['Return Requested','Under Review','More Information Required','Approved','Pickup Scheduled','Picked Up','Product Received','Quality Check','Refund Processing','Replacement Processing','Completed','Rejected','Cancelled'];
+    const { status, adminMessage, pickupDate, pickupCourier, pickupTrackingNo, message } = req.body;
+    const allowed=['Return Requested','Under Review','More Information Required','Approved','Pickup Scheduled','Picked Up','Product Received','Quality Check','Replacement Processing','Completed','Rejected','Cancelled'];
     if(!allowed.includes(status)) return res.status(400).json({ error:'Invalid status' });
     const ret = await Return.findById(req.params.id);
     if(!ret) return res.status(404).json({ error:'Not found' });
@@ -159,10 +164,17 @@ router.put('/:id/status', auth, async (req, res) => {
     if(pickupTrackingNo!==undefined) ret.pickup.trackingNo=pickupTrackingNo;
     if(status==='Pickup Scheduled') ret.pickup.status='Scheduled';
     if(status==='Picked Up') ret.pickup.status='Picked Up';
-    if(refundStatus) ret.refund.status=refundStatus;
-    if(refundTransactionId) ret.refund.transactionId=refundTransactionId;
-    if(refundAmount!==undefined) ret.refund.amount=refundAmount;
-    ret.tracking.push({ status, message: message||adminMessage||`Status -> ${status}`, timestamp:new Date() });
+    let trackingMsg = message || adminMessage || '';
+    if(status==='Pickup Scheduled' && pickupDate) trackingMsg = `Pickup scheduled on ${new Date(pickupDate).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}${pickupCourier?` via ${pickupCourier}`:''}`;
+    else if(status==='Picked Up' && pickupTrackingNo) trackingMsg = `Product picked up${pickupCourier?` via ${pickupCourier}`:''}. Tracking: ${pickupTrackingNo}`;
+    else if(status==='Picked Up') trackingMsg = `Product picked up${pickupCourier?` via ${pickupCourier}`:''}`;
+    else if(status==='Approved') trackingMsg = `Return approved${adminMessage?`. ${adminMessage}`:'. Pickup will be scheduled soon.'}`;
+    else if(status==='Quality Check') trackingMsg = `Product received at warehouse. Quality check ${adminMessage||'in progress'}`;
+    else if(status==='Replacement Processing') trackingMsg = `Replacement ${ret.productId?'for '+ret.productId:''} is being processed${adminMessage?`. ${adminMessage}`:''}`;
+    else if(status==='Completed') trackingMsg = `Return completed successfully. Replacement delivered!${adminMessage?` ${adminMessage}`:''}`;
+    else if(status==='Rejected') trackingMsg = `Return rejected: ${adminMessage}`;
+    else if(!trackingMsg) trackingMsg = `Status updated to ${status}`;
+    ret.tracking.push({ status, message: trackingMsg, timestamp:new Date() });
     await ret.save();
     try{ await Notification.create({ type:'return', title:`Return ${status}`, message:`Return ${ret.returnId} ${status}: ${adminMessage||message||''}`, orderId:ret.orderId, productId:ret.productId, phone:ret.phone }); }catch(_){ }
     res.json(ret);

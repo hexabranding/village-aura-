@@ -63,9 +63,7 @@ export default function AdminHomeContent() {
   const openAddHero = () => { setEditingHero(null); setHeroForm({ eyebrow: '', headline: '', ctaLabel: 'Shop the Weave', ctaLink: '/shop', ctaSecondaryLabel: '', ctaSecondaryLink: '', image: '', order: heroSlides.length + 1, active: true }); setHeroError(null); setShowHeroModal(true); };
   const openEditHero = (item: any) => { setEditingHero(item); setHeroForm({ eyebrow: item.eyebrow || '', headline: Array.isArray(item.headline) ? item.headline.join('\n') : (item.headline || ''), ctaLabel: item.ctaLabel || '', ctaLink: item.ctaLink || '', ctaSecondaryLabel: item.ctaSecondaryLabel || '', ctaSecondaryLink: item.ctaSecondaryLink || '', image: item.image || '', order: item.order || 1, active: item.active }); setHeroError(null); setShowHeroModal(true); };
   const saveHero = async () => {
-    if (!heroForm.headline.trim()) { setHeroError('Headline is required (one or two lines)'); return; }
     if (!heroForm.image.trim()) { setHeroError('Background image is required'); return; }
-    setHeroSaving(true); setHeroError(null);
     const payload = { eyebrow: heroForm.eyebrow, headline: heroForm.headline.split('\n').map((s: string) => s.trim()).filter(Boolean), ctaLabel: heroForm.ctaLabel, ctaLink: heroForm.ctaLink, ctaSecondaryLabel: heroForm.ctaSecondaryLabel, ctaSecondaryLink: heroForm.ctaSecondaryLink, image: heroForm.image, order: heroForm.order, active: heroForm.active };
     try {
       if (editingHero) await api.heroSlides.update(editingHero.id || editingHero._id, payload);
@@ -111,7 +109,7 @@ export default function AdminHomeContent() {
         <div className="admin-products-stat"><div className="admin-stat-icon maroon">🏠</div><div className="admin-products-stat-text"><span className="admin-products-stat-value">{heroSlides.length}</span><span className="admin-products-stat-label">Hero Slides</span></div></div>
         <div className="admin-products-stat"><div className="admin-stat-icon maroon">🧵</div><div className="admin-products-stat-text"><span className="admin-products-stat-value">Weaver</span><span className="admin-products-stat-label">Story</span></div></div>
         <div className="admin-products-stat green"><div className="admin-stat-icon green">✨</div><div className="admin-products-stat-text"><span className="admin-products-stat-value">{curated.length}</span><span className="admin-products-stat-label">Curated Edits</span></div></div>
-        <div className="admin-products-stat"><div className="admin-stat-icon" style={{ background: 'linear-gradient(135deg, #e1306c, #f77737)', color: '#fff' }}>📸</div><div className="admin-products-stat-text"><span className="admin-products-stat-value">{instagram.length}</span><span className="admin-products-stat-label">Instagram</span></div></div>
+        <div className="admin-products-stat"><div className="admin-stat-icon" style={{ background: 'linear-gradient(135deg, #e1306c, #f77737)', color: '#fff' }}>📸</div><div className="admin-products-stat-text"><span className="admin-products-stat-value">{instagram.length}</span><span className="admin-products-stat-label">Instagram / YouTube</span></div></div>
       </div>
 
       <div className="admin-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
@@ -180,13 +178,13 @@ export default function AdminHomeContent() {
 
       <div className="admin-card" style={{ padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Follow Us On Instagram</h3>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Follow Us On Instagram / YouTube</h3>
           <div style={{ display: 'flex', gap: '0.6rem' }}>
             {instagram.length === 0 && <button onClick={importLocalInstagram} className="admin-btn admin-btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>Import Local Images</button>}
-            <button onClick={openAddInsta} className="admin-products-add-btn"><span>+</span> Add Image</button>
+            <button onClick={openAddInsta} className="admin-products-add-btn"><span>+</span> Add Instagram / YouTube</button>
           </div>
         </div>
-        <p style={{ fontSize: '0.82rem', color: 'var(--ink-soft)', marginBottom: '1rem' }}>Manage Instagram scrolling images. Click Import to bring existing local images into backend for editing, then edit label/image/link per card.</p>
+        <p style={{ fontSize: '0.82rem', color: 'var(--ink-soft)', marginBottom: '1rem' }}>Manage Instagram/YouTube scrolling images. Click Import to bring existing local images into backend for editing, then edit label/image/link per card. Links can be Instagram posts or YouTube videos.</p>
         <div className="admin-ads-grid">
           {instagram.map((item, i) => (
             <motion.div key={item.id || item._id || i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`admin-ad-card ${!item.active ? 'inactive' : ''}`}>
@@ -202,7 +200,7 @@ export default function AdminHomeContent() {
               </div>
             </motion.div>
           ))}
-          {instagram.length === 0 && <div className="admin-products-empty" style={{ gridColumn: '1/-1' }}><h3>No Instagram Images</h3><p>Add images for the scrolling Instagram strip on Home.</p></div>}
+          {instagram.length === 0 && <div className="admin-products-empty" style={{ gridColumn: '1/-1' }}><h3>No Instagram / YouTube Images</h3><p>Add images for the scrolling strip on Home. Links can be Instagram or YouTube.</p></div>}
         </div>
       </div>
 
@@ -261,17 +259,17 @@ export default function AdminHomeContent() {
         {showInstaModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="admin-modal-overlay" onClick={() => setShowInstaModal(false)}>
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="admin-modal" onClick={e => e.stopPropagation()}>
-              <div className="admin-modal-header"><h3>{editingInsta ? 'Edit Instagram Image' : 'Add Instagram Image'}</h3><button onClick={() => setShowInstaModal(false)} className="admin-modal-close">✕</button></div>
+              <div className="admin-modal-header"><h3>{editingInsta ? 'Edit Instagram / YouTube Image' : 'Add Instagram / YouTube Image'}</h3><button onClick={() => setShowInstaModal(false)} className="admin-modal-close">✕</button></div>
               <div className="admin-modal-body">
                 <div className="admin-form-group"><label>Label</label><input value={instaForm.label} onChange={e => setInstaForm(f => ({ ...f, label: e.target.value }))} placeholder="Sarees" /></div>
-                <div className="admin-form-group"><label>Link (Instagram URL)</label><input value={instaForm.link} onChange={e => setInstaForm(f => ({ ...f, link: e.target.value }))} placeholder="https://instagram.com/p/..." /></div>
+                <div className="admin-form-group"><label>Link (Instagram / YouTube URL)</label><input value={instaForm.link} onChange={e => setInstaForm(f => ({ ...f, link: e.target.value }))} placeholder="https://instagram.com/p/... or https://youtube.com/..." /></div>
                 <div className="admin-form-group"><label>Image *</label><div style={{ display: 'flex', gap: '0.5rem' }}><input value={instaForm.image} onChange={e => setInstaForm(f => ({ ...f, image: e.target.value }))} placeholder="Image URL or upload" style={{ flex: 1 }} /><input ref={fileRefInsta} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => upload(e.target.files, url => setInstaForm(f => ({ ...f, image: url })), 'insta')} /><button type="button" onClick={() => fileRefInsta.current?.click()} style={{ padding: '0.5rem 1rem', border: '1px solid var(--maroon)', background: 'var(--ivory)', color: 'var(--maroon)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}>{uploading === 'insta' ? '...' : 'Upload'}</button></div>{instaForm.image && <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(instaForm.image)} alt="preview" style={{ width: '100%', maxHeight: 240, objectFit: 'cover', marginTop: '0.5rem', borderRadius: 8 }} />}</div>
                 <div className="admin-form-grid">
                   <div className="admin-form-group"><label>Order</label><input type="number" value={instaForm.order} onChange={e => setInstaForm(f => ({ ...f, order: Number(e.target.value) }))} /></div>
                   <div className="admin-form-group"><label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.4rem' }}><input type="checkbox" checked={instaForm.active} onChange={e => setInstaForm(f => ({ ...f, active: e.target.checked }))} /> Active</label></div>
                 </div>
               </div>
-              <div className="admin-modal-footer"><button onClick={() => setShowInstaModal(false)} className="admin-btn admin-btn-outline">Cancel</button><button onClick={saveInsta} className="admin-btn admin-btn-primary">{editingInsta ? 'Save' : 'Add'}</button></div>
+                <div className="admin-modal-footer"><button onClick={() => setShowInstaModal(false)} className="admin-btn admin-btn-outline">Cancel</button><button onClick={saveInsta} className="admin-btn admin-btn-primary">{editingInsta ? 'Save' : 'Add Instagram / YouTube'}</button></div>
             </motion.div>
           </motion.div>
         )}

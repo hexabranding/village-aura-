@@ -314,6 +314,13 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
             )}
           </div>
 
+          {(product as any).quantity != null && (product as any).quantity > 0 && (product as any).quantity <= 2 && (
+            <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.85rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span style={{ fontSize: '0.82rem', color: '#991b1b', fontWeight: 600 }}>Only {(product as any).quantity} piece{(product as any).quantity === 1 ? '' : 's'} left — order soon!</span>
+            </div>
+          )}
+
           <p style={{ color: 'var(--ink-soft)', lineHeight: 1.8, marginTop: '1.25rem', maxWidth: 460 }}>
             {product.description}
           </p>

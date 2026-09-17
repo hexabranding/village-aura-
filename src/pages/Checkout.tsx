@@ -189,6 +189,15 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     setLoading(true);
     setError('');
     try {
+      // Check stock availability before placing order
+      for (const ci of cart) {
+        const product = getProduct(ci.id);
+        if (product && (product as any).quantity != null && (product as any).quantity > 0 && ci.qty > (product as any).quantity) {
+          setError(`Not enough stock for "${product.name}". Only ${(product as any).quantity} piece(s) available.`);
+          setLoading(false);
+          return;
+        }
+      }
       const orderItems = cart.map((ci) => ({ id: ci.id, colorIndex: ci.colorIndex, qty: ci.qty }));
       await openRazorpay(orderItems);
     } catch (err: unknown) {

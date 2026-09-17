@@ -11,11 +11,11 @@ const returnSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   images: [{ type: String }],
   video: { type: String, default: '' },
-  resolution: { type: String, enum: ['Refund','Replacement','Exchange'], default: 'Refund' },
+  resolution: { type: String, enum: ['Replacement','Exchange'], default: 'Replacement' },
   exchangeVariant: { type: String, default: '' },
   status: {
     type: String,
-    enum: ['Return Requested','Under Review','More Information Required','Approved','Pickup Scheduled','Picked Up','Product Received','Quality Check','Refund Processing','Replacement Processing','Completed','Rejected','Cancelled'],
+    enum: ['Return Requested','Under Review','More Information Required','Approved','Pickup Scheduled','Picked Up','Product Received','Quality Check','Replacement Processing','Completed','Rejected','Cancelled'],
     default: 'Return Requested',
   },
   tracking: [{
@@ -31,12 +31,6 @@ const returnSchema = new mongoose.Schema({
     status: { type: String, default: 'Pending' },
     courier: { type: String, default: '' },
     trackingNo: { type: String, default: '' },
-  },
-  refund: {
-    amount: { type: Number, default: 0 },
-    method: { type: String, default: '' },
-    status: { type: String, enum: ['Pending','Initiated','Processing','Completed','Failed'], default: 'Pending' },
-    transactionId: { type: String, default: '' },
   },
   deliveryDate: { type: Date, default: null },
   returnDeadline: { type: Date, default: null },

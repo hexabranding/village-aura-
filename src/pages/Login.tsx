@@ -1,21 +1,32 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { api } from '../lib/api';
 import ZariDivider from '../components/ZariDivider';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const redirect = new URLSearchParams(location.search).get('redirect') || (location.state as { from?: string } | null)?.from || null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('reshamUser', JSON.stringify({ email, name: email.split('@')[0] || 'Member' }));
-    navigate(redirect || '/');
+    setError('');
+    setLoading(true);
+    try {
+      await api.customers.login(email, password);
+      navigate(redirect || '/');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to login';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -117,12 +128,6 @@ export default function Login() {
               <label className="eyebrow" htmlFor="login-password" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>
                 Password
               </label>
-              <Link
-                to="/login"
-                style={{ fontSize: '0.72rem', color: 'var(--maroon)', borderBottom: '1px solid var(--gold)' }}
-              >
-                Forgot?
-              </Link>
             </div>
             <div style={{ position: 'relative' }}>
               <input
@@ -170,31 +175,21 @@ export default function Login() {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.55 }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--ink-soft)' }}>
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                style={{ accentColor: 'var(--maroon)', width: 15, height: 15 }}
-              />
-              Remember me
-            </label>
-          </motion.div>
+          {error && (
+            <div style={{ padding: '0.6rem 0.8rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, fontSize: '0.82rem', color: '#991b1b' }}>
+              {error}
+            </div>
+          )}
 
           <motion.button
             type="submit"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="btn btn-solid"
-            style={{ width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '0.85rem' }}
+            disabled={loading}
+            style={{ width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '0.85rem', opacity: loading ? 0.6 : 1 }}
           >
-            Sign In
+            {loading ? 'Signing In...' : 'Sign In'}
           </motion.button>
         </form>
 

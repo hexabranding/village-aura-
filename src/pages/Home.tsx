@@ -547,18 +547,18 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
                 fontFamily: 'var(--font-body)',
                 fontSize: '0.8rem',
                 fontWeight: 500,
-                letterSpacing: '0.15em',
+                letterSpacing: '0.10em',
                 textTransform: 'uppercase',
                 color: 'var(--gold)',
-                padding: '0 3rem',
+                padding: '0 -5rem',
                 flexShrink: 0,
                 display: 'inline-block',
               }}
             >
-              ✦ Free Shipping on Orders Above ₹2999 &nbsp;&nbsp;&nbsp;
-              ✦ New Suit Set Collection Out Now &nbsp;&nbsp;&nbsp;
-              ✦ Handwoven authenticity guaranteed &nbsp;&nbsp;&nbsp;
-              ✦ Easy 7-Day Returns &nbsp;&nbsp;&nbsp;
+              ✦ Free Shipping all over India &nbsp;&nbsp;&nbsp;
+              ✦ For whole order directly message to our WhatsApp number 6282655422 &nbsp;&nbsp;&nbsp;
+              ✦ The joy of dressing is an art  &nbsp;&nbsp;&nbsp;
+              ✦Subscribe YouTube for free sarees &nbsp;&nbsp;&nbsp;
             </span>
           ))}
         </div>

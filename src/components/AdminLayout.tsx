@@ -9,6 +9,7 @@ const navItems = [
   { label: 'Products', to: '/admin/products', icon: '📦' },
   { label: 'Categories', to: '/admin/categories', icon: '📁' },
   { label: 'Orders', to: '/admin/orders', icon: '🛒' },
+  { label: 'Customers', to: '/admin/customers', icon: '👥' },
   { label: 'Returns', to: '/admin/returns', icon: '↩️' },
   { label: 'Return Settings', to: '/admin/return-settings', icon: '⚙️' },
   { label: 'Sales', to: '/admin/sales', icon: '📈' },

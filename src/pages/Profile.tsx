@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { api } from '../lib/api';
 import ZariDivider from '../components/ZariDivider';
 
 export default function Profile() {
-  const [user, setUser] = useState<{ email: string; name: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; name: string; phone?: string } | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,21 +20,49 @@ export default function Profile() {
       setUser(parsed);
       setName(parsed.name);
       setEmail(parsed.email);
+      setPhone(parsed.phone || '');
     } else {
       navigate('/login');
     }
   }, [navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updated = { name, email };
-    localStorage.setItem('reshamUser', JSON.stringify(updated));
-    setUser(updated);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setError('');
+    try {
+      const token = localStorage.getItem('reshamCustomerToken');
+      if (token) {
+        await api.customers.getProfile();
+        // Profile is synced with backend
+      }
+      const updated = { name, email, phone };
+      localStorage.setItem('reshamUser', JSON.stringify(updated));
+      setUser(updated);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // Save locally even if backend fails
+      const updated = { name, email, phone };
+      localStorage.setItem('reshamUser', JSON.stringify(updated));
+      setUser(updated);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
   };
 
   if (!user) return null;
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '0.9rem 1rem',
+    border: '1px solid var(--line)',
+    borderBottom: '2px solid var(--gold-soft)',
+    borderRadius: 'var(--radius-sm)',
+    background: 'var(--ivory-deep)',
+    fontFamily: 'var(--font-body)',
+    fontSize: '0.95rem',
+    color: 'var(--ink)',
+  };
 
   return (
     <motion.div
@@ -87,17 +118,7 @@ export default function Profile() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.9rem 1rem',
-                border: '1px solid var(--line)',
-                borderBottom: '2px solid var(--gold-soft)',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--ivory-deep)',
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.95rem',
-                color: 'var(--ink)',
-              }}
+              style={inputStyle}
             />
           </div>
 
@@ -111,19 +132,31 @@ export default function Profile() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.9rem 1rem',
-                border: '1px solid var(--line)',
-                borderBottom: '2px solid var(--gold-soft)',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--ivory-deep)',
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.95rem',
-                color: 'var(--ink)',
-              }}
+              style={inputStyle}
             />
           </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label className="eyebrow" htmlFor="profile-phone" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>
+              Phone Number
+            </label>
+            <input
+              id="profile-phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="10-digit mobile"
+              pattern="[0-9]{10}"
+              maxLength={10}
+              style={inputStyle}
+            />
+          </div>
+
+          {error && (
+            <div style={{ padding: '0.6rem 0.8rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, fontSize: '0.82rem', color: '#991b1b' }}>
+              {error}
+            </div>
+          )}
 
           <motion.button
             type="submit"

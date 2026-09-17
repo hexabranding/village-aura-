@@ -1,7 +1,7 @@
 import express from 'express';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
-import User from '../models/User.js';
+import Customer from '../models/Customer.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -10,7 +10,7 @@ router.get('/stats', auth, async (req, res) => {
   try {
     const orders = await Order.find();
     const products = await Product.find();
-    const users = await User.find();
+    const customers = await Customer.find();
 
     const totalRevenue = orders
       .filter((o) => o.status !== 'Cancelled')
@@ -18,7 +18,7 @@ router.get('/stats', auth, async (req, res) => {
 
     const totalOrders = orders.length;
     const totalProducts = products.length;
-    const totalCustomers = users.length;
+    const totalCustomers = customers.length;
 
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyMap = {};

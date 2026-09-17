@@ -88,7 +88,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
     { label: 'Home', to: '/', icon: true } as { label: string; to: string; subs?: string[]; icon?: boolean },
     ...sortedCategories.map((c) => ({
         label: c.name,
-        to: c.slug === 'gallery' ? '/gallery' : `/shop?category=${encodeURIComponent(c.name)}`,
+        to: (c.slug === 'gallery' || c.name.toLowerCase() === 'gallery') ? '/gallery' : `/shop?category=${encodeURIComponent(c.name)}`,
         subs: c.subcategories,
       })),
     { label: 'Contact', to: '/contact' },

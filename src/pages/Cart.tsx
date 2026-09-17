@@ -105,6 +105,11 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
                         <div style={{ fontSize: '0.75rem', color: 'var(--ink-soft)' }}>
                           {product!.variants[ci.colorIndex]?.colorName ?? product!.variants[0].colorName}
                         </div>
+                        {(product as any).quantity != null && (product as any).quantity > 0 && (product as any).quantity <= 2 && (
+                          <div style={{ fontSize: '0.7rem', color: '#dc2626', fontWeight: 600, marginTop: 2 }}>
+                            Only {(product as any).quantity} left
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={() => removeFromCart(ci.id, ci.colorIndex)}
@@ -130,7 +135,8 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
                           onClick={() => updateQty(ci.id, ci.colorIndex, ci.qty + 1)}
                           aria-label="Increase quantity"
                           className="qty-btn"
-                          style={{ borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--ivory)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}
+                          disabled={(product as any).quantity != null && (product as any).quantity > 0 && ci.qty >= (product as any).quantity}
+                          style={{ borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--ivory)', cursor: (product as any).quantity != null && (product as any).quantity > 0 && ci.qty >= (product as any).quantity ? 'not-allowed' : 'pointer', fontSize: '1rem', lineHeight: 1, opacity: (product as any).quantity != null && (product as any).quantity > 0 && ci.qty >= (product as any).quantity ? 0.4 : 1 }}
                         >
                           +
                         </button>

@@ -33,7 +33,6 @@ const emptyProduct: Product = {
   returnWindow: 7,
   replacementAvailable: true,
   exchangeAvailable: false,
-  refundAvailable: true,
   unboxingVideoRequired: false,
   nonReturnableReason: '',
 } as any;
@@ -434,6 +433,14 @@ export default function AdminProducts() {
                       <span className="admin-stock-dot" />
                       {product.inStock === false ? 'Out of Stock' : 'In Stock'}
                     </button>
+                    {(product as any).quantity != null && (product as any).quantity > 0 && (
+                      <div style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: 4 }}>
+                        Qty: {(product as any).quantity}
+                        {(product as any).quantity <= 2 && (
+                          <span style={{ color: '#dc2626', fontWeight: 600, marginLeft: 4 }}>Low</span>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td>
                     <div className="admin-actions-cell">
@@ -523,6 +530,7 @@ export default function AdminProducts() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div><span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 700 }}>Price</span><div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--maroon)' }}>₹{detailProduct.price.toLocaleString('en-IN')}{detailProduct.mrp ? <span style={{ fontSize: '0.8rem', color: 'var(--ink-soft)', fontWeight: 400, textDecoration: 'line-through', marginLeft: 8 }}>₹{detailProduct.mrp.toLocaleString('en-IN')}</span> : null}</div></div>
                         <div><span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 700 }}>Stock</span><div><span className={`admin-status-badge ${detailProduct.inStock === false ? 'cancelled' : 'delivered'}`} style={{ marginTop: 4 }}>{detailProduct.inStock === false ? 'Out of Stock' : 'In Stock'}</span></div></div>
+                        {(detailProduct as any).quantity != null && <div><span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 700 }}>Quantity</span><div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{(detailProduct as any).quantity} pieces{(detailProduct as any).quantity <= 2 && <span style={{ color: '#dc2626', marginLeft: 6, fontSize: '0.78rem' }}>Low stock</span>}</div></div>}
                       </div>
                       <div><span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 700 }}>Description</span><div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)', lineHeight: 1.6, marginTop: 4 }}>{detailProduct.description || 'No description'}</div></div>
                     </div>
@@ -662,7 +670,16 @@ export default function AdminProducts() {
                       </button>
                     </div>
                   </div>
-                  <div className="admin-form-group" />
+                  <div className="admin-form-group">
+                    <label>Quantity (Pieces)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={(form as any).quantity ?? 0}
+                      onChange={(e) => updateForm('quantity', Math.max(0, Number(e.target.value)))}
+                      placeholder="e.g. 10"
+                    />
+                  </div>
                 </div>
 
                 <div style={{ background:'#fefce8', border:'1px solid #fde68a', borderRadius:10, padding:'1rem', marginBottom:'1rem' }}>
@@ -674,7 +691,6 @@ export default function AdminProducts() {
                   <div style={{ display:'flex', gap:'1rem', flexWrap:'wrap', marginTop:'0.6rem' }}>
                     <label style={{ display:'flex', gap:'0.3rem', alignItems:'center', fontSize:'0.78rem' }}><input type="checkbox" checked={(form as any).replacementAvailable!==false} onChange={e=>updateForm('replacementAvailable', e.target.checked)} /> Replacement</label>
                     <label style={{ display:'flex', gap:'0.3rem', alignItems:'center', fontSize:'0.78rem' }}><input type="checkbox" checked={!!(form as any).exchangeAvailable} onChange={e=>updateForm('exchangeAvailable', e.target.checked)} /> Exchange</label>
-                    <label style={{ display:'flex', gap:'0.3rem', alignItems:'center', fontSize:'0.78rem' }}><input type="checkbox" checked={(form as any).refundAvailable!==false} onChange={e=>updateForm('refundAvailable', e.target.checked)} /> Refund</label>
                     <label style={{ display:'flex', gap:'0.3rem', alignItems:'center', fontSize:'0.78rem' }}><input type="checkbox" checked={!!(form as any).unboxingVideoRequired} onChange={e=>updateForm('unboxingVideoRequired', e.target.checked)} /> Video Required</label>
                   </div>
                   { (form as any).returnable===false && <input value={(form as any).nonReturnableReason||''} onChange={e=>updateForm('nonReturnableReason', e.target.value)} placeholder="Reason for non-returnable" style={{ width:'100%', padding:'0.4rem', border:'1px solid var(--line)', borderRadius:6, marginTop:'0.6rem', fontSize:'0.82rem' }} />}

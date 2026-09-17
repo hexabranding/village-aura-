@@ -64,11 +64,15 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  quantity: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
   returnable: { type: Boolean, default: true },
   returnWindow: { type: Number, default: 7 },
   replacementAvailable: { type: Boolean, default: true },
   exchangeAvailable: { type: Boolean, default: false },
-  refundAvailable: { type: Boolean, default: true },
   unboxingVideoRequired: { type: Boolean, default: false },
   nonReturnableReason: { type: String, default: '' },
 }, { timestamps: true, suppressReservedKeysWarning: true });

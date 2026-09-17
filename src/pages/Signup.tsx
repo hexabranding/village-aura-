@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { api } from '../lib/api';
 import ZariDivider from '../components/ZariDivider';
 
 export default function Signup() {
@@ -9,14 +10,25 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const redirect = new URLSearchParams(location.search).get('redirect') || (location.state as { from?: string } | null)?.from || null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('reshamUser', JSON.stringify({ email, name: name || email.split('@')[0] || 'Member' }));
-    navigate(redirect || '/');
+    setError('');
+    setLoading(true);
+    try {
+      await api.customers.register({ name, email, password });
+      navigate(redirect || '/');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to create account';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -142,7 +154,8 @@ export default function Signup() {
                 id="signup-password"
                 type={showPassword ? 'text' : 'password'}
                 required
-                placeholder="Create a password"
+                minLength={6}
+                placeholder="Create a password (min 6 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ ...inputStyle, paddingRight: '2.75rem' }}
@@ -201,14 +214,21 @@ export default function Signup() {
             </span>
           </motion.div>
 
+          {error && (
+            <div style={{ padding: '0.6rem 0.8rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, fontSize: '0.82rem', color: '#991b1b' }}>
+              {error}
+            </div>
+          )}
+
           <motion.button
             type="submit"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="btn btn-solid"
-            style={{ width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '0.85rem' }}
+            disabled={loading || !agreeTerms}
+            style={{ width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '0.85rem', opacity: loading || !agreeTerms ? 0.6 : 1 }}
           >
-            Create Account
+            {loading ? 'Creating Account...' : 'Create Account'}
           </motion.button>
         </form>
 

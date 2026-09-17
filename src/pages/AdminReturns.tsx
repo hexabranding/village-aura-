@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api, type ReturnRequest, resolveUploadUrl } from '../lib/api';
 import { getProduct } from '../lib/productStore';
 
-const statuses=['Return Requested','Under Review','More Information Required','Approved','Pickup Scheduled','Picked Up','Product Received','Quality Check','Refund Processing','Replacement Processing','Completed','Rejected','Cancelled'];
-const colors:any={ 'Return Requested':'#f59e0b','Under Review':'#3b82f6','More Information Required':'#eab308', Approved:'#10b981','Pickup Scheduled':'#8b5cf6','Picked Up':'#f97316','Product Received':'#06b6d4','Quality Check':'#a855f7','Refund Processing':'#10b981','Replacement Processing':'#6366f1', Completed:'#059669', Rejected:'#ef4444', Cancelled:'#6b7280' };
+const statuses=['Return Requested','Under Review','More Information Required','Approved','Pickup Scheduled','Picked Up','Product Received','Quality Check','Replacement Processing','Completed','Rejected','Cancelled'];
+const colors:any={ 'Return Requested':'#f59e0b','Under Review':'#3b82f6','More Information Required':'#eab308', Approved:'#10b981','Pickup Scheduled':'#8b5cf6','Picked Up':'#f97316','Product Received':'#06b6d4','Quality Check':'#a855f7','Replacement Processing':'#6366f1', Completed:'#059669', Rejected:'#ef4444', Cancelled:'#6b7280' };
 
 export default function AdminReturns(){
   const [returns,setReturns]=useState<ReturnRequest[]>([]);
@@ -17,10 +17,23 @@ export default function AdminReturns(){
   const [pickupDate,setPickupDate]=useState('');
   const [courier,setCourier]=useState('');
   const [trackingNo,setTrackingNo]=useState('');
-  const [refundStatus,setRefundStatus]=useState('');
+  const [zoomImage,setZoomImage]=useState<string|null>(null);
+  const [zoomScale,setZoomScale]=useState(1);
+  useEffect(()=>{
+    if(!zoomImage) return;
+    const handler=(e:WheelEvent)=>{e.preventDefault();setZoomScale(s=>Math.max(1,Math.min(5,s-(e.deltaY>0?0.3:-0.3))));};
+    window.addEventListener('wheel',handler,{passive:false});
+    return()=>window.removeEventListener('wheel',handler);
+  },[zoomImage]);
+  useEffect(()=>{
+    if(!zoomImage) return;
+    const keyHandler=(e:KeyboardEvent)=>{if(e.key==='Escape'){setZoomImage(null);setZoomScale(1);}if(e.key==='+'||e.key==='=')setZoomScale(s=>Math.min(5,s+0.5));if(e.key==='-')setZoomScale(s=>Math.max(1,s-0.5));};
+    window.addEventListener('keydown',keyHandler);
+    return()=>window.removeEventListener('keydown',keyHandler);
+  },[zoomImage]);
   const load=async()=>{ try{ const d=await api.returns.getAll(); setReturns(d);}catch(e:any){ } finally{ setLoading(false);} };
   useEffect(()=>{ load(); const i=setInterval(load,12000); return()=>clearInterval(i); },[]);
-  const openAction=(r:ReturnRequest, status:string)=>{ setSelected(r); setActionStatus(status); setAdminMsg(''); setPickupDate(''); setCourier(''); setTrackingNo(''); setRefundStatus(''); };
+  const openAction=(r:ReturnRequest, status:string)=>{ setSelected(r); setActionStatus(status); setAdminMsg(''); setPickupDate(''); setCourier(''); setTrackingNo(''); };
   const handleDelete=async(id:string, returnId?:string)=>{
     if(!confirm(`Delete return ${returnId||id}? This cannot be undone.`)) return;
     try{ await api.returns.delete(id); setReturns(p=>p.filter(x=> (x as any).id!==id && (x as any)._id!==id && x.returnId!==id)); setSelected(null); }catch(e:any){ alert(e.message||'Delete failed'); }
@@ -33,7 +46,6 @@ export default function AdminReturns(){
       if(pickupDate) extra.pickupDate=pickupDate;
       if(courier) extra.pickupCourier=courier;
       if(trackingNo) extra.pickupTrackingNo=trackingNo;
-      if(refundStatus) extra.refundStatus=refundStatus;
       const u=await api.returns.updateStatus(selected.id, actionStatus, extra);
       setReturns(p=>p.map(x=>x.id===selected.id?u:x)); setSelected(null);
     }catch(e:any){ alert(e.message); }
@@ -73,11 +85,14 @@ export default function AdminReturns(){
               </div>
             </div>
             <div style={{fontSize:'0.82rem'}}><strong>Reason:</strong> {r.reason}{r.otherReason?` (${r.otherReason})`:''} {r.description?` — ${r.description}`:''}</div>
-            {(r.images?.length||0)>0 && <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{r.images!.map((img,i)=><img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" key={i} src={resolveUploadUrl(img)} alt="ev" style={{width:64,height:64,objectFit:'cover',borderRadius:8,border:'1px solid var(--line)'}} />)}</div>}
+            {(r.images?.length||0)>0 && <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{r.images!.map((img,i)=><img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" key={i} src={resolveUploadUrl(img)} alt="Evidence" onClick={()=>{setZoomImage(img);setZoomScale(1);}} style={{width:64,height:64,objectFit:'cover',borderRadius:8,border:'1px solid var(--line)',cursor:'zoom-in',transition:'transform 0.15s'}} onMouseEnter={e=>(e.currentTarget.style.transform='scale(1.08)')} onMouseLeave={e=>(e.currentTarget.style.transform='scale(1)')} />)}</div>}
             {r.video && <video src={resolveUploadUrl(r.video)} controls playsInline preload="metadata" muted onError={(e)=>{ const v=e.currentTarget; v.style.display='none'; const p=v.parentElement; if(p && !p.querySelector('.video-fallback')){ const d=document.createElement('div'); d.className='video-fallback'; d.textContent='⚠️ Video unavailable'; d.style.cssText='padding:0.5rem;background:#fef2f2;border:1px dashed #fecaca;border-radius:8px;font-size:0.75rem;color:#991b1b'; p.appendChild(d);} }} style={{maxWidth:240, maxHeight:140, borderRadius:8}} />}
-            {r.refund?.amount!=null && <div style={{fontSize:'0.78rem',background:'#f0fdf4',border:'1px solid #bbf7d0',padding:'0.4rem 0.6rem',borderRadius:8}}>Refund ₹{r.refund.amount} • {r.refund.method} • {r.refund.status} {r.refund.transactionId?`• ${r.refund.transactionId}`:''}</div>}
             {r.pickup && <div style={{fontSize:'0.75rem',background:'#f9fafb',border:'1px solid #e5e7eb',padding:'0.4rem 0.6rem',borderRadius:8}}>Pickup: {r.pickup.status} {r.pickup.date?`• ${r.pickup.date}`:''} {r.pickup.courier?`• ${r.pickup.courier}`:''} {r.pickup.trackingNo?`• ${r.pickup.trackingNo}`:''}</div>}
             {r.adminMessage && <div style={{fontSize:'0.78rem',background:'#eff6ff',border:'1px solid #bfdbfe',padding:'0.5rem',borderRadius:8,color:'#1e40af'}}>{r.adminMessage}</div>}
+            {r.tracking && r.tracking.length>0 && (()=>{
+              const last=r.tracking[r.tracking.length-1];
+              return <div style={{fontSize:'0.72rem',color:'#6b7280',background:'#f9fafb',border:'1px solid #f3f4f6',padding:'0.35rem 0.6rem',borderRadius:8,display:'flex',alignItems:'center',gap:'0.4rem'}}><span style={{width:8,height:8,borderRadius:'50%',background:colors[last.status]||'#999',flexShrink:0}} /><span><strong>{last.status}</strong>: {last.message||'No details'} • {new Date(last.timestamp).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span></div>;
+            })()}
             {r.tracking && <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{r.tracking.slice(-4).map((t:any,i:number)=><span key={i} style={{fontSize:'0.65rem',background:'#f3f4f6',padding:'2px 6px',borderRadius:12,border:'1px solid #e5e7eb'}}>{t.status}: {t.message?.slice(0,40)}</span>)}</div>}
             <div style={{display:'flex',gap:'0.4rem',flexWrap:'wrap'}}>
               {['Under Review','Approved','More Information Required'].includes(r.status) || r.status==='Return Requested' ? <button onClick={()=>openAction(r,'Approved')} style={{padding:'0.4rem 0.8rem',background:'#10b981',color:'white',border:'none',borderRadius:8,fontSize:'0.75rem',fontWeight:700,cursor:'pointer'}}>Approve</button> : null}
@@ -105,9 +120,6 @@ export default function AdminReturns(){
                   <div className="admin-form-group"><label>Courier</label><input value={courier} onChange={e=>setCourier(e.target.value)} placeholder="Courier name" style={{width:'100%',padding:'0.6rem',border:'1px solid var(--line)',borderRadius:8}} /></div>
                   <div className="admin-form-group"><label>Tracking No</label><input value={trackingNo} onChange={e=>setTrackingNo(e.target.value)} placeholder="Tracking number" style={{width:'100%',padding:'0.6rem',border:'1px solid var(--line)',borderRadius:8}} /></div>
                 </>}
-                {(actionStatus.includes('Refund') || actionStatus==='Completed') && <>
-                  <div className="admin-form-group"><label>Refund Status</label><select value={refundStatus} onChange={e=>setRefundStatus(e.target.value)} style={{width:'100%',padding:'0.6rem',border:'1px solid var(--line)',borderRadius:8}}><option value="">Select</option><option>Pending</option><option>Initiated</option><option>Processing</option><option>Completed</option><option>Failed</option></select></div>
-                </>}
               </div>
               <div className="admin-modal-footer"><button onClick={()=>{setSelected(null);setActionStatus('');}} className="admin-btn admin-btn-outline">Cancel</button><button onClick={doAction} className="admin-btn admin-btn-primary">Confirm {actionStatus}</button></div>
             </motion.div>
@@ -122,11 +134,42 @@ export default function AdminReturns(){
                 <p><strong>Reason:</strong> {selected.reason} {selected.otherReason?`(${selected.otherReason})`:''}</p>
                 <p><strong>Description:</strong> {selected.description||'-'}</p>
                 <p><strong>Resolution:</strong> {selected.resolution} • <strong>Status:</strong> {selected.status}</p>
-                {selected.images?.length ? <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:'0.5rem'}}>{selected.images.map((im,i)=><img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" key={i} src={resolveUploadUrl(im)} style={{width:80,height:80,objectFit:'cover',borderRadius:8}}/> )}</div> : null}
+                {selected.images?.length ? <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:'0.5rem'}}>{selected.images.map((im,i)=><img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" key={i} src={resolveUploadUrl(im)} onClick={()=>{setZoomImage(im);setZoomScale(1);}} style={{width:80,height:80,objectFit:'cover',borderRadius:8,cursor:'zoom-in',transition:'transform 0.15s'}} onMouseEnter={e=>(e.currentTarget.style.transform='scale(1.08)')} onMouseLeave={e=>(e.currentTarget.style.transform='scale(1)')} /> )}</div> : null}
                 {selected.video && <video src={resolveUploadUrl(selected.video)} controls playsInline preload="metadata" muted onError={(e)=>{ const v=e.currentTarget; v.style.display='none'; }} style={{width:'100%',maxHeight:200,marginTop:'0.5rem',borderRadius:8}} />}
-                <div style={{marginTop:'0.75rem'}}><strong>Timeline</strong>{selected.tracking?.map((t:any,i:number)=><div key={i} style={{fontSize:'0.75rem',padding:'0.3rem 0',borderBottom:'1px solid #f3f4f6'}}>{new Date(t.timestamp).toLocaleString('en-IN')} — <strong>{t.status}</strong>: {t.message}</div>)}</div>
+                <div style={{marginTop:'0.75rem'}}>
+                  <strong style={{fontSize:'0.85rem'}}>📋 Tracking Timeline</strong>
+                  {selected.tracking?.length ? (
+                    <div style={{display:'flex',flexDirection:'column',gap:0,marginTop:'0.5rem',borderLeft:'2px solid #e5e7eb',marginLeft:4,paddingLeft:14}}>
+                      {selected.tracking!.map((t:any,i:number)=>(
+                        <div key={i} style={{position:'relative',paddingBottom:12,borderBottom: i<(selected.tracking!.length-1) ? '1px solid #f3f4f6' : 'none'}}>
+                          <div style={{position:'absolute',left:-20,top:4,width:12,height:12,borderRadius:'50%',background: i===selected.tracking!.length-1 ? (colors[t.status]||'#6b7280') : '#d1d5db',border:'2px solid white',boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}} />
+                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                            <span style={{fontSize:'0.78rem',fontWeight:700,color: i===selected.tracking!.length-1 ? (colors[t.status]||'#333') : '#6b7280'}}>{t.status}</span>
+                            <span style={{fontSize:'0.65rem',color:'#9ca3af'}}>{new Date(t.timestamp).toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                          </div>
+                          {t.message && <div style={{fontSize:'0.72rem',color:'#6b7280',marginTop:2}}>{t.message}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  ) : <div style={{fontSize:'0.75rem',color:'#9ca3af',marginTop:'0.3rem'}}>No tracking entries yet</div>}
+                </div>
               </div>
               <div className="admin-modal-footer"><button onClick={()=>handleDelete((selected as any).id || (selected as any)._id, selected.returnId)} style={{padding:'0.5rem 1rem',background:'#fee2e2',border:'1px solid #fecaca',color:'#991b1b',borderRadius:8,fontSize:'0.82rem',fontWeight:700,cursor:'pointer',marginRight:'auto'}}>🗑️ Delete</button><button onClick={()=>setSelected(null)} className="admin-btn admin-btn-outline">Close</button></div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {zoomImage && (
+          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{position:'fixed',top:0,left:0,right:0,bottom:0,zIndex:9999,background:'rgba(0,0,0,0.92)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'zoom-out'}} onClick={()=>{setZoomImage(null);setZoomScale(1);}}>
+            <motion.div initial={{scale:0.8}} animate={{scale:1}} exit={{scale:0.8}} onClick={e=>e.stopPropagation()} style={{position:'relative',maxWidth:'90vw',maxHeight:'90vh'}}>
+              <img src={resolveUploadUrl(zoomImage)} alt="Zoomed evidence" style={{maxWidth:'90vw',maxHeight:'85vh',objectFit:'contain',borderRadius:8,transform:`scale(${zoomScale})`,transformOrigin:'center',transition:'transform 0.2s ease',cursor:zoomScale>1?'grab':'zoom-in'}} />
+              <div style={{position:'absolute',top:-12,right:-12,display:'flex',gap:6}}>
+                <button onClick={e=>{e.stopPropagation();setZoomScale(s=>Math.min(s+0.5,5));}} style={{width:36,height:36,borderRadius:'50%',background:'white',border:'none',fontSize:'1.2rem',cursor:'pointer',boxShadow:'0 2px 12px rgba(0,0,0,0.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                <button onClick={e=>{e.stopPropagation();setZoomScale(s=>Math.max(s-0.5,1));}} style={{width:36,height:36,borderRadius:'50%',background:'white',border:'none',fontSize:'1.2rem',cursor:'pointer',boxShadow:'0 2px 12px rgba(0,0,0,0.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>-</button>
+                <button onClick={e=>{e.stopPropagation();setZoomImage(null);setZoomScale(1);}} style={{width:36,height:36,borderRadius:'50%',background:'#ef4444',color:'white',border:'none',fontSize:'1rem',cursor:'pointer',boxShadow:'0 2px 12px rgba(0,0,0,0.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+              </div>
+              <div style={{position:'absolute',bottom:-12,left:'50%',transform:'translateX(-50%)',background:'rgba(255,255,255,0.9)',padding:'4px 12px',borderRadius:20,fontSize:'0.75rem',fontWeight:600,color:'#333',whiteSpace:'nowrap'}}>{Math.round(zoomScale*100)}% • Scroll to zoom • Click outside to close</div>
             </motion.div>
           </motion.div>
         )}

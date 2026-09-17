@@ -31,6 +31,7 @@ import AdminTestimonials from './pages/AdminTestimonials';
 import AdminHomeContent from './pages/AdminHomeContent';
 import AdminReturns from './pages/AdminReturns';
 import AdminReturnSettings from './pages/AdminReturnSettings';
+import AdminCustomers from './pages/AdminCustomers';
 import type { CartItem } from './data/products';
 import { loadProducts } from './lib/productStore';
 
@@ -154,6 +155,7 @@ export default function App() {
                 <Route path="home-content" element={<AdminHomeContent />} />
                 <Route path="returns" element={<AdminReturns />} />
                 <Route path="return-settings" element={<AdminReturnSettings />} />
+                <Route path="customers" element={<AdminCustomers />} />
               </Route>
             </Routes>
           </motion.div>

@@ -89,7 +89,7 @@ export default function Instagram() {
           transition={{ duration: 0.6, delay: 0.1 }}
           style={{ fontSize: '2.2rem', marginTop: '0.4rem' }}
         >
-          Follow Us On Instagram
+          Follow Us
         </motion.h2>
         <motion.div
           initial={{ scaleX: 0 }}
@@ -168,11 +168,17 @@ export default function Instagram() {
                   justifyContent: 'center',
                 }}
               >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--ivory)" strokeWidth="1.5">
-                  <rect x="2" y="2" width="20" height="20" rx="5" />
-                  <circle cx="12" cy="12" r="5" />
-                  <circle cx="17.5" cy="6.5" r="1.5" fill="var(--ivory)" stroke="none" />
-                </svg>
+                {post.link && post.link.includes('youtube') || post.link.includes('youtu.be') ? (
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--ivory)" stroke="none">
+                    <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8zM9.6 15.6V8.4L15.8 12l-6.2 3.6z"/>
+                  </svg>
+                ) : (
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--ivory)" strokeWidth="1.5">
+                    <rect x="2" y="2" width="20" height="20" rx="5" />
+                    <circle cx="12" cy="12" r="5" />
+                    <circle cx="17.5" cy="6.5" r="1.5" fill="var(--ivory)" stroke="none" />
+                  </svg>
+                )}
               </div>
               {/* Label */}
               <div

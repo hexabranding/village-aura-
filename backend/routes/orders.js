@@ -1,7 +1,9 @@
 import express from 'express';
 import Order from '../models/Order.js';
+import Product from '../models/Product.js';
 import Notification from '../models/Notification.js';
 import auth from '../middleware/auth.js';
+import { sendOrderConfirmation, sendOrderStatusUpdate } from '../utils/email.js';
 
 const router = express.Router();
 
@@ -81,6 +83,16 @@ router.put('/cancel/:orderId', async (req, res) => {
       item.cancelled = true;
       item.cancelReason = reason || 'Cancelled by customer';
       item.cancelledAt = new Date();
+
+      // Restore quantity
+      try {
+        const product = await Product.findById(productId);
+        if (product) {
+          product.quantity = (product.quantity || 0) + (item.qty || 1);
+          await product.save();
+        }
+      } catch (_) {}
+
       const activeItems = order.items.filter((i) => !i.cancelled);
       if (activeItems.length === 0) {
         order.status = 'Cancelled';
@@ -96,6 +108,20 @@ router.put('/cancel/:orderId', async (req, res) => {
       order.notes = reason ? `Cancelled by customer: ${reason}` : 'Cancelled by customer';
       order.lastUpdated = new Date().toISOString();
       order.tracking.push({ status: 'Cancelled', timestamp: new Date(), message: reason ? `Cancelled: ${reason}` : 'Order cancelled by customer' });
+
+      // Restore quantity for all non-cancelled items
+      try {
+        for (const item of order.items) {
+          if (!item.cancelled) {
+            const product = await Product.findById(item.id);
+            if (product) {
+              product.quantity = (product.quantity || 0) + (item.qty || 1);
+              await product.save();
+            }
+          }
+        }
+      } catch (_) {}
+
       await order.save();
       try { await Notification.create({ type: 'cancellation', title: 'Order Cancelled', message: `Customer ${order.name} cancelled entire order ${order.orderId}. Reason: ${reason || 'N/A'}`, orderId: order.orderId, phone: order.phone }); } catch (_) {}
       res.json(order);
@@ -108,6 +134,25 @@ router.put('/cancel/:orderId', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    const { items } = req.body;
+
+    // Validate stock availability and decrease quantity
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const product = await Product.findById(item.id);
+        if (product) {
+          const currentQty = product.quantity || 0;
+          if (currentQty > 0 && currentQty < item.qty) {
+            return res.status(400).json({ error: `Not enough stock for "${product.name}". Only ${currentQty} pieces available.` });
+          }
+          if (currentQty > 0) {
+            product.quantity = Math.max(0, currentQty - item.qty);
+            await product.save();
+          }
+        }
+      }
+    }
+
     const orderData = {
       ...req.body,
       orderId: generateOrderId(),
@@ -122,6 +167,9 @@ router.post('/', async (req, res) => {
 
     const order = new Order(orderData);
     await order.save();
+
+    sendOrderConfirmation(order).catch(() => {});
+
     res.status(201).json(order);
   } catch (error) {
     console.error('Create order error:', error);
@@ -163,6 +211,9 @@ router.put('/:id/status', auth, async (req, res) => {
     });
 
     await order.save();
+
+    const statusMessage = message || `Status updated to ${status}`;
+    sendOrderStatusUpdate(order, status, statusMessage).catch(() => {});
 
     if (status === 'Dispatched') {
       const notifMsg = `Order ${order.orderId} dispatched for ${order.name}. Phone: ${order.phone}${order.email ? ', Email: ' + order.email : ''}. Tracking: ${trackingLink || 'N/A'}`;

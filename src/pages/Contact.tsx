@@ -223,9 +223,10 @@ export default function Contact() {
               <div>
                 <div className="eyebrow" style={{ color: 'var(--gold)', fontSize: '0.62rem', marginBottom: '0.3rem' }}>Visit Us</div>
                 <div style={{ fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.6 }}>
-                  ABCDEFGHTJ<br />
-                  abcdefgh<br />
-                  India
+                  VillageAllure <br />
+                  Malappuram <br />
+                  Keralam ,
+                  679577
                 </div>
               </div>
             </div>
@@ -251,7 +252,7 @@ export default function Contact() {
                 <div className="eyebrow" style={{ color: 'var(--gold)', fontSize: '0.62rem', marginBottom: '0.3rem' }}>Call Us</div>
                 <div style={{ fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.6 }}>
                   +91 6282655422<br />
-                  Mon – Sat, 10 AM – 7 PM IST
+                  
                 </div>
               </div>
             </div>

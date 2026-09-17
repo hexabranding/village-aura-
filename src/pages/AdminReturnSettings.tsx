@@ -26,7 +26,6 @@ export default function AdminReturnSettings(){
             ['enabled','Enable Returns'],
             ['replacementEnabled','Replacement'],
             ['exchangeEnabled','Exchange'],
-            ['refundEnabled','Refund'],
             ['videoRequired','Video Required'],
             ['imagesRequired','Images Required'],
             ['pickupAvailable','Pickup Available'],
@@ -41,7 +40,6 @@ export default function AdminReturnSettings(){
         </div>
         <label>Non-returnable Categories (comma separated)<input value={(s.nonReturnableCategories||[]).join(', ')} onChange={e=>setS({...s, nonReturnableCategories: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean)})} placeholder="e.g. Innerwear, Earrings" style={inputStyle} /></label>
         <label>Return Conditions<textarea value={s.returnConditions} onChange={e=>setS({...s,returnConditions:e.target.value})} rows={3} style={inputStyle} /></label>
-        <label>Refund Method<input value={s.refundMethod} onChange={e=>setS({...s,refundMethod:e.target.value})} style={inputStyle} /></label>
         <label>Instructions<textarea value={s.instructions} onChange={e=>setS({...s,instructions:e.target.value})} rows={2} style={inputStyle} /></label>
         <label>Return Reasons (comma separated)<textarea value={(s.reasons||[]).join(', ')} onChange={e=>setS({...s, reasons: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean)})} rows={2} style={inputStyle} /></label>
         <button onClick={save} disabled={saving} style={{ padding:'0.75rem 1.5rem', background:'var(--maroon)', color:'white', border:'none', borderRadius:8, fontWeight:700, cursor:'pointer', opacity:saving?0.6:1 }}>{saving?'Saving...':'Save Settings'}</button>
