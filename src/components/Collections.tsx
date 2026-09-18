@@ -132,9 +132,7 @@ export default function Collections({ collections }: CollectionsProps) {
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic' }}>
                     {c.title}
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--rose-dust)', marginTop: '0.2rem' }}>
-                    {c.tagline}
-                  </div>
+
                 </div>
                 <motion.div
                   initial={{ opacity: 0, x: -6 }}
