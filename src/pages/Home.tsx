@@ -634,7 +634,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               transition={{ delay: 0.2 }}
               style={{ fontSize: '2rem', marginTop: '0.8rem', fontStyle: 'italic' }}
             >
-              {weaver?.title || 'Every saree is signed by the loom that made it.'}
+              {weaver?.title || 'Every Saree is Just Made For You.'}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 10 }}
@@ -643,7 +643,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
               transition={{ delay: 0.35 }}
               style={{ color: 'var(--ink-soft)', lineHeight: 1.8, marginTop: '1rem', maxWidth: 480 }}
             >
-              {weaver?.description || 'We work directly with 40 weaving families across Kanchipuram, Banaras, Chanderi and rural Bengal. No middle warehouses, no mass reproduction — a saree isn\'t cut from a bolt here, it\'s finished only when you order it.'}
+              {weaver?.description || 'We work directly with 40 weaving families across  Chanderi,Rural Bengal,Rajasthan and Pedana (Andhra Pradesh). No middle warehouses, no mass reproduction — a saree isn\'t cut from a bolt here, it\'s finished only when you order it.'}
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 10 }}

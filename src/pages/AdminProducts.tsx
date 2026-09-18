@@ -10,7 +10,7 @@ interface Variant {
   images: string[];
 }
 
-const emptyVariant: Variant = { colorName: '', hex: '#6b1e23', images: [] };
+const emptyVariant: Variant = { colorName: '', hex: '', images: [] };
 
 const emptyProduct: Product = {
   id: '',
@@ -24,7 +24,7 @@ const emptyProduct: Product = {
   details: [],
   care: [],
   shippingReturns: '',
-  variants: [{ ...emptyVariant }],
+  variants: [],
   featured: false,
   isNew: false,
   isBestSeller: false,
@@ -169,7 +169,7 @@ export default function AdminProducts() {
 
   const openEdit = (product: Product) => {
     setEditing(product);
-    setForm({ ...product, variants: product.variants.length > 0 ? product.variants : [{ ...emptyVariant }] });
+    setForm({ ...product });
     setActiveVariantTab(0);
     setShowModal(true);
   };
@@ -179,7 +179,15 @@ export default function AdminProducts() {
     if (!form.name.trim()) newErrors.name = 'Product name is required';
     if (!form.price || form.price <= 0) newErrors.price = 'Valid selling price is required';
     if (!form.category) newErrors.category = 'Category is required';
-    if (!form.variants[0]?.colorName.trim()) newErrors.colorName = 'Color name is required';
+    if (form.variants.length === 0) {
+      newErrors.variants = 'At least one variant with images is required';
+    } else {
+      form.variants.forEach((v, i) => {
+        if (!v.images || v.images.length === 0) {
+          newErrors[`variantImages_${i}`] = `At least one image is required for Variant ${i + 1}`;
+        }
+      });
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -247,15 +255,19 @@ export default function AdminProducts() {
       variants: [...f.variants, { ...emptyVariant }],
     }));
     setActiveVariantTab(form.variants.length);
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.variants;
+      return next;
+    });
   };
 
   const removeVariant = (index: number) => {
-    if (form.variants.length <= 1) return;
     setForm((f) => ({
       ...f,
       variants: f.variants.filter((_, i) => i !== index),
     }));
-    setActiveVariantTab(Math.min(activeVariantTab, form.variants.length - 2));
+    setActiveVariantTab(Math.max(0, Math.min(activeVariantTab, form.variants.length - 2)));
   };
 
   const handleImageUpload = async (variantIndex: number, files: FileList | null) => {
@@ -270,6 +282,12 @@ export default function AdminProducts() {
         images: [...variants[variantIndex].images, ...urls],
       };
       setForm((f) => ({ ...f, variants }));
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[`variantImages_${variantIndex}`];
+        if (form.variants.length > 0) delete next.variants;
+        return next;
+      });
     } catch (error) {
       console.error('Upload error:', error);
     } finally {
@@ -744,8 +762,12 @@ export default function AdminProducts() {
                       + Add Variant
                     </button>
                   </div>
+                  {errors.variants && <span className="admin-field-error" style={{ marginBottom: '0.5rem', display: 'block' }}>{errors.variants}</span>}
 
                   <div className="admin-variant-tabs">
+                    {form.variants.length === 0 && (
+                      <span className="admin-variant-empty">No variants added yet</span>
+                    )}
                     {form.variants.map((v, i) => (
                       <button
                         key={i}
@@ -758,14 +780,12 @@ export default function AdminProducts() {
                           style={{ background: v.hex || '#ccc' }}
                         />
                         <span>{v.colorName || `Variant ${i + 1}`}</span>
-                        {form.variants.length > 1 && (
-                          <span
-                            className="admin-variant-tab-remove"
-                            onClick={(e) => { e.stopPropagation(); removeVariant(i); }}
-                          >
-                            ×
-                          </span>
-                        )}
+                        <span
+                          className="admin-variant-tab-remove"
+                          onClick={(e) => { e.stopPropagation(); removeVariant(i); }}
+                        >
+                          ×
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -775,21 +795,19 @@ export default function AdminProducts() {
                       <div key={vIndex} className="admin-variant-content">
                         <div className="admin-form-grid">
                           <div className="admin-form-group">
-                            <label>Color Name *</label>
+                            <label>Color Name</label>
                             <input
                               value={variant.colorName}
-                              onChange={(e) => { updateVariant(vIndex, 'colorName', e.target.value); setErrors((prev) => ({ ...prev, colorName: '' })); }}
+                              onChange={(e) => updateVariant(vIndex, 'colorName', e.target.value)}
                               placeholder="e.g. Deep Maroon"
-                              className={errors.colorName ? 'admin-input-error' : ''}
                             />
-                            {errors.colorName && <span className="admin-field-error">{errors.colorName}</span>}
                           </div>
                           <div className="admin-form-group">
                             <label>Color</label>
                             <div className="admin-color-picker-wrap">
                               <input
                                 type="color"
-                                value={variant.hex}
+                                value={variant.hex || '#000000'}
                                 onChange={(e) => updateVariant(vIndex, 'hex', e.target.value)}
                                 className="admin-color-input"
                               />
@@ -800,6 +818,16 @@ export default function AdminProducts() {
                                 className="admin-color-hex"
                                 placeholder="#000000"
                               />
+                              {variant.hex && (
+                                <button
+                                  type="button"
+                                  className="admin-btn-remove-color"
+                                  title="Remove color"
+                                  onClick={() => updateVariant(vIndex, 'hex', '')}
+                                >
+                                  ×
+                                </button>
+                              )}
                             </div>
                             <div className="admin-color-presets">
                               {presetColors.map((c) => (
@@ -822,7 +850,10 @@ export default function AdminProducts() {
                         </div>
 
                         <div className="admin-form-group">
-                          <label>Product Images</label>
+                          <label>Product Images *</label>
+                          {errors[`variantImages_${vIndex}`] && (
+                            <span className="admin-field-error" style={{ marginLeft: '0.5rem' }}>{errors[`variantImages_${vIndex}`]}</span>
+                          )}
                           <div className="admin-image-upload-area">
                             <input
                               ref={fileInputRef}

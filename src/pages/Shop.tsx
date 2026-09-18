@@ -40,6 +40,7 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [products, setProducts] = useState<ProductType[]>(localProducts);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     Promise.all([api.products.getAll(), api.categories.getAll()]).then(([apiProducts, cats]) => {
@@ -87,6 +88,16 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
       if (activeMin && p.price < Number(activeMin)) return false;
       if (activeMax && p.price > Number(activeMax)) return false;
       return true;
+    })
+    .filter((p) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (p.subCategory && p.subCategory.toLowerCase().includes(q)) ||
+        p.fabric.toLowerCase().includes(q)
+      );
     })
     .sort((a, b) => {
       if (activeSort === 'low') return a.price - b.price;
@@ -269,11 +280,30 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
 
   return (
     <div className="container" style={{ padding: '3rem 0 5rem' }}>
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <span className="eyebrow">The Full Collection</span>
-        <h1 style={{ fontSize: '2.6rem', marginTop: '0.4rem', fontStyle: 'italic' }}>
-          {activeCategory ?? 'All Products'}
-        </h1>
+      <div className="shop-header-row">
+        <div className="shop-search-wrap">
+          <svg className="shop-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            className="shop-search-input"
+            type="text"
+            placeholder="Search by name,category"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="shop-search-clear" onClick={() => setSearchQuery('')}>✕</button>
+          )}
+        </div>
+
+        <div className="shop-header-text">
+          <span className="eyebrow">The Full Collection</span>
+          <h1 style={{ fontSize: '2.6rem', marginTop: '0.4rem', fontStyle: 'italic' }}>
+            {activeCategory ?? 'All Products'}
+          </h1>
+        </div>
       </div>
 
       <ZariDivider />
@@ -328,7 +358,7 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
             </AnimatePresence>
             {filtered.length === 0 && (
               <p style={{ textAlign: 'center', color: 'var(--ink-soft)', padding: '3rem 0' }}>
-                No products found in this category yet.
+                {searchQuery ? `No products found for "${searchQuery}".` : 'No products found in this category yet.'}
               </p>
             )}
           </div>
@@ -354,7 +384,7 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
           </AnimatePresence>
           {filtered.length === 0 && (
             <p style={{ textAlign: 'center', color: 'var(--ink-soft)' }}>
-              No products found in this category yet.
+              {searchQuery ? `No products found for "${searchQuery}".` : 'No products found in this category yet.'}
             </p>
           )}
         </>

@@ -64,6 +64,7 @@ export default function AdminCategories() {
   const [formUploading, setFormUploading] = useState(false);
 
   const [cardSubInputs, setCardSubInputs] = useState<Record<string, string>>({});
+  const [search, setSearch] = useState('');
 
   const loadCategories = async () => {
     try {
@@ -196,6 +197,17 @@ export default function AdminCategories() {
     }
   };
 
+  const filtered = categories.filter((cat) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      cat.name.toLowerCase().includes(q) ||
+      cat.description.toLowerCase().includes(q) ||
+      cat.slug.toLowerCase().includes(q) ||
+      cat.subcategories.some((s) => s.toLowerCase().includes(q))
+    );
+  });
+
   const totalCategories = categories.length;
   const activeCount = categories.filter((c) => c.active).length;
   const totalSubs = categories.reduce((sum, c) => sum + c.subcategories.length, 0);
@@ -237,10 +249,25 @@ export default function AdminCategories() {
 
       <div className="admin-categories-toolbar">
         <h3 className="admin-categories-title">All Categories</h3>
+        <div className="admin-products-search-wrap">
+          <svg className="admin-products-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            placeholder="Search categories..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="admin-products-search"
+          />
+          {search && (
+            <button className="admin-products-search-clear" onClick={() => setSearch('')}>✕</button>
+          )}
+        </div>
       </div>
 
       <div className="admin-categories-grid">
-        {categories.map((cat, index) => (
+        {filtered.map((cat, index) => (
           <motion.div
             key={cat.id}
             initial={{ opacity: 0, y: 20 }}
@@ -344,11 +371,19 @@ export default function AdminCategories() {
           </motion.div>
         ))}
 
-        {categories.length === 0 && (
+        {filtered.length === 0 && categories.length === 0 && (
           <div className="admin-products-empty">
             <span className="admin-products-empty-icon">📁</span>
             <h3>No Categories Yet</h3>
             <p>Categories from backend will appear here.</p>
+          </div>
+        )}
+
+        {filtered.length === 0 && categories.length > 0 && (
+          <div className="admin-products-empty">
+            <span className="admin-products-empty-icon">🔍</span>
+            <h3>No Categories Found</h3>
+            <p>No categories match "{search}"</p>
           </div>
         )}
       </div>
