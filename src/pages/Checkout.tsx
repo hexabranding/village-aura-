@@ -107,38 +107,13 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     existingOrders.unshift(localOrder);
     localStorage.setItem('reshamOrders', JSON.stringify(existingOrders));
 
-    const orderDate = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    const itemNames = items.map(({ ci, product }) => `${product!.name} x${ci.qty}`).join(', ');
-    try {
-      await fetch('https://formspree.io/f/mzeblogq', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          _subject: `Order Confirmed - ${result.orderId}`,
-          _replyto: form.email,
-          _template: 'table',
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          orderId: result.orderId,
-          items: itemNames,
-          total: `₹${total.toLocaleString('en-IN')}`,
-          address: `${form.address}, ${form.city}, ${form.state} - ${form.pincode}`,
-          payment: paymentMethod,
-          date: orderDate,
-        }),
-      });
-    } catch {
-      // silent fail – order already placed
-    }
-
     setPlaced({
       orderId: result.orderId,
       total,
       name: form.name,
       phone: form.phone,
       payment: paymentMethod,
-      date: orderDate,
+      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
     });
     window.scrollTo(0, 0);
   }, [total, form, clearCart, items]);

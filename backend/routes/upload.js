@@ -9,12 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = express.Router();
-const uploadDir = path.join(
-  process.env.HOME || process.env.USERPROFILE || '.',
-  'domains',
-  'api.villageallure.com',
-  'uploads'
-);
+const uploadDir = path.join(__dirname, '..', 'uploads');
 
 fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -70,22 +65,6 @@ router.post('/return', upload.array('images', 10), (req, res) => {
     const urls = req.files.map((file) => `/api/upload/images/${file.filename}`);
     res.json({ urls });
   } catch (error) { res.status(500).json({ error: 'Failed to upload' }); }
-});
-
-router.get('/images/:filename', (req, res) => {
-const filePath = path.join(uploadDir, req.params.filename);
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: 'File not found', filename: req.params.filename });
-  }
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  res.setHeader('Cache-Control', 'public, max-age=2592000');
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      console.error('sendFile error:', err);
-      if (!res.headersSent) res.status(404).json({ error: 'File not found' });
-    }
-  });
 });
 
 router.get('/debug', (req, res) => {

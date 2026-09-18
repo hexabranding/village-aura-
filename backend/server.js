@@ -36,6 +36,14 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+const legacyUploadsDir = path.join(
+  process.env.HOME || process.env.USERPROFILE || '.',
+  'domains', 'api.villageallure.com', 'uploads'
+);
+if (!fs.existsSync(legacyUploadsDir)) {
+  fs.mkdirSync(legacyUploadsDir, { recursive: true });
+}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -47,6 +55,17 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 app.use('/api/upload/images', express.static(path.join(__dirname, 'uploads'), {
+  maxAge: '30d',
+  etag: true,
+  setHeaders: (res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  }
+}));
+
+app.use('/api/upload/images', express.static(legacyUploadsDir, {
   maxAge: '30d',
   etag: true,
   setHeaders: (res) => {

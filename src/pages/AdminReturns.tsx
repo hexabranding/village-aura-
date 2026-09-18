@@ -19,6 +19,7 @@ export default function AdminReturns(){
   const [trackingNo,setTrackingNo]=useState('');
   const [zoomImage,setZoomImage]=useState<string|null>(null);
   const [zoomScale,setZoomScale]=useState(1);
+  const [videoRetries,setVideoRetries]=useState<Record<string,number>>({});
   useEffect(()=>{
     if(!zoomImage) return;
     const handler=(e:WheelEvent)=>{e.preventDefault();setZoomScale(s=>Math.max(1,Math.min(5,s-(e.deltaY>0?0.3:-0.3))));};
@@ -86,7 +87,14 @@ export default function AdminReturns(){
             </div>
             <div style={{fontSize:'0.82rem'}}><strong>Reason:</strong> {r.reason}{r.otherReason?` (${r.otherReason})`:''} {r.description?` — ${r.description}`:''}</div>
             {(r.images?.length||0)>0 && <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{r.images!.map((img,i)=><img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" key={i} src={resolveUploadUrl(img)} alt="Evidence" onClick={()=>{setZoomImage(img);setZoomScale(1);}} style={{width:64,height:64,objectFit:'cover',borderRadius:8,border:'1px solid var(--line)',cursor:'zoom-in',transition:'transform 0.15s'}} onMouseEnter={e=>(e.currentTarget.style.transform='scale(1.08)')} onMouseLeave={e=>(e.currentTarget.style.transform='scale(1)')} />)}</div>}
-            {r.video && <video src={resolveUploadUrl(r.video)} controls playsInline preload="metadata" muted onError={(e)=>{ const v=e.currentTarget; v.style.display='none'; const p=v.parentElement; if(p && !p.querySelector('.video-fallback')){ const d=document.createElement('div'); d.className='video-fallback'; d.textContent='⚠️ Video unavailable'; d.style.cssText='padding:0.5rem;background:#fef2f2;border:1px dashed #fecaca;border-radius:8px;font-size:0.75rem;color:#991b1b'; p.appendChild(d);} }} style={{maxWidth:240, maxHeight:140, borderRadius:8}} />}
+            {r.video && (()=>{
+              const vidUrl=resolveUploadUrl(r.video);
+              const retryCount=videoRetries[r.video]||0;
+              const cacheBust=`?v=${retryCount}`;
+              return retryCount>3
+                ? <div style={{padding:'0.5rem',background:'#fef2f2',border:'1px dashed #fecaca',borderRadius:8,fontSize:'0.75rem',color:'#991b1b',maxWidth:240}}>Video unavailable <button onClick={()=>setVideoRetries(p=>({...p,[r.video ?? '']:0}))} style={{marginLeft:6,border:'1px solid #fecaca',background:'white',borderRadius:4,padding:'1px 6px',fontSize:'0.7rem',cursor:'pointer',color:'#991b1b'}}>Retry</button></div>
+                : <video key={`${r.video}-${retryCount}`} src={vidUrl+cacheBust} controls playsInline preload="metadata" muted onError={()=>{ setVideoRetries(p=>({...p,[r.video!]: (p[r.video!]||0)+1 })); }} style={{maxWidth:240, maxHeight:140, borderRadius:8}} />;
+            })()}
             {r.pickup && <div style={{fontSize:'0.75rem',background:'#f9fafb',border:'1px solid #e5e7eb',padding:'0.4rem 0.6rem',borderRadius:8}}>Pickup: {r.pickup.status} {r.pickup.date?`• ${r.pickup.date}`:''} {r.pickup.courier?`• ${r.pickup.courier}`:''} {r.pickup.trackingNo?`• ${r.pickup.trackingNo}`:''}</div>}
             {r.adminMessage && <div style={{fontSize:'0.78rem',background:'#eff6ff',border:'1px solid #bfdbfe',padding:'0.5rem',borderRadius:8,color:'#1e40af'}}>{r.adminMessage}</div>}
             {r.tracking && r.tracking.length>0 && (()=>{
@@ -135,7 +143,14 @@ export default function AdminReturns(){
                 <p><strong>Description:</strong> {selected.description||'-'}</p>
                 <p><strong>Resolution:</strong> {selected.resolution} • <strong>Status:</strong> {selected.status}</p>
                 {selected.images?.length ? <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:'0.5rem'}}>{selected.images.map((im,i)=><img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" key={i} src={resolveUploadUrl(im)} onClick={()=>{setZoomImage(im);setZoomScale(1);}} style={{width:80,height:80,objectFit:'cover',borderRadius:8,cursor:'zoom-in',transition:'transform 0.15s'}} onMouseEnter={e=>(e.currentTarget.style.transform='scale(1.08)')} onMouseLeave={e=>(e.currentTarget.style.transform='scale(1)')} /> )}</div> : null}
-                {selected.video && <video src={resolveUploadUrl(selected.video)} controls playsInline preload="metadata" muted onError={(e)=>{ const v=e.currentTarget; v.style.display='none'; }} style={{width:'100%',maxHeight:200,marginTop:'0.5rem',borderRadius:8}} />}
+                {selected.video && (()=>{
+                  const vidUrl=resolveUploadUrl(selected.video);
+                  const retryCount=videoRetries[selected.video]||0;
+                  const cacheBust=`?v=${retryCount}`;
+                  return retryCount>3
+                    ? <div style={{padding:'1rem',background:'#fef2f2',border:'1px dashed #fecaca',borderRadius:8,fontSize:'0.82rem',color:'#991b1b',textAlign:'center'}}>Video unavailable <button onClick={()=>setVideoRetries(p=>({...p,[selected.video ?? '']:0}))} style={{marginLeft:6,border:'1px solid #fecaca',background:'white',borderRadius:4,padding:'2px 8px',fontSize:'0.75rem',cursor:'pointer',color:'#991b1b'}}>Retry</button></div>
+                    : <video key={`${selected.video}-${retryCount}`} src={vidUrl+cacheBust} controls playsInline preload="metadata" muted onError={()=>{ setVideoRetries(p=>({...p,[selected.video!]: (p[selected.video!]||0)+1 })); }} style={{width:'100%',maxHeight:200,marginTop:'0.5rem',borderRadius:8}} />;
+                })()}
                 <div style={{marginTop:'0.75rem'}}>
                   <strong style={{fontSize:'0.85rem'}}>📋 Tracking Timeline</strong>
                   {selected.tracking?.length ? (

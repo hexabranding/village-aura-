@@ -168,7 +168,7 @@ router.post('/', async (req, res) => {
     const order = new Order(orderData);
     await order.save();
 
-    sendOrderConfirmation(order).catch(() => {});
+    sendOrderConfirmation(order).catch((err) => console.error('Email send failed:', err.message));
 
     res.status(201).json(order);
   } catch (error) {
