@@ -25,6 +25,10 @@ const categorySchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  linkUrl: {
+    type: String,
+    default: '',
+  },
   active: {
     type: Boolean,
     default: true,

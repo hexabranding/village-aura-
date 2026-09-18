@@ -35,10 +35,15 @@ export default function Collections({ collections }: CollectionsProps) {
   const paused = useRef(false);
   const totalWidth = collections.length * (CARD_W + GAP);
   const [randImages, setRandImages] = useState<Record<string, string>>({});
+  const [linkUrls, setLinkUrls] = useState<Record<string, string>>({});
   const loadCategoryImages = () => {
     api.categories.getAll().then((cats) => {
       const catImageMap: Record<string, string> = {};
-      cats.forEach((cat) => { if (cat.image) catImageMap[cat.name] = cat.image; });
+      const catLinkMap: Record<string, string> = {};
+      cats.forEach((cat) => {
+        if (cat.image) catImageMap[cat.name] = cat.image;
+        if (cat.linkUrl) catLinkMap[cat.name] = cat.linkUrl;
+      });
       const shuffled = [...publicImages].sort(() => 0.5 - Math.random());
       const map: Record<string, string> = {};
       collections.forEach((c, i) => {
@@ -46,6 +51,7 @@ export default function Collections({ collections }: CollectionsProps) {
         else map[c.category] = shuffled[i % shuffled.length];
       });
       setRandImages(map);
+      setLinkUrls(catLinkMap);
     }).catch(() => {
       const shuffled = [...publicImages].sort(() => 0.5 - Math.random());
       const map: Record<string, string> = {};
@@ -97,7 +103,7 @@ export default function Collections({ collections }: CollectionsProps) {
               style={{ flexShrink: 0, width: CARD_W }}
             >
               <Link
-                to="/gallery"
+                to={linkUrls[c.category] || `/gallery?category=${encodeURIComponent(c.category)}`}
                 style={{
                   position: 'relative',
                   display: 'block',
@@ -129,7 +135,7 @@ export default function Collections({ collections }: CollectionsProps) {
                   }}
                 />
                 <div style={{ position: 'absolute', left: '1rem', right: '1rem', bottom: '1rem', color: 'var(--ivory)' }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic' }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontStyle: 'italic', textAlign: 'center' }}>
                     {c.title}
                   </div>
 

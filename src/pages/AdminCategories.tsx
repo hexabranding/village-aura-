@@ -50,6 +50,7 @@ function InlineNameEditor({ name, onSave }: { name: string; onSave: (n: string) 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,6 +59,7 @@ export default function AdminCategories() {
   const [formSlug, setFormSlug] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formImage, setFormImage] = useState('');
+  const [formLinkUrl, setFormLinkUrl] = useState('');
   const [formSubcategories, setFormSubcategories] = useState<string[]>([]);
   const [formActive, setFormActive] = useState(true);
   const [formSubInput, setFormSubInput] = useState('');
@@ -93,6 +95,7 @@ export default function AdminCategories() {
     setFormSlug(cat.slug);
     setFormDescription(cat.description);
     setFormImage(cat.image);
+    setFormLinkUrl(cat.linkUrl || '');
     setFormSubcategories([...cat.subcategories]);
     setFormActive(cat.active);
     setFormSubInput('');
@@ -133,6 +136,7 @@ export default function AdminCategories() {
         subcategories: formSubcategories,
         image: formImage,
         description: formDescription,
+        linkUrl: formLinkUrl,
         active: formActive,
       };
       await api.categories.update(editing.id, payload);
@@ -140,6 +144,39 @@ export default function AdminCategories() {
       setShowModal(false);
     } catch (error) {
       console.error('Failed to save category:', error);
+    }
+  };
+
+  const openCreate = () => {
+    setEditing(null);
+    setFormName('');
+    setFormSlug('');
+    setFormDescription('');
+    setFormImage('');
+    setFormLinkUrl('');
+    setFormSubcategories([]);
+    setFormActive(true);
+    setFormSubInput('');
+    setShowCreateModal(true);
+  };
+
+  const handleCreate = async () => {
+    if (!formName.trim()) return;
+    try {
+      const payload = {
+        name: formName.trim(),
+        slug: formSlug || formName.trim().toLowerCase().replace(/\s+/g, '-'),
+        subcategories: formSubcategories,
+        image: formImage,
+        description: formDescription,
+        linkUrl: formLinkUrl,
+        active: formActive,
+      };
+      await api.categories.create(payload as any);
+      await loadCategories();
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error('Failed to create category:', error);
     }
   };
 
@@ -249,20 +286,25 @@ export default function AdminCategories() {
 
       <div className="admin-categories-toolbar">
         <h3 className="admin-categories-title">All Categories</h3>
-        <div className="admin-products-search-wrap">
-          <svg className="admin-products-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            placeholder="Search categories..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="admin-products-search"
-          />
-          {search && (
-            <button className="admin-products-search-clear" onClick={() => setSearch('')}>✕</button>
-          )}
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <button onClick={openCreate} className="admin-btn admin-btn-primary" style={{ fontSize: '0.82rem', padding: '0.5rem 1rem' }}>
+            + Add Category
+          </button>
+          <div className="admin-products-search-wrap">
+            <svg className="admin-products-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              placeholder="Search categories..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="admin-products-search"
+            />
+            {search && (
+              <button className="admin-products-search-clear" onClick={() => setSearch('')}>✕</button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -427,6 +469,14 @@ export default function AdminCategories() {
                 </div>
 
                 <div className="admin-form-group">
+                  <label>Link URL</label>
+                  <input value={formLinkUrl} onChange={(e) => setFormLinkUrl(e.target.value)} placeholder="e.g. /gallery?category=Sarees or https://..." />
+                  <small style={{ color: 'var(--ink-soft)', fontSize: '0.72rem', marginTop: '0.25rem', display: 'block' }}>
+                    Custom link when clicking this collection. Leave empty for default /gallery?category=...
+                  </small>
+                </div>
+
+                <div className="admin-form-group">
                   <label>Image</label>
                   <div className="admin-form-image-upload-row">
                     <input value={formImage} onChange={(e) => setFormImage(e.target.value)} placeholder="Upload below" />
@@ -483,6 +533,116 @@ export default function AdminCategories() {
                 <button onClick={() => setShowModal(false)} className="admin-btn admin-btn-outline">Cancel</button>
                 <button onClick={handleSave} className="admin-btn admin-btn-primary">
                   Save Changes
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showCreateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="admin-modal-overlay"
+            onClick={() => setShowCreateModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="admin-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="admin-modal-header">
+                <h3>Create New Category</h3>
+                <button onClick={() => setShowCreateModal(false)} className="admin-modal-close">✕</button>
+              </div>
+
+              <div className="admin-modal-body">
+                <div className="admin-form-grid">
+                  <div className="admin-form-group">
+                    <label>Category Name *</label>
+                    <input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Sarees" />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Slug</label>
+                    <input value={formSlug} onChange={(e) => setFormSlug(e.target.value)} placeholder="Auto-generated from name" />
+                  </div>
+                </div>
+
+                <div className="admin-form-group">
+                  <label>Description</label>
+                  <textarea rows={2} value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Short description of this category..." />
+                </div>
+
+                <div className="admin-form-group">
+                  <label>Link URL</label>
+                  <input value={formLinkUrl} onChange={(e) => setFormLinkUrl(e.target.value)} placeholder="e.g. /gallery?category=Sarees or https://..." />
+                  <small style={{ color: 'var(--ink-soft)', fontSize: '0.72rem', marginTop: '0.25rem', display: 'block' }}>
+                    Custom link when clicking this collection. Leave empty for default /gallery?category=...
+                  </small>
+                </div>
+
+                <div className="admin-form-group">
+                  <label>Image</label>
+                  <div className="admin-form-image-upload-row">
+                    <input value={formImage} onChange={(e) => setFormImage(e.target.value)} placeholder="Upload below" />
+                    <label className="admin-btn admin-btn-outline admin-upload-btn">
+                      {formUploading ? 'Uploading...' : 'Upload'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleFormImageUpload(e.target.files)}
+                        disabled={formUploading}
+                      />
+                    </label>
+                  </div>
+                  {formImage && (
+                    <div className="admin-category-modal-preview">
+                      <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(formImage)} alt="Preview" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="admin-form-group">
+                  <label>Subcategories</label>
+                  <div className="admin-modal-subs-list">
+                    {formSubcategories.map((sub) => (
+                      <span key={sub} className="admin-category-card-sub">
+                        {sub}
+                        <button className="admin-category-card-sub-remove" onClick={() => removeSubFromForm(sub)}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="admin-modal-subs-add">
+                    <input
+                      type="text"
+                      placeholder="Add a subcategory..."
+                      value={formSubInput}
+                      onChange={(e) => setFormSubInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') addSubToForm(); }}
+                    />
+                    <button type="button" className="admin-btn admin-btn-outline" onClick={addSubToForm}>Add</button>
+                  </div>
+                </div>
+
+                <div className="admin-form-group">
+                  <label className="admin-category-modal-toggle">
+                    <input type="checkbox" checked={formActive} onChange={(e) => setFormActive(e.target.checked)} />
+                    <span className="admin-category-modal-toggle-track" />
+                    Active (visible on store)
+                  </label>
+                </div>
+              </div>
+
+              <div className="admin-modal-footer">
+                <button onClick={() => setShowCreateModal(false)} className="admin-btn admin-btn-outline">Cancel</button>
+                <button onClick={handleCreate} className="admin-btn admin-btn-primary">
+                  Create Category
                 </button>
               </div>
             </motion.div>

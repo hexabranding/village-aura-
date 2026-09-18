@@ -39,6 +39,7 @@ export interface Category {
   subcategories: string[];
   image: string;
   description: string;
+  linkUrl: string;
   active: boolean;
   createdAt: string;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api, resolveUploadUrl } from '../lib/api';
 
@@ -37,13 +37,22 @@ const fadeUp = {
 };
 
 export default function GalleryPage() {
-  const [images, setImages] = useState<GalleryImage[]>(fallbackImages);
+  const [searchParams] = useSearchParams();
+  const category = searchParams.get('category');
+  const [allImages, setAllImages] = useState<GalleryImage[]>(fallbackImages);
+
+  const images = category
+    ? allImages.filter((img) =>
+        img.title.toLowerCase().includes(category.toLowerCase()) ||
+        img.subtitle.toLowerCase().includes(category.toLowerCase())
+      )
+    : allImages;
 
   useEffect(() => {
     window.scrollTo(0, 0);
     api.gallery.getActive().then((data) => {
       if (data.length > 0) {
-        setImages(data.map((img) => ({
+        setAllImages(data.map((img) => ({
           src: img.image,
           title: img.title,
           subtitle: img.subtitle || 'VIEW MORE',
@@ -65,7 +74,7 @@ export default function GalleryPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          The Collection
+          {category ? `Category: ${category}` : 'The Collection'}
         </motion.span>
         <motion.h1
           initial={{ opacity: 0, y: 15 }}
@@ -88,6 +97,22 @@ export default function GalleryPage() {
           }}
         />
       </div>
+
+      {category && (
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <Link
+            to="/gallery"
+            style={{
+              fontSize: '0.8rem',
+              color: 'var(--gold)',
+              textDecoration: 'underline',
+              letterSpacing: '0.05em',
+            }}
+          >
+            View All Collections
+          </Link>
+        </div>
+      )}
 
       <div
         style={{
