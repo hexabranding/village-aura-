@@ -8,13 +8,30 @@ let razorpay = null;
 
 function getRazorpay() {
   if (!razorpay) {
-    razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keyId || !keySecret) {
+      throw new Error('Payment gateway not configured. RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET must be set.');
+    }
+    razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
   }
   return razorpay;
 }
+
+router.get('/test', async (req, res) => {
+  try {
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keyId || !keySecret) {
+      return res.json({ ok: false, error: 'RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is missing from env' });
+    }
+    const instance = getRazorpay();
+    const order = await instance.orders.create({ amount: 100, currency: 'INR', receipt: 'test_receipt' });
+    res.json({ ok: true, orderId: order.id, keyPrefix: keyId.substring(0, 12) });
+  } catch (error) {
+    res.json({ ok: false, error: error?.error?.description || error?.message || String(error) });
+  }
+});
 
 router.post('/create-order', async (req, res) => {
   try {
@@ -24,7 +41,14 @@ router.post('/create-order', async (req, res) => {
       return res.status(400).json({ error: 'Amount must be at least 100 paise (₹1)' });
     }
 
-    const order = await getRazorpay().orders.create({
+    let instance;
+    try {
+      instance = getRazorpay();
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+
+    const order = await instance.orders.create({
       amount: Math.round(amount),
       currency,
       receipt: receipt || `receipt_${Date.now()}`,
@@ -36,8 +60,9 @@ router.post('/create-order', async (req, res) => {
       currency: order.currency,
     });
   } catch (error) {
-    console.error('Razorpay create order error:', error);
-    res.status(500).json({ error: 'Failed to create payment order' });
+    console.error('Razorpay create order error:', error?.statusCode, error?.error?.description || error?.message || error);
+    const message = error?.error?.description || error?.message || 'Failed to create payment order';
+    res.status(error?.statusCode || 500).json({ error: message });
   }
 });
 

@@ -31,6 +31,7 @@ const seed = async () => {
         subcategories: ['Kanchipuram Silk', 'Banarasi Silk', 'Chanderi Silk', 'Maheshwari Silk', 'Kota Doria', 'Ajrakh Cotton', 'Kota Cotton', 'Kalamkari'],
         description: 'Handwoven sarees from India\'s finest weaving traditions',
         active: true,
+        order: 1,
       },
       {
         name: 'Jewellery',
@@ -38,6 +39,7 @@ const seed = async () => {
         subcategories: ['Necklaces', 'Earrings', 'Bangles', 'Hair Jewellery'],
         description: 'Temple kemp, kundan & antique gold jewellery',
         active: true,
+        order: 2,
       },
       {
         name: 'Bags',
@@ -45,6 +47,7 @@ const seed = async () => {
         subcategories: ['Clutches', 'Totes', 'Potli'],
         description: 'Handwoven clutches, potlis & totes',
         active: true,
+        order: 3,
       },
       {
         name: 'Suits Sets',
@@ -52,6 +55,7 @@ const seed = async () => {
         subcategories: ['Anarkali', 'Straight Cut'],
         description: 'Anarkali & straight suit sets in handloom fabrics',
         active: true,
+        order: 4,
       },
       {
         name: 'Others',
@@ -59,6 +63,7 @@ const seed = async () => {
         subcategories: [],
         description: 'Other curated handloom finds',
         active: true,
+        order: 5,
       },
       {
         name: 'Gallery',
@@ -66,6 +71,7 @@ const seed = async () => {
         subcategories: [],
         description: 'Gallery collection',
         active: true,
+        order: 6,
       },
     ]);
     console.log(`${categories.length} categories created`);

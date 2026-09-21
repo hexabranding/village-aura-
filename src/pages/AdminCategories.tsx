@@ -67,6 +67,8 @@ export default function AdminCategories() {
 
   const [cardSubInputs, setCardSubInputs] = useState<Record<string, string>>({});
   const [search, setSearch] = useState('');
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   const loadCategories = async () => {
     try {
@@ -163,6 +165,7 @@ export default function AdminCategories() {
   const handleCreate = async () => {
     if (!formName.trim()) return;
     try {
+      const maxOrder = categories.reduce((max, c) => Math.max(max, c.order ?? 0), 0);
       const payload = {
         name: formName.trim(),
         slug: formSlug || formName.trim().toLowerCase().replace(/\s+/g, '-'),
@@ -171,6 +174,7 @@ export default function AdminCategories() {
         description: formDescription,
         linkUrl: formLinkUrl,
         active: formActive,
+        order: maxOrder + 1,
       };
       await api.categories.create(payload as any);
       await loadCategories();
@@ -232,6 +236,67 @@ export default function AdminCategories() {
     } catch (error) {
       console.error('Failed to delete category:', error);
     }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setOverIndex(index);
+  };
+
+  const handleDragEnter = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setOverIndex(index);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    const related = e.relatedTarget as HTMLElement;
+    if (related && (e.currentTarget as HTMLElement).contains(related)) return;
+    setOverIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragIndex(null);
+      setOverIndex(null);
+      return;
+    }
+
+    const movedCatId = filtered[dragIndex].id;
+    const dropCatId = filtered[dropIndex].id;
+
+    const fullReordered = [...categories];
+    const fromFullIdx = fullReordered.findIndex((c) => c.id === movedCatId);
+    const toFullIdx = fullReordered.findIndex((c) => c.id === dropCatId);
+    const [moved] = fullReordered.splice(fromFullIdx, 1);
+    fullReordered.splice(toFullIdx, 0, moved);
+
+    const orderPayload = fullReordered.map((cat, i) => ({ id: cat.id, order: i + 1 }));
+
+    setDragIndex(null);
+    setOverIndex(null);
+
+    try {
+      const updated = await api.categories.reorder(orderPayload);
+      setCategories(updated);
+      window.dispatchEvent(new Event('categoriesUpdated'));
+      localStorage.setItem('categoriesUpdated', Date.now().toString());
+    } catch (error) {
+      console.error('Failed to reorder categories:', error);
+      await loadCategories();
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setOverIndex(null);
   };
 
   const filtered = categories.filter((cat) => {
@@ -310,13 +375,27 @@ export default function AdminCategories() {
 
       <div className="admin-categories-grid">
         {filtered.map((cat, index) => (
-          <motion.div
+          <div
             key={cat.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className={`admin-category-card ${!cat.active ? 'inactive' : ''}`}
+            className={`admin-category-card ${!cat.active ? 'inactive' : ''} ${dragIndex === index ? 'dragging' : ''} ${overIndex === index && dragIndex !== null && dragIndex !== index ? 'drag-over' : ''}`}
+            draggable
+            onDragStart={(e) => handleDragStart(e as unknown as React.DragEvent, index)}
+            onDragOver={(e) => handleDragOver(e as unknown as React.DragEvent, index)}
+            onDragEnter={(e) => handleDragEnter(e as unknown as React.DragEvent, index)}
+            onDragLeave={(e) => handleDragLeave(e as unknown as React.DragEvent)}
+            onDrop={(e) => handleDrop(e as unknown as React.DragEvent, index)}
+            onDragEnd={handleDragEnd}
           >
+            <div
+              className="admin-category-drag-handle"
+              title="Drag to reorder"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="5" r="1" /><circle cx="15" cy="5" r="1" />
+                <circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" />
+                <circle cx="9" cy="19" r="1" /><circle cx="15" cy="19" r="1" />
+              </svg>
+            </div>
             <div className="admin-category-card-image">
               {cat.image ? (
                 <>
@@ -410,7 +489,7 @@ export default function AdminCategories() {
                 </button>
               )}
             </div>
-          </motion.div>
+          </div>
         ))}
 
         {filtered.length === 0 && categories.length === 0 && (

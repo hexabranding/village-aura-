@@ -1,9 +1,22 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { config } from 'dotenv';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+config({ path: path.join(__dirname, '.env') });
+
+const _envCheck = () => {
+  const key = process.env.RAZORPAY_KEY_ID;
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  console.log('Razorpay Key:', key ? `${key.substring(0, 12)}...` : 'MISSING');
+  console.log('Razorpay Secret:', secret ? 'set' : 'MISSING');
+};
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
@@ -25,11 +38,6 @@ import returnSettingsRoutes from './routes/returnSettings.js';
 import notificationRoutes from './routes/notifications.js';
 import paymentRoutes from './routes/payments.js';
 import customerRoutes from './routes/customers.js';
-
-dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -113,6 +121,7 @@ app.get('/api/health', (req, res) => {
 });
 
 const start = async () => {
+  _envCheck();
   await connectDB();
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

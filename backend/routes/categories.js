@@ -6,11 +6,29 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const categories = await Category.find().sort({ name: 1 });
+    const categories = await Category.find().sort({ order: 1, name: 1 });
     res.json(categories);
   } catch (error) {
     console.error('Get categories error:', error);
     res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+router.put('/reorder', auth, async (req, res) => {
+  try {
+    const { order } = req.body;
+    if (!Array.isArray(order)) {
+      return res.status(400).json({ error: 'Order must be an array of { id, order } objects' });
+    }
+    const ops = order.map(({ id, order: o }) => ({
+      updateOne: { filter: { _id: id }, update: { $set: { order: o } } },
+    }));
+    await Category.bulkWrite(ops);
+    const categories = await Category.find().sort({ order: 1, name: 1 });
+    res.json(categories);
+  } catch (error) {
+    console.error('Reorder categories error:', error);
+    res.status(500).json({ error: 'Failed to reorder categories' });
   }
 });
 

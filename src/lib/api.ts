@@ -41,6 +41,7 @@ export interface Category {
   description: string;
   linkUrl: string;
   active: boolean;
+  order: number;
   createdAt: string;
 }
 
@@ -243,6 +244,14 @@ export const api = {
       const res = await fetch(`${API_BASE}/categories/${id}`, {
         method: 'DELETE',
         headers: headers(),
+      });
+      return handleResponse(res);
+    },
+    reorder: async (order: { id: string; order: number }[]): Promise<Category[]> => {
+      const res = await fetch(`${API_BASE}/categories/reorder`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify({ order }),
       });
       return handleResponse(res);
     },

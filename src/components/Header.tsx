@@ -76,14 +76,9 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
     .map((id) => getProduct(id))
     .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
-  const order = ['sarees','jewellery','bags','suits-sets','others','gallery'];
-  const sortedCategories = [...apiCategories].filter((c) => c.active).sort((a,b)=>{
-    const ai = order.indexOf(a.slug); const bi = order.indexOf(b.slug);
-    if (ai !== -1 && bi !== -1) return ai - bi;
-    if (ai !== -1) return -1;
-    if (bi !== -1) return 1;
-    return a.name.localeCompare(b.name);
-  });
+  const sortedCategories = [...apiCategories]
+    .filter((c) => c.active)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name));
   const navLinks = [
     { label: 'Home', to: '/', icon: true } as { label: string; to: string; subs?: string[]; icon?: boolean },
     ...sortedCategories.map((c) => ({

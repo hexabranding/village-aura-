@@ -4,6 +4,7 @@ import Product from '../models/Product.js';
 import Notification from '../models/Notification.js';
 import auth from '../middleware/auth.js';
 import { sendOrderConfirmation, sendOrderStatusUpdate } from '../utils/email.js';
+import { sendOrderConfirmationSMS } from '../utils/sms.js';
 
 const router = express.Router();
 
@@ -169,8 +170,27 @@ router.post('/', async (req, res) => {
     await order.save();
 
     sendOrderConfirmation(order).catch((err) => console.error('Email send failed:', err.message));
+    sendOrderConfirmationSMS(order).catch((err) => console.error('SMS send failed:', err.message));
 
-    res.status(201).json(order);
+    const productIds = order.items.map((item) => item.id);
+    const products = await Product.find({ _id: { $in: productIds } }).lean();
+    const productMap = {};
+    products.forEach((p) => { productMap[p._id] = p; });
+
+    const itemList = order.items.map((item) => {
+      const product = productMap[item.id];
+      const name = product ? product.name : item.id;
+      return `${name} x${item.qty || 1}`;
+    }).join(', ');
+
+    const addressLine = [order.address, order.city, order.state, order.pincode].filter(Boolean).join(', ');
+    const waMsg = encodeURIComponent(
+      `Hi Village Allure,\n\nOrder Details:\nOrder ID: ${order.orderId}\nItems: ${itemList}\nTotal: ₹${order.total.toLocaleString('en-IN')}\nPayment: ${order.payment}\n\nShipping To:\n${order.name}\n${addressLine}\nPhone: ${order.phone}\n\nPlease confirm my order. Thank you!`
+    );
+    const phone = (order.phone || '').replace(/\D/g, '');
+    const whatsappUrl = phone ? `https://wa.me/91${phone}?text=${waMsg}` : '';
+
+    res.status(201).json({ ...order.toJSON(), whatsappUrl });
   } catch (error) {
     console.error('Create order error:', error);
     res.status(500).json({ error: 'Failed to create order' });
