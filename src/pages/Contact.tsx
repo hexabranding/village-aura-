@@ -225,7 +225,7 @@ export default function Contact() {
                 <div style={{ fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.6 }}>
                   VillageAllure <br />
                   Malappuram <br />
-                  Keralam ,
+                  Kerala,
                   679577
                 </div>
               </div>
