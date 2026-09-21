@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import auth from '../middleware/auth.js';
-import R2 from '../utils/r2.js';
+import Image from '../models/Image.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,14 +25,7 @@ function sanitizeFilename(originalname) {
   return `${uniqueSuffix}_${base || 'file'}${ext}`;
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, sanitizeFilename(file.originalname));
-  },
-});
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
@@ -50,14 +43,30 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
 });
 
+async function saveToMongoDB(file) {
+  const filename = sanitizeFilename(file.originalname);
+  const url = `/api/upload/images/${filename}`;
+  const existing = await Image.findOne({ filename });
+  if (existing) return url;
+  await Image.create({
+    filename,
+    contentType: file.mimetype,
+    data: file.buffer,
+    size: file.size,
+    url,
+  });
+  return url;
+}
+
 router.post('/', auth, upload.array('images', 20), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No images uploaded' });
     }
-    const urls = req.files.map((file) => `/api/upload/images/${file.filename}`);
-    if (R2.isConfigured) {
-      Promise.all(req.files.map(file => R2.uploadFile(file.path, file.filename))).catch(() => {});
+    const urls = [];
+    for (const file of req.files) {
+      const url = await saveToMongoDB(file);
+      urls.push(url);
     }
     res.json({ urls });
   } catch (error) {
@@ -73,9 +82,10 @@ router.post('/return', upload.array('images', 10), async (req, res) => {
       if (f.mimetype.startsWith('image/') && f.size > 8 * 1024 * 1024) return res.status(400).json({ error: `${f.originalname} exceeds 8MB` });
       if (f.mimetype.startsWith('video/') && f.size > 60 * 1024 * 1024) return res.status(400).json({ error: `${f.originalname} exceeds 60MB` });
     }
-    const urls = req.files.map((file) => `/api/upload/images/${file.filename}`);
-    if (R2.isConfigured) {
-      Promise.all(req.files.map(file => R2.uploadFile(file.path, file.filename))).catch(() => {});
+    const urls = [];
+    for (const file of req.files) {
+      const url = await saveToMongoDB(file);
+      urls.push(url);
     }
     res.json({ urls });
   } catch (error) {
@@ -83,11 +93,11 @@ router.post('/return', upload.array('images', 10), async (req, res) => {
   }
 });
 
-router.get('/debug', (req, res) => {
-  const dir = path.join(__dirname, '../uploads');
+router.get('/debug', async (req, res) => {
   try {
-    const files = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
-    res.json({ dir, exists: fs.existsSync(dir), count: files.length, sample: files.slice(0, 20) });
+    const count = await Image.countDocuments();
+    const sample = await Image.find().limit(20).select('filename size url contentType -data');
+    res.json({ storage: 'mongodb', count, sample });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
