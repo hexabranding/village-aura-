@@ -75,6 +75,22 @@ app.get('/api/upload/images/:filename', (req, res) => {
   res.status(404).json({ error: 'Image not found', filename });
 });
 
+app.get('/images/:filename', (req, res) => {
+  const filename = decodeURIComponent(req.params.filename);
+  for (const dir of imageDirs) {
+    const filePath = path.join(dir, filename);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      const ext = path.extname(filename).toLowerCase();
+      res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Cache-Control', 'public, max-age=2592000');
+      return fs.createReadStream(filePath).pipe(res);
+    }
+  }
+  res.status(404).json({ error: 'Image not found', filename });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);

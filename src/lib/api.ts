@@ -5,17 +5,8 @@ export const API_ORIGIN = API_BASE.startsWith('/') ? '' : API_BASE.replace(/\/ap
 export const resolveUploadUrl = (url: string) => {
   if (!url) return url;
   if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
-  if (url.startsWith('/images/') || url.startsWith('images/')) return url;
-  if (url.startsWith('/api/upload') || url.startsWith('/uploads/') || url.startsWith('uploads/')) {
-    const slashIdx = url.indexOf('/', url.indexOf('/') + 1);
-    const base = slashIdx !== -1 ? url.substring(0, slashIdx + 1) : url;
-    const rest = slashIdx !== -1 ? url.substring(slashIdx + 1) : '';
-    const encodedRest = rest.split('/').map(segment => encodeURIComponent(decodeURIComponent(segment))).join('/');
-    const p = (base.startsWith('/') ? base : `/${base}`) + encodedRest;
-    return API_ORIGIN ? `${API_ORIGIN}${p}` : p;
-  }
-  if (url.startsWith('/')) return API_ORIGIN ? `${API_ORIGIN}${url}` : url;
-  return API_ORIGIN ? `${API_ORIGIN}/${url}` : `/${url}`;
+  const p = url.startsWith('/') ? url : `/${url}`;
+  return API_ORIGIN ? `${API_ORIGIN}${p}` : p;
 };
 
 const getToken = () => localStorage.getItem('reshamAdminToken');
