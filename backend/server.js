@@ -44,56 +44,36 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const legacyUploadsDir = path.join(
-  process.env.HOME || process.env.USERPROFILE || '.',
-  'domains', 'api.villageallure.com', 'uploads'
-);
-if (!fs.existsSync(legacyUploadsDir)) {
-  fs.mkdirSync(legacyUploadsDir, { recursive: true });
-}
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
+const MIME = {
+  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+  '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml',
+  '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.webm': 'video/webm',
+};
+
+const imageDirs = [uploadsDir];
+
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-app.use('/api/upload/images', express.static(path.join(__dirname, 'uploads'), {
-  maxAge: '30d',
-  etag: true,
-  setHeaders: (res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+app.get('/api/upload/images/:filename', (req, res) => {
+  const filename = decodeURIComponent(req.params.filename);
+  for (const dir of imageDirs) {
+    const filePath = path.join(dir, filename);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      const ext = path.extname(filename).toLowerCase();
+      res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Cache-Control', 'public, max-age=2592000');
+      return fs.createReadStream(filePath).pipe(res);
+    }
   }
-}));
-
-app.use('/api/upload/images', express.static(legacyUploadsDir, {
-  maxAge: '30d',
-  etag: true,
-  setHeaders: (res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-  }
-}));
-
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
-  maxAge: '30d',
-  etag: true,
-  setHeaders: (res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-  }
-}));
+  res.status(404).json({ error: 'Image not found', filename });
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
