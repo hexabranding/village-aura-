@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import auth from '../middleware/auth.js';
+import R2 from '../utils/r2.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,12 +50,15 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
 });
 
-router.post('/', auth, upload.array('images', 20), (req, res) => {
+router.post('/', auth, upload.array('images', 20), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No images uploaded' });
     }
     const urls = req.files.map((file) => `/api/upload/images/${file.filename}`);
+    if (R2.isConfigured) {
+      Promise.all(req.files.map(file => R2.uploadFile(file.path, file.filename))).catch(() => {});
+    }
     res.json({ urls });
   } catch (error) {
     console.error('Upload error:', error);
@@ -62,7 +66,7 @@ router.post('/', auth, upload.array('images', 20), (req, res) => {
   }
 });
 
-router.post('/return', upload.array('images', 10), (req, res) => {
+router.post('/return', upload.array('images', 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files uploaded' });
     for (const f of req.files) {
@@ -70,6 +74,9 @@ router.post('/return', upload.array('images', 10), (req, res) => {
       if (f.mimetype.startsWith('video/') && f.size > 60 * 1024 * 1024) return res.status(400).json({ error: `${f.originalname} exceeds 60MB` });
     }
     const urls = req.files.map((file) => `/api/upload/images/${file.filename}`);
+    if (R2.isConfigured) {
+      Promise.all(req.files.map(file => R2.uploadFile(file.path, file.filename))).catch(() => {});
+    }
     res.json({ urls });
   } catch (error) {
     res.status(500).json({ error: 'Failed to upload' });
