@@ -75,6 +75,7 @@ const productSchema = new mongoose.Schema({
   exchangeAvailable: { type: Boolean, default: false },
   unboxingVideoRequired: { type: Boolean, default: false },
   nonReturnableReason: { type: String, default: '' },
+  shippingReturns: { type: String, default: '' },
 }, { timestamps: true, suppressReservedKeysWarning: true });
 
 productSchema.set('toJSON', {
