@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ZariDivider from './ZariDivider';
@@ -16,6 +17,35 @@ const stagger = {
 
 export default function Footer() {
   const loggedUser = useAuthUser();
+  const [subEmail, setSubEmail] = useState('');
+  const [joining, setJoining] = useState(false);
+  const [joined, setJoined] = useState(false);
+
+  const handleJoin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = subEmail.trim();
+    if (!email || joining) return;
+    setJoining(true);
+    try {
+      await fetch('https://formspree.io/f/mzeblogq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          _subject: 'Newsletter Subscribe - Village Allure',
+          _replyto: email,
+          _template: 'table',
+          email,
+          source: 'Footer - Stay in the loom',
+        }),
+      });
+    } catch {
+      // silent fail
+    }
+    setJoining(false);
+    setJoined(true);
+    setSubEmail('');
+    setTimeout(() => setJoined(false), 4000);
+  };
 
   const supportLinks = [
     { name: 'Size & Drape Guide', path: '/contact' },
@@ -116,13 +146,16 @@ export default function Footer() {
             New weaves and restocks, once or twice a month.
           </p>
           <form
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleJoin}
             style={{ display: 'flex', borderBottom: '1px solid var(--gold-soft)', paddingBottom: '0.4rem' }}
           >
             <input
               type="email"
+              required
               placeholder="Email address"
               aria-label="Email address"
+              value={subEmail}
+              onChange={(e) => setSubEmail(e.target.value)}
               style={{
                 background: 'none',
                 border: 'none',
@@ -136,13 +169,28 @@ export default function Footer() {
             <motion.button
               type="submit"
               className="eyebrow"
+              disabled={joining}
               whileHover={{ scale: 1.1, color: 'var(--ivory)' }}
               whileTap={{ scale: 0.95 }}
-              style={{ background: 'none', border: 'none', color: 'var(--gold-soft)', cursor: 'pointer' }}
+              style={{ background: 'none', border: 'none', color: 'var(--gold-soft)', cursor: 'pointer', opacity: joining ? 0.6 : 1 }}
             >
-              Join
+              {joining ? 'Joining…' : 'Join'}
             </motion.button>
           </form>
+          <div
+            role="status"
+            style={{
+              minHeight: '1.1rem',
+              marginTop: '0.5rem',
+              fontSize: '0.78rem',
+              letterSpacing: '0.04em',
+              color: joined ? '#7ee2a8' : 'rgba(255,255,255,0.6)',
+              opacity: joined ? 1 : 0,
+              transition: 'opacity 0.3s ease',
+            }}
+          >
+            Thanks for subscribing — you're on the list ✓
+          </div>
           <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>
             <a href="https://www.instagram.com/village__allure?igsh=OGVxcTZtbDltYzV2&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.25)' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>
