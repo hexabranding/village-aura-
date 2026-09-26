@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/api';
+import { products as localProducts } from '../data/products';
 import type { Order, OrderTracking, ReturnRequest } from '../lib/api';
 
 const allStatuses = ['Pending', 'Processing', 'Dispatched', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
@@ -58,6 +59,21 @@ export default function AdminOrders() {
   const [orderNotes, setOrderNotes] = useState('');
   const [trackingLink, setTrackingLink] = useState('');
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
+  const [productNames, setProductNames] = useState<Record<string, string>>({});
+
+  const loadProducts = async () => {
+    const map: Record<string, string> = {};
+    localProducts.forEach((p) => { map[p.id] = p.name; });
+    try {
+      const ps = await api.products.getAll();
+      ps.forEach((p) => { map[p.id] = p.name; });
+    } catch {
+      // keep local fallback
+    }
+    setProductNames(map);
+  };
+
+  const productName = (id: string) => productNames[id] || id;
 
   const loadOrders = async () => {
     try {
@@ -69,6 +85,7 @@ export default function AdminOrders() {
       if (String(error.message).includes('401')) alert('Admin session expired');
     } finally { setLoading(false); }
   };
+
   const returnsByOrder = (id:string) => returns.filter((r)=>r.orderId===id);
   const pendingCount = (id:string) => returns.filter((r)=>r.orderId===id && r.status==='Pending').length;
   const nextFor = (s:string) => ({Pending:'Approved',Approved:'Pickup Scheduled','Pickup Scheduled':'Picked Up','Picked Up':'Completed'} as Record<string,string>)[s];
@@ -76,6 +93,7 @@ export default function AdminOrders() {
 
   useEffect(() => {
     loadOrders();
+    loadProducts();
   }, []);
 
   const filtered = orders.filter((o) => {
@@ -279,7 +297,7 @@ export default function AdminOrders() {
                       <span className="admin-order-card-detail-title">Items</span>
                       {order.items?.map((item, i) => (
                         <div key={i} className="admin-order-card-detail-text" style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:'0.5rem' }}>
-                          <span>{item.id} × {item.qty}</span>
+                          <span>{productName(item.id)} × {item.qty}</span>
                           {(item as any).cancelled && <span style={{ fontSize:'0.68rem', background:'#fee2e2', color:'#991b1b', padding:'2px 6px', borderRadius:10, fontWeight:700 }}>❌ CANCELLED{(item as any).cancelReason ? `: ${(item as any).cancelReason}` : ''}</span>}
                         </div>
                       )) || <div className="admin-order-card-detail-text muted">N/A</div>}
@@ -336,7 +354,7 @@ export default function AdminOrders() {
                         {returnsByOrder(order.orderId).map((r) => (
                           <div key={r.id} style={{ background: 'white', border: '1px solid #fde68a', borderRadius: 8, padding: '0.7rem 0.85rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: '0.82rem' }}><strong>{r.productId}</strong> • {r.reason}</span>
+                              <span style={{ fontSize: '0.82rem' }}><strong>{productName(r.productId)}</strong> • {r.reason}</span>
                               <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#fef3c7', color: '#92400e' }}>{r.status}{r.pickupDate ? ` • ${r.pickupDate}` : ''}</span>
                             </div>
                             {r.description && <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)', marginTop: 4 }}>{r.description}</div>}

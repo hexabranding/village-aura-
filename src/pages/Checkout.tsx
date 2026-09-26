@@ -5,6 +5,7 @@ import { getProduct } from '../lib/productStore';
 import type { CartItem } from '../data/products';
 import ZariDivider from '../components/ZariDivider';
 import { api, resolveUploadUrl } from '../lib/api';
+import { writeUser } from '../lib/auth';
 
 declare global {
   interface Window {
@@ -66,7 +67,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     .map((ci) => ({ ci, product: getProduct(ci.id) }))
     .filter((row) => row.product !== undefined);
   const subtotal = items.reduce((sum, { ci, product }) => sum + product!.price * ci.qty, 0);
-  const shipping = subtotal >= 2999 || items.length === 0 ? 0 : 99;
+  const shipping = 0;
   const total = subtotal + shipping;
 
   const set = (key: keyof typeof form) => (
@@ -90,9 +91,9 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     const savedUser = localStorage.getItem('reshamUser');
     if (savedUser) {
       const user = JSON.parse(savedUser);
-      localStorage.setItem('reshamUser', JSON.stringify({ ...user, email: form.email, phone: form.phone, name: form.name || user.name }));
+      writeUser({ ...user, email: form.email, phone: form.phone, name: form.name || user.name }, 'update');
     } else {
-      localStorage.setItem('reshamUser', JSON.stringify({ email: form.email, name: form.name, phone: form.phone }));
+      writeUser({ email: form.email, name: form.name, phone: form.phone }, 'update');
     }
     const localOrder = {
       orderId: result.orderId,
@@ -419,7 +420,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--ink-soft)' }}>Shipping</span>
-              <span>{shipping === 0 ? 'FREE' : `₹${shipping}`}</span>
+              <span style={{ color: 'var(--teal)', fontWeight: 600 }}>FREE</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 600, marginTop: '0.25rem' }}>
               <span>Total</span>

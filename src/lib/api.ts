@@ -1,4 +1,5 @@
 import type { Product } from '../data/products';
+import { writeUser, clearUser } from './auth';
 
 export const API_BASE = (import.meta as unknown as { env: { DEV: boolean; VITE_API_BASE?: string } }).env.DEV ? '/api' : ((import.meta as unknown as { env: { VITE_API_BASE?: string } }).env.VITE_API_BASE || 'https://api.villageallure.com/api');
 export const API_ORIGIN = API_BASE.startsWith('/') ? '' : API_BASE.replace(/\/api\/?$/, '');
@@ -735,7 +736,7 @@ export const api = {
       const result = await handleResponse(res);
       if (result.token) {
         localStorage.setItem('reshamCustomerToken', result.token);
-        localStorage.setItem('reshamUser', JSON.stringify(result.customer));
+        writeUser(result.customer, 'login', 'Account created — you are logged in');
       }
       return result;
     },
@@ -748,13 +749,12 @@ export const api = {
       const result = await handleResponse(res);
       if (result.token) {
         localStorage.setItem('reshamCustomerToken', result.token);
-        localStorage.setItem('reshamUser', JSON.stringify(result.customer));
+        writeUser(result.customer, 'login', 'Logged in successfully');
       }
       return result;
     },
     logout: () => {
-      localStorage.removeItem('reshamCustomerToken');
-      localStorage.removeItem('reshamUser');
+      clearUser('Logged out');
     },
     getProfile: async () => {
       const token = localStorage.getItem('reshamCustomerToken');

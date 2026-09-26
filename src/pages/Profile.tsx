@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api } from '../lib/api';
+import { writeUser } from '../lib/auth';
 import ZariDivider from '../components/ZariDivider';
 
 export default function Profile() {
@@ -36,14 +37,14 @@ export default function Profile() {
         // Profile is synced with backend
       }
       const updated = { name, email, phone };
-      localStorage.setItem('reshamUser', JSON.stringify(updated));
+      writeUser(updated, 'update');
       setUser(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
       // Save locally even if backend fails
       const updated = { name, email, phone };
-      localStorage.setItem('reshamUser', JSON.stringify(updated));
+      writeUser(updated, 'update');
       setUser(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);

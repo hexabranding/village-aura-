@@ -34,6 +34,7 @@ import AdminReturnSettings from './pages/AdminReturnSettings';
 import AdminCustomers from './pages/AdminCustomers';
 import type { CartItem } from './data/products';
 import { loadProducts } from './lib/productStore';
+import { AUTH_EVENT, type AuthChangeDetail } from './lib/auth';
 
 export default function App() {
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -74,6 +75,17 @@ export default function App() {
     window.clearTimeout((showToast as unknown as { _t?: number })._t);
     (showToast as unknown as { _t?: number })._t = window.setTimeout(() => setToast(null), 2400);
   }, []);
+
+  useEffect(() => {
+    const onAuth = (e: Event) => {
+      const detail = (e as CustomEvent<AuthChangeDetail>).detail;
+      if (!detail) return;
+      if (detail.type === 'login') showToast(detail.message || 'Logged in successfully', '#16a34a');
+      else if (detail.type === 'logout') showToast(detail.message || 'Logged out', '#16a34a');
+    };
+    window.addEventListener(AUTH_EVENT, onAuth);
+    return () => window.removeEventListener(AUTH_EVENT, onAuth);
+  }, [showToast]);
 
   const addToBag = useCallback(
     (productId: string, colorIndex = 0) => {

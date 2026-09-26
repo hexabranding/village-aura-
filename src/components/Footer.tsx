@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ZariDivider from './ZariDivider';
+import { useAuthUser } from '../lib/auth';
 import logo from '../assets/images/logo.png';
 
 const fadeUp = {
@@ -15,10 +15,7 @@ const stagger = {
 };
 
 export default function Footer() {
-  const loggedUser = useMemo(() => {
-    const saved = localStorage.getItem('reshamUser');
-    return saved ? JSON.parse(saved) : null;
-  }, []);
+  const loggedUser = useAuthUser();
 
   const supportLinks = [
     { name: 'Size & Drape Guide', path: '/contact' },
@@ -80,7 +77,7 @@ export default function Footer() {
               { name: 'Sarees', path: '/shop?category=Sarees' },
               { name: 'Jewellery', path: '/shop?category=Jewellery' },
               { name: 'Bags', path: '/shop?category=Bags' },
-              { name: 'Suit Sets', path: '/shop?category=Unstitched%20Suit%20Sets' },
+              { name: 'Suit Sets', path: '/shop?category=Suits%20Sets' },
               { name: 'Gallery', path: '/gallery' },
             ].map((item) => (
               <motion.li

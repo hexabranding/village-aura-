@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/images/logo.png';
 import { getProduct } from '../lib/productStore';
 import { api, resolveUploadUrl } from '../lib/api';
+import { useAuthUser } from '../lib/auth';
 import type { Category } from '../lib/api';
 
 interface HeaderProps {
@@ -24,15 +25,11 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
   const userRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const [loggedUser, setLoggedUser] = useState<{ email: string; name: string } | null>(() => {
-    const saved = localStorage.getItem('reshamUser');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const loggedUser = useAuthUser();
   const [apiCategories, setApiCategories] = useState<Category[]>([]);
 
   const handleLogout = () => {
-    localStorage.removeItem('reshamUser');
-    setLoggedUser(null);
+    api.customers.logout();
     setUserOpen(false);
     navigate('/');
   };

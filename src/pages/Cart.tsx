@@ -28,7 +28,7 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
   const subtotal = items.reduce((sum, { ci, product }) => sum + product!.price * ci.qty, 0);
   const mrpTotal = items.reduce((sum, { ci, product }) => sum + (product!.mrp ?? product!.price) * ci.qty, 0);
   const savings = mrpTotal - subtotal;
-  const shipping = subtotal >= 2999 || items.length === 0 ? 0 : 99;
+  const shipping = 0;
 
   return (
     <div className="container" style={{ padding: '3rem 0 5rem', maxWidth: 1060 }}>
@@ -186,7 +186,7 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--ink-soft)' }}>Shipping</span>
-                <span>{shipping === 0 ? 'FREE' : `₹${shipping}`}</span>
+                <span style={{ color: 'var(--teal)', fontWeight: 600 }}>FREE</span>
               </div>
               <div style={{ borderTop: '1px solid var(--line)', margin: '0.4rem 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', fontWeight: 600 }}>

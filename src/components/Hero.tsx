@@ -21,7 +21,7 @@ const heroSlides = [
   {
     eyebrow: 'The Wedding Edit — Banarasi Heritage',
     headline: ['Woven for the', 'day you remember.'],
-    cta: { label: 'Explore Suit Sets', to: '/shop?category=Unstitched%20Suit%20Sets' },
+    cta: { label: 'Explore Suit Sets', to: '/shop?category=Suits%20Sets' },
     ctaSecondary: { label: 'All Collections', to: '/shop' },
     image: '',
   },
