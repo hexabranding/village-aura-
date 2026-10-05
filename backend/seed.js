@@ -16,13 +16,13 @@ const seed = async () => {
     await Category.deleteMany({});
     await Product.deleteMany({});
 
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const hashedPassword = await bcrypt.hash('admin@123', 10);
     await User.create({
       username: 'admin',
       password: hashedPassword,
       role: 'admin',
     });
-    console.log('Default admin user created (admin / admin123)');
+    console.log('Default admin user created (admin / admin@123)');
 
     const categories = await Category.insertMany([
       {
@@ -155,7 +155,7 @@ const seed = async () => {
     console.log(`${products.length} products created`);
 
     console.log('\nSeeding complete!');
-    console.log('Admin login: admin / admin123');
+    console.log('Admin login: admin / admin@123');
     process.exit(0);
   } catch (error) {
     console.error('Seeding error:', error);

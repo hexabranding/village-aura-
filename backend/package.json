@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "seed": "node seed.js",
+    "set-admin": "node set-admin.js",
     "test:notify": "node test-notify.js"
   },
   "dependencies": {
