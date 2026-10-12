@@ -1,11 +1,12 @@
-import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
+import { useMemo, useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getProduct, products as localProducts, isOutOfStock, getQuantity } from '../data/products';
+import { products as localProducts, isOutOfStock, getQuantity } from '../data/products';
 import Accordion from '../components/Accordion';
 import ProductCard from '../components/ProductCard';
 import ZariDivider from '../components/ZariDivider';
 import { api, resolveUploadUrl } from '../lib/api';
+import { getAllProducts, loadProducts, subscribeProducts, isProductsLoaded } from '../lib/productStore';
 import type { Product as ProductType } from '../data/products';
 
 interface ProductProps {
@@ -17,30 +18,74 @@ interface ProductProps {
 const ZOOM_LEVEL = 2.8;
 const LENS_SIZE = 150;
 
+function ProductSkeleton() {
+  return (
+    <div className="container" style={{ padding: '2.5rem 0 5rem', minHeight: '70vh' }} aria-busy="true">
+      <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)', marginBottom: '2rem' }}>
+        Home &nbsp;/&nbsp; Shop &nbsp;/&nbsp; Loading…
+      </div>
+      <div
+        className="product-detail-grid"
+        style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 'clamp(2rem, 5vw, 4rem)' }}
+      >
+        <div
+          style={{
+            aspectRatio: '4/5',
+            borderRadius: 'var(--radius)',
+            background: 'linear-gradient(100deg, var(--ivory-deep) 40%, #f5efe6 50%, var(--ivory-deep) 60%)',
+            backgroundSize: '200% 100%',
+            animation: 'va-shimmer 1.4s ease-in-out infinite',
+          }}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', paddingTop: '0.5rem' }}>
+          {[
+            { w: '30%', h: '0.8rem' },
+            { w: '70%', h: '2.2rem' },
+            { w: '40%', h: '1.6rem' },
+            { w: '100%', h: '4.5rem' },
+            { w: '50%', h: '1rem' },
+            { w: '100%', h: '3.2rem' },
+          ].map((s, i) => (
+            <div
+              key={i}
+              style={{
+                width: s.w,
+                height: s.h,
+                borderRadius: 6,
+                background: 'linear-gradient(100deg, #eee6d8 40%, #f7f2e9 50%, #eee6d8 60%)',
+                backgroundSize: '200% 100%',
+                animation: 'va-shimmer 1.4s ease-in-out infinite',
+                animationDelay: `${i * 0.08}s`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      <style>{`@keyframes va-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }`}</style>
+    </div>
+  );
+}
+
 export default function Product({ onAddToBag, likedProducts, onToggleLike }: ProductProps) {
   const { id } = useParams();
-  const [allProducts, setAllProducts] = useState<ProductType[]>(localProducts);
+  const [allProducts, setAllProducts] = useState<ProductType[]>(() => getAllProducts());
+  const [storeLoaded, setStoreLoaded] = useState(isProductsLoaded);
   const [fetchingSingle, setFetchingSingle] = useState(false);
   const product = useMemo(() => {
     if (id) {
-      return allProducts.find((p) => p.id === id) ?? localProducts.find((p) => p.id === id) ?? getProduct(id);
+      return allProducts.find((p) => p.id === id) ?? localProducts.find((p) => p.id === id);
     }
     return undefined;
   }, [id, allProducts]);
 
   useEffect(() => {
-    Promise.all([api.products.getAll(), api.categories.getAll()]).then(([apiProducts, cats]) => {
-      if (apiProducts.length === 0) return;
-      const validNames = new Set(cats.map((c) => c.name));
-      const merged = localProducts.map((lp) => {
-        const apiP = apiProducts.find((p) => p.id === lp.id);
-        if (apiP && apiP.variants.some((v) => v.images.length > 0)) return apiP;
-        return lp;
-      });
-      const newProducts = apiProducts.filter((p) => !localProducts.some((lp) => lp.id === p.id));
-      const all = [...merged, ...newProducts];
-      setAllProducts(all.filter((p) => validNames.has(p.category)));
-    }).catch(() => {});
+    const unsub = subscribeProducts(() => {
+      setAllProducts(getAllProducts());
+      setStoreLoaded(true);
+    });
+    loadProducts();
+    if (isProductsLoaded()) setStoreLoaded(true);
+    return unsub;
   }, []);
 
   useEffect(() => {
@@ -58,8 +103,8 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
   const [bagQty, setBagQty] = useState(0);
   const [alreadyAdded, setAlreadyAdded] = useState(false);
 
-  // Scroll to top when product changes
-  useEffect(() => {
+  // Scroll to top before paint when product changes
+  useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
@@ -107,8 +152,12 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
   }, []);
 
   if (!product) {
-    if (fetchingSingle) return <div style={{ padding:'4rem', textAlign:'center', color:'var(--ink-soft)' }}>Loading product...</div>;
-    return null;
+    if (!storeLoaded || fetchingSingle) return <ProductSkeleton />;
+    return (
+      <div className="container" style={{ padding: '4rem 0', minHeight: '70vh', textAlign: 'center', color: 'var(--ink-soft)' }}>
+        Product not found. <Link to="/shop" style={{ color: 'var(--maroon)' }}>Continue shopping</Link>
+      </div>
+    );
   }
 
   const variant = product.variants[variantIndex];

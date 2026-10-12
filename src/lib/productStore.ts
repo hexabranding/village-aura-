@@ -13,6 +13,8 @@ export const subscribeProducts = (fn: () => void) => {
 
 export const getAllProducts = () => allProducts;
 
+export const isProductsLoaded = () => loaded;
+
 export const getProduct = (id: string): Product | undefined => {
   return allProducts.find((p) => p.id === id);
 };
