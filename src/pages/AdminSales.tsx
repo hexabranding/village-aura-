@@ -54,7 +54,7 @@ export default function AdminSales() {
   }, []);
 
   const filteredOrders = orders.filter((o) => {
-    if (dateRange === 'all') return true;
+    if (dateRange === 'alltime' || dateRange === 'all') return true;
     const orderDate = new Date(o.date);
     const now = new Date();
     const daysAgo = dateRange === 'last7days' ? 7 : 30;

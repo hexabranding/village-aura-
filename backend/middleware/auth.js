@@ -12,8 +12,14 @@ const auth = async (req, res, next) => {
     const token = header.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Check if it's a customer token
+    // Customer tokens may only reach customer-facing profile routes.
+    // Everything else mounted behind `auth` is admin/manager territory.
     if (decoded.role === 'customer') {
+      const pathOnly = req.originalUrl.split('?')[0];
+      const customerRoutes = ['/api/customers/profile'];
+      if (!customerRoutes.some((p) => pathOnly.startsWith(p))) {
+        return res.status(403).json({ error: 'Admin access required.' });
+      }
       const customer = await Customer.findById(decoded.id).select('-password');
       if (!customer) {
         return res.status(401).json({ error: 'Invalid token. Customer not found.' });

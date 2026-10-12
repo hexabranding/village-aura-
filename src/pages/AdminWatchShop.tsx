@@ -41,6 +41,8 @@ export default function AdminWatchShop() {
   const openAdd = () => {
     setEditing(null);
     setForm({ name: '', video: '', poster: '', price: '', productId: '', order: 1, active: true });
+    setSaveError(null);
+    setUploadError(null);
     setShowModal(true);
   };
 
@@ -59,7 +61,11 @@ export default function AdminWatchShop() {
   };
 
   const handleSave = async () => {
-    if (!form.name || !form.video) return;
+    if (!form.name || !form.video) {
+      setSaveError(!form.name ? 'Product name is required.' : 'A video is required — upload an MP4 or paste a video URL.');
+      return;
+    }
+    setSaveError(null);
     try {
       if (editing) {
         await api.watchshop.update(editing.id, form);
@@ -68,8 +74,9 @@ export default function AdminWatchShop() {
       }
       await loadItems();
       setShowModal(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save watch shop item:', error);
+      setSaveError(`Failed to save — ${error?.message || 'unknown error'}. Your entries are still here; try again.`);
     }
   };
 
@@ -110,6 +117,7 @@ export default function AdminWatchShop() {
   };
 
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -370,6 +378,11 @@ export default function AdminWatchShop() {
               </div>
 
               <div className="admin-modal-footer">
+                {saveError && (
+                  <div style={{ flex: 1, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 8, padding: '0.5rem 0.75rem', fontSize: '0.78rem' }}>
+                    ⚠️ {saveError}
+                  </div>
+                )}
                 <button onClick={() => setShowModal(false)} className="admin-btn admin-btn-outline">Cancel</button>
                 <button onClick={handleSave} className="admin-btn admin-btn-primary">
                   {editing ? 'Save Changes' : 'Add Item'}

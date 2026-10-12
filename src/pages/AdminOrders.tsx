@@ -91,9 +91,10 @@ export default function AdminOrders() {
   };
 
   const returnsByOrder = (id:string) => returns.filter((r)=>r.orderId===id);
-  const pendingCount = (id:string) => returns.filter((r)=>r.orderId===id && r.status==='Pending').length;
-  const nextFor = (s:string) => ({Pending:'Approved',Approved:'Pickup Scheduled','Pickup Scheduled':'Picked Up','Picked Up':'Completed'} as Record<string,string>)[s];
-  const handleReturnStatus = async (rid:string, st:string) => { try{ const u=await api.returns.updateStatus(rid,st); setReturns((p)=>p.map((r)=>r.id===rid?u:r)); }catch(e:any){ alert(e.message); } };
+  const pendingCount = (id:string) => returns.filter((r)=>r.orderId===id && !['Completed','Rejected','Cancelled'].includes(r.status)).length;
+  const nextFor = (s:string) => ({'Return Requested':'Under Review','Under Review':'Approved','More Information Required':'Approved',Approved:'Pickup Scheduled','Pickup Scheduled':'Picked Up','Picked Up':'Product Received','Product Received':'Quality Check','Quality Check':'Replacement Processing','Replacement Processing':'Completed'} as Record<string,string>)[s];
+  const handleReturnStatus = async (rid:string, st:string, extra?:Record<string,unknown>) => { try{ const u=await api.returns.updateStatus(rid,st,extra); setReturns((p)=>p.map((r)=>r.id===rid?u:r)); }catch(e:any){ alert(e.message); } };
+  const rejectReturn = (rid:string) => { const reason = window.prompt('Reason for rejecting this return:'); if (reason && reason.trim()) handleReturnStatus(rid,'Rejected',{ adminMessage: reason.trim() }); };
 
   useEffect(() => {
     loadOrders();
@@ -170,7 +171,7 @@ export default function AdminOrders() {
     <div className="admin-orders-page">
       <div className="admin-products-stats">
         {allStatuses.slice(0, 5).map((s) => {
-          const key = s.toLowerCase().replace(/\s+/g, '') as keyof typeof stats;
+          const key = ({ 'Pending':'pending','Processing':'processing','Dispatched':'dispatched','Shipped':'shipped','Out for Delivery':'outForDelivery','Delivered':'delivered','Cancelled':'cancelled' } as Record<string, keyof typeof stats>)[s] ?? (s.toLowerCase().replace(/\s+/g,'') as keyof typeof stats);
           return (
             <div key={s} className="admin-products-stat">
               <div className="admin-stat-icon" style={{ background: statusGradients[s], color: statusTextColors[s] }}>
@@ -378,13 +379,13 @@ export default function AdminOrders() {
                           <div key={r.id} style={{ background: 'white', border: '1px solid #fde68a', borderRadius: 8, padding: '0.7rem 0.85rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
                               <span style={{ fontSize: '0.82rem' }}><strong>{productName(r.productId)}</strong> • {r.reason}</span>
-                              <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#fef3c7', color: '#92400e' }}>{r.status}{r.pickupDate ? ` • ${r.pickupDate}` : ''}</span>
+                              <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#fef3c7', color: '#92400e' }}>{r.status}{r.pickup?.date ? ` • ${r.pickup.date}` : ''}</span>
                             </div>
                             {r.description && <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)', marginTop: 4 }}>{r.description}</div>}
                             {r.adminMessage && <div style={{ fontSize: '0.78rem', background: '#eff6ff', padding: '0.4rem 0.6rem', borderRadius: 6, color: '#1e40af', marginTop: 4 }}>Admin: {r.adminMessage}</div>}
                             <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
                               {r.status !== 'Rejected' && r.status !== 'Completed' && nextFor(r.status) && <button onClick={() => handleReturnStatus(r.id, nextFor(r.status))} style={{ padding: '0.3rem 0.7rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 6, fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>→ {nextFor(r.status)}</button>}
-                              {r.status === 'Pending' && <button onClick={() => handleReturnStatus(r.id, 'Rejected')} style={{ padding: '0.3rem 0.7rem', background: 'white', border: '1px solid #fecaca', color: '#991b1b', borderRadius: 6, fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>Reject</button>}
+                              {!['Rejected','Completed','Cancelled'].includes(r.status) && <button onClick={() => rejectReturn(r.id)} style={{ padding: '0.3rem 0.7rem', background: 'white', border: '1px solid #fecaca', color: '#991b1b', borderRadius: 6, fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>Reject</button>}
                             </div>
                           </div>
                         ))}

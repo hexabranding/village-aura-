@@ -124,6 +124,7 @@ export default function AdminProducts() {
   const [activeVariantTab, setActiveVariantTab] = useState(0);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
@@ -166,6 +167,7 @@ export default function AdminProducts() {
     setEditing(null);
     setForm({ ...emptyProduct, id: `product-${Date.now()}` });
     setActiveVariantTab(0);
+    setFormError(null);
     setShowModal(true);
   };
 
@@ -174,6 +176,7 @@ export default function AdminProducts() {
     setEditing(product);
     setForm({ ...product, quantity: qty, inStock: qty > 0 ? product.inStock !== false : false } as Product);
     setActiveVariantTab(0);
+    setFormError(null);
     setShowModal(true);
   };
 
@@ -185,17 +188,29 @@ export default function AdminProducts() {
     if (form.variants.length === 0) {
       newErrors.variants = 'At least one variant with images is required';
     } else {
+      let firstErrorTab = -1;
       form.variants.forEach((v, i) => {
+        if (!v.colorName || !v.colorName.trim()) {
+          newErrors[`variantColorName_${i}`] = `Color name is required for Variant ${i + 1}`;
+          if (firstErrorTab === -1) firstErrorTab = i;
+        }
         if (!v.images || v.images.length === 0) {
           newErrors[`variantImages_${i}`] = `At least one image is required for Variant ${i + 1}`;
+          if (firstErrorTab === -1) firstErrorTab = i;
         }
       });
+      // Switch to the variant with the first error so the message is actually visible
+      if (firstErrorTab !== -1) setActiveVariantTab(firstErrorTab);
     }
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      setFormError('Please fix the highlighted fields before saving.');
+    }
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
+    setFormError(null);
     if (!validate()) return;
     const qty = Math.max(0, Math.floor(Number((form as any).quantity ?? 0)) || 0);
     const payload = {
@@ -223,8 +238,9 @@ export default function AdminProducts() {
       setShowModal(false);
       await loadData();
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save product:', error);
+      setFormError(`Failed to save product — ${error?.message || 'unknown error'}. Your entries are still here; fix the issue and press Save again.`);
     }
   };
 
@@ -305,14 +321,16 @@ export default function AdminProducts() {
         images: [...variants[variantIndex].images, ...urls],
       };
       setForm((f) => ({ ...f, variants }));
+      setFormError(null);
       setErrors((prev) => {
         const next = { ...prev };
         delete next[`variantImages_${variantIndex}`];
         if (form.variants.length > 0) delete next.variants;
         return next;
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
+      setFormError(`Image upload failed — ${error?.message || 'check your connection and try again'}.`);
     } finally {
       setUploading(false);
     }
@@ -609,6 +627,11 @@ export default function AdminProducts() {
               </div>
 
               <div className="admin-modal-body">
+                {formError && (
+                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 10, padding: '0.75rem 1rem', fontSize: '0.82rem', marginBottom: '1rem' }}>
+                    ⚠️ {formError}
+                  </div>
+                )}
                 <div className="admin-form-grid">
                   <div className="admin-form-group">
                     <label>Product Name *</label>
@@ -826,12 +849,19 @@ export default function AdminProducts() {
                       <div key={vIndex} className="admin-variant-content">
                         <div className="admin-form-grid">
                           <div className="admin-form-group">
-                            <label>Color Name</label>
+                            <label>Color Name *</label>
                             <input
                               value={variant.colorName}
-                              onChange={(e) => updateVariant(vIndex, 'colorName', e.target.value)}
+                              onChange={(e) => {
+                                updateVariant(vIndex, 'colorName', e.target.value);
+                                setErrors((prev) => ({ ...prev, [`variantColorName_${vIndex}`]: '' }));
+                              }}
                               placeholder="e.g. Deep Maroon"
+                              className={errors[`variantColorName_${vIndex}`] ? 'admin-input-error' : ''}
                             />
+                            {errors[`variantColorName_${vIndex}`] && (
+                              <span className="admin-field-error">{errors[`variantColorName_${vIndex}`]}</span>
+                            )}
                           </div>
                           <div className="admin-form-group">
                             <label>Color</label>
@@ -909,7 +939,7 @@ export default function AdminProducts() {
                                 <>
                                   <span>📷</span>
                                   <span>Click to Upload Images</span>
-                                  <span className="admin-upload-hint">JPG, PNG, WebP — Max 5MB each</span>
+                                  <span className="admin-upload-hint">JPG, PNG, WebP, MP4 — Max 50MB each</span>
                                 </>
                               )}
                             </button>

@@ -65,6 +65,7 @@ export default function AdminHomeContent() {
   const saveHero = async () => {
     if (!heroForm.image.trim()) { setHeroError('Background image is required'); return; }
     const payload = { eyebrow: heroForm.eyebrow, headline: heroForm.headline.split('\n').map((s: string) => s.trim()).filter(Boolean), ctaLabel: heroForm.ctaLabel, ctaLink: heroForm.ctaLink, ctaSecondaryLabel: heroForm.ctaSecondaryLabel, ctaSecondaryLink: heroForm.ctaSecondaryLink, image: heroForm.image, order: heroForm.order, active: heroForm.active };
+    setHeroSaving(true);
     try {
       if (editingHero) await api.heroSlides.update(editingHero.id || editingHero._id, payload);
       else await api.heroSlides.create(payload);

@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, resolveUploadUrl } from '../lib/api';
 import type { Ad } from '../lib/api';
 
 export default function AdminAds() {
+  const navigate = useNavigate();
   const [ads, setAds] = useState<Ad[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Ad | null>(null);
@@ -28,7 +30,7 @@ export default function AdminAds() {
     const checkAdmin = async () => {
       const token = localStorage.getItem('reshamAdminToken');
       if (!token) {
-        setAdminChecked(false);
+        navigate('/admin/login');
         return;
       }
       try {
@@ -37,11 +39,11 @@ export default function AdminAds() {
         await loadAds();
       } catch {
         localStorage.removeItem('reshamAdminToken');
-        setAdminChecked(false);
+        navigate('/admin/login');
       }
     };
     checkAdmin();
-  }, []);
+  }, [navigate]);
 
   const loadAds = async () => {
     try {
@@ -49,7 +51,9 @@ export default function AdminAds() {
       setAds(data);
     } catch (error) {
       console.error('Failed to load ads:', error);
-      setAdminChecked(false);
+      // Don't reset adminChecked here - that left the page stuck on the
+      // "Verifying admin access..." spinner with no way out.
+      alert(`Failed to load advertisements: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }

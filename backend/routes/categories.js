@@ -1,5 +1,6 @@
 import express from 'express';
 import Category from '../models/Category.js';
+import Product from '../models/Product.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -61,14 +62,34 @@ router.post('/', auth, async (req, res) => {
 
 router.put('/:id', auth, async (req, res) => {
   try {
+    const existing = await Category.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+    const oldName = existing.name;
+    const oldSubcategories = existing.subcategories || [];
+
     const category = await Category.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
-    if (!category) {
-      return res.status(404).json({ error: 'Category not found' });
+
+    // Keep existing products attached when a category is renamed,
+    // otherwise they no longer match any category and disappear everywhere.
+    if (category.name !== oldName) {
+      await Product.updateMany({ category: oldName }, { $set: { category: category.name } });
     }
+    // Products using a removed subcategory fall back to the parent category.
+    const newSubs = new Set(category.subcategories || []);
+    const removedSubs = oldSubcategories.filter((s) => !newSubs.has(s));
+    if (removedSubs.length > 0) {
+      await Product.updateMany(
+        { category: category.name, subCategory: { $in: removedSubs } },
+        { $set: { subCategory: '' } }
+      );
+    }
+
     res.json(category);
   } catch (error) {
     console.error('Update category error:', error);

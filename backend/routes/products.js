@@ -25,19 +25,12 @@ router.get('/', async (req, res) => {
   try {
     const categories = await Category.find().select('name subcategories');
     const validCategoryNames = new Set(categories.map((c) => c.name));
-    const validSubCategoryMap = {};
-    categories.forEach((c) => {
-      c.subcategories.forEach((sub) => {
-        validSubCategoryMap[`${c.name}::${sub}`] = true;
-      });
-    });
 
     const products = await Product.find().sort({ createdAt: -1 });
-    const filtered = products.filter((p) => {
-      if (!validCategoryNames.has(p.category)) return false;
-      if (p.subCategory && !validSubCategoryMap[`${p.category}::${p.subCategory}`]) return false;
-      return true;
-    });
+    // Only hide products whose category no longer exists. Do NOT hide on
+    // subCategory: free-typed subcategories would save fine and then vanish
+    // from this list, making it look like the product was never added.
+    const filtered = products.filter((p) => validCategoryNames.has(p.category));
     res.json(filtered.map(syncStock));
   } catch (error) {
     console.error('Get products error:', error);

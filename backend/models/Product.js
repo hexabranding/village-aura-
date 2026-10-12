@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const productVariantSchema = new mongoose.Schema({
-  colorName: { type: String, required: true },
+  colorName: { type: String, default: '' },
   hex: { type: String, default: '#000000' },
   images: [{ type: String }],
 }, { _id: false });

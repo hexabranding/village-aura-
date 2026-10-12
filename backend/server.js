@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
 
@@ -12,7 +13,7 @@ const _envCheck = () => {
   const secret = process.env.RAZORPAY_KEY_SECRET;
   console.log('Razorpay Key:', key ? `${key.substring(0, 12)}...` : 'MISSING');
   console.log('Razorpay Secret:', secret ? 'set' : 'MISSING');
-  console.log('Image Storage: MongoDB');
+  console.log('Image Storage: MongoDB GridFS (legacy MongoDB + disk fallbacks)');
 };
 
 import express from 'express';
@@ -25,7 +26,7 @@ import categoryRoutes from './routes/categories.js';
 import orderRoutes from './routes/orders.js';
 import adRoutes from './routes/ads.js';
 import dashboardRoutes from './routes/dashboard.js';
-import uploadRoutes from './routes/upload.js';
+import uploadRoutes, { uploadDir } from './routes/upload.js';
 import galleryRoutes from './routes/gallery.js';
 import watchShopRoutes from './routes/watchshop.js';
 import testimonialRoutes from './routes/testimonials.js';
@@ -39,6 +40,23 @@ import returnSettingsRoutes from './routes/returnSettings.js';
 import notificationRoutes from './routes/notifications.js';
 import paymentRoutes from './routes/payments.js';
 import customerRoutes from './routes/customers.js';
+import { findGridFSFile, openGridFSStream } from './utils/gridfs.js';
+
+// Cloudinary mapping for legacy MongoDB images (written by migrate-to-cloudinary.js).
+// Used as a last-resort redirect so old /api/upload/images/<file> links keep
+// working even after the MongoDB blobs are deleted to free the Atlas quota.
+const CLOUDINARY_MAPPING_FILE = path.join(__dirname, 'cloudinary-migration.json');
+const loadCloudinaryMapping = () => {
+  try {
+    if (fs.existsSync(CLOUDINARY_MAPPING_FILE)) {
+      return JSON.parse(fs.readFileSync(CLOUDINARY_MAPPING_FILE, 'utf8'));
+    }
+  } catch (error) {
+    console.warn('Could not read cloudinary-migration.json:', error.message);
+  }
+  return {};
+};
+const cloudinaryMapping = loadCloudinaryMapping();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -47,19 +65,95 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+const MIME_TYPES = {
+  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+  '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml',
+  '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.webm': 'video/webm',
+  '.ogg': 'video/ogg',
+};
+
+// Parses a single-range "bytes=start-end" header. Returns null when absent/unsupported.
+const parseRange = (header, size) => {
+  if (!header) return null;
+  const match = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+  if (!match || (match[1] === '' && match[2] === '')) return null;
+  let start;
+  let end;
+  if (match[1] === '') {
+    // suffix range: last N bytes
+    const suffix = parseInt(match[2], 10);
+    if (Number.isNaN(suffix)) return null;
+    start = Math.max(0, size - suffix);
+    end = size - 1;
+  } else {
+    start = parseInt(match[1], 10);
+    end = match[2] === '' ? size - 1 : parseInt(match[2], 10);
+    if (end > size - 1) end = size - 1;
+  }
+  if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= size) return 'invalid';
+  return { start, end };
+};
+
+const setFileHeaders = (res, contentType) => {
+  res.setHeader('Content-Type', contentType || 'application/octet-stream');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Cache-Control', 'public, max-age=2592000');
+};
+
 app.get('/api/upload/images/:filename', async (req, res) => {
-  const filename = decodeURIComponent(req.params.filename);
+  const filename = path.basename(decodeURIComponent(req.params.filename));
   try {
-    const image = await Image.findOne({ filename });
-    if (!image) {
-      return res.status(404).json({ error: 'Image not found', filename });
+    // 1) Current storage: MongoDB GridFS
+    const gfsFile = await findGridFSFile(filename);
+    if (gfsFile) {
+      const size = gfsFile.length;
+      setFileHeaders(res, gfsFile.contentType);
+      res.setHeader('Accept-Ranges', 'bytes');
+      const range = parseRange(req.headers.range, size);
+      if (range === 'invalid') {
+        res.setHeader('Content-Range', `bytes */${size}`);
+        return res.status(416).end();
+      }
+      if (range) {
+        res.status(206);
+        res.setHeader('Content-Range', `bytes ${range.start}-${range.end}/${size}`);
+        res.setHeader('Content-Length', range.end - range.start + 1);
+      } else {
+        res.setHeader('Content-Length', size);
+      }
+      const stream = openGridFSStream(filename, range || undefined);
+      stream.on('error', (err) => {
+        console.error('GridFS stream error:', err.message);
+        res.destroy();
+      });
+      return stream.pipe(res);
     }
-    res.setHeader('Content-Type', image.contentType);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.setHeader('Cache-Control', 'public, max-age=2592000');
-    res.setHeader('Content-Length', image.size);
-    return res.send(image.data);
+
+    // 2) Legacy images stored as a single MongoDB document
+    const image = await Image.findOne({ filename });
+    if (image) {
+      setFileHeaders(res, image.contentType);
+      res.setHeader('Content-Length', image.size);
+      return res.send(image.data);
+    }
+
+    // 3) Oldest uploads saved on local disk (kept so old links never break)
+    const diskPath = path.join(uploadDir, filename);
+    if (fs.existsSync(diskPath)) {
+      const ext = path.extname(filename).toLowerCase();
+      setFileHeaders(res, MIME_TYPES[ext]);
+      return res.sendFile(diskPath);
+    }
+
+    // 4) Migrated legacy image — redirect to Cloudinary
+    const migrated = cloudinaryMapping[filename];
+    if (migrated?.secure_url) {
+      res.setHeader('Cache-Control', 'public, max-age=2592000');
+      return res.redirect(302, migrated.secure_url);
+    }
+
+    return res.status(404).json({ error: 'Image not found', filename });
   } catch (error) {
     console.error('Image fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch image' });
