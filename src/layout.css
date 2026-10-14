@@ -3050,6 +3050,20 @@
   min-width: 0;
 }
 
+.admin-order-card-item-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.admin-order-card-item-id {
+  font-size: 0.66rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
 .admin-order-card-detail-total {
   font-family: var(--font-body);
   font-size: 1.1rem;

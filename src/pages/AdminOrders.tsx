@@ -347,7 +347,10 @@ export default function AdminOrders() {
                               <div className="admin-order-card-item-img admin-order-card-item-img-empty">📦</div>
                             )}
                             <div className="admin-order-card-item-info">
-                              <span className="admin-order-card-detail-text">{productName(item.id, item)} × {item.qty}</span>
+                              <div className="admin-order-card-item-texts">
+                                <span className="admin-order-card-detail-text">{productName(item.id, item)} × {item.qty}</span>
+                                <span className="admin-order-card-item-id" title={item.id}>{item.id}</span>
+                              </div>
                               {(item as any).cancelled && <span style={{ fontSize: '0.68rem', background: '#fee2e2', color: '#991b1b', padding: '2px 6px', borderRadius: 10, fontWeight: 700 }}>❌ CANCELLED{(item as any).cancelReason ? `: ${(item as any).cancelReason}` : ''}</span>}
                             </div>
                           </div>
