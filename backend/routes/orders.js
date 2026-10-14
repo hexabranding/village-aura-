@@ -145,6 +145,7 @@ router.post('/', async (req, res) => {
     const { items } = req.body;
 
     // Validate stock availability for every item first, then decrease quantity
+    const productInfo = new Map();
     if (items && items.length > 0) {
       const products = [];
       for (const item of items) {
@@ -157,11 +158,22 @@ router.post('/', async (req, res) => {
             : `Not enough stock for "${product.name}". Only ${currentQty} pieces available.` });
         }
         products.push({ product, currentQty, qty: item.qty });
+        productInfo.set(String(item.id), product);
       }
       for (const { product, currentQty, qty } of products) {
         product.quantity = Math.max(0, currentQty - qty);
         product.inStock = product.quantity > 0;
         await product.save();
+      }
+      // Snapshot name + image so orders never fall back to a raw product ID.
+      for (const item of items) {
+        const product = productInfo.get(String(item.id));
+        if (!product) continue;
+        if (!item.name) item.name = product.name || '';
+        if (!item.image) {
+          item.image = product.variants?.[item.colorIndex || 0]?.images?.[0]
+            || product.variants?.[0]?.images?.[0] || '';
+        }
       }
     }
 

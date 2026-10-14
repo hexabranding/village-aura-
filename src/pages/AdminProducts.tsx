@@ -109,6 +109,31 @@ const presetColors = [
   { name: 'Rose Gold', hex: '#b76e79' },
 ];
 
+// Suggests the preset colour name closest to the given hex (empty string when
+// the value is not a complete hex colour yet, e.g. while typing "#ff").
+const nearestColorName = (hex: string): string => {
+  const value = (hex || '').trim().replace(/^#/, '');
+  if (!/^[0-9a-fA-F]{6}$/.test(value)) return '';
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+
+  let best = '';
+  let bestDistance = Infinity;
+  for (const c of presetColors) {
+    const h = c.hex.replace('#', '');
+    const dr = r - parseInt(h.slice(0, 2), 16);
+    const dg = g - parseInt(h.slice(2, 4), 16);
+    const db = b - parseInt(h.slice(4, 6), 16);
+    const distance = dr * dr + dg * dg + db * db;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = c.name;
+    }
+  }
+  return best;
+};
+
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -286,6 +311,18 @@ export default function AdminProducts() {
       variants[index] = { ...variants[index], [key]: value };
       return { ...f, variants };
     });
+  };
+
+  // Every colour change also refreshes the colour name: preset swatches use the
+  // palette name exactly, the colour wheel / hex field use the closest palette
+  // colour. Only an incomplete hex (while still typing "#ff") leaves it alone.
+  const setVariantColor = (index: number, hex: string, exactName?: string) => {
+    const suggested = exactName || nearestColorName(hex);
+    updateVariant(index, 'hex', hex);
+    if (suggested) {
+      updateVariant(index, 'colorName', suggested);
+      setErrors((e) => ({ ...e, [`variantColorName_${index}`]: '' }));
+    }
   };
 
   const addVariant = () => {
@@ -869,13 +906,13 @@ export default function AdminProducts() {
                               <input
                                 type="color"
                                 value={variant.hex || '#000000'}
-                                onChange={(e) => updateVariant(vIndex, 'hex', e.target.value)}
+                                onChange={(e) => setVariantColor(vIndex, e.target.value)}
                                 className="admin-color-input"
                               />
                               <input
                                 type="text"
                                 value={variant.hex}
-                                onChange={(e) => updateVariant(vIndex, 'hex', e.target.value)}
+                                onChange={(e) => setVariantColor(vIndex, e.target.value)}
                                 className="admin-color-hex"
                                 placeholder="#000000"
                               />
@@ -884,7 +921,7 @@ export default function AdminProducts() {
                                   type="button"
                                   className="admin-btn-remove-color"
                                   title="Remove color"
-                                  onClick={() => updateVariant(vIndex, 'hex', '')}
+                                  onClick={() => setVariantColor(vIndex, '')}
                                 >
                                   ×
                                 </button>
@@ -898,10 +935,7 @@ export default function AdminProducts() {
                                   className={`admin-color-preset ${variant.hex.toLowerCase() === c.hex.toLowerCase() ? 'selected' : ''}`}
                                   style={{ background: c.hex }}
                                   title={`${c.name} — ${c.hex}`}
-                                  onClick={() => {
-                                    updateVariant(vIndex, 'hex', c.hex);
-                                    if (!variant.colorName) updateVariant(vIndex, 'colorName', c.name);
-                                  }}
+                                  onClick={() => setVariantColor(vIndex, c.hex, c.name)}
                                 >
                                   <span className="admin-color-preset-label">{c.hex}</span>
                                 </button>

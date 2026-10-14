@@ -30,6 +30,13 @@ const publicImages = [
   '/images/ChatGPT%20Image%20Aug%2022%2C%202026%20at%2003_50_46%20PM.png',
 ];
 
+// Product collections open the filtered shop page; only the Gallery
+// collection belongs on the gallery page.
+const defaultLink = (category: string) =>
+  category === 'Gallery'
+    ? `/gallery?category=${encodeURIComponent(category)}`
+    : `/shop?category=${encodeURIComponent(category)}`;
+
 export default function Collections({ collections }: CollectionsProps) {
   const x = useMotionValue(0);
   const paused = useRef(false);
@@ -103,7 +110,7 @@ export default function Collections({ collections }: CollectionsProps) {
               style={{ flexShrink: 0, width: CARD_W }}
             >
               <Link
-                to={linkUrls[c.category] || `/gallery?category=${encodeURIComponent(c.category)}`}
+                to={linkUrls[c.category] || defaultLink(c.category)}
                 style={{
                   position: 'relative',
                   display: 'block',

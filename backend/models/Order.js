@@ -8,6 +8,10 @@ const trackingSchema = new mongoose.Schema({
 
 const orderItemSchema = new mongoose.Schema({
   id: { type: String, required: true },
+  // Snapshot of the product at purchase time, so the order stays readable
+  // even if the product is renamed or deleted later.
+  name: { type: String, default: '' },
+  image: { type: String, default: '' },
   colorIndex: { type: Number, default: 0 },
   qty: { type: Number, default: 1 },
   cancelled: { type: Boolean, default: false },

@@ -112,7 +112,7 @@ export interface Order {
   payment: string;
   paymentId?: string;
   date: string;
-  items: { id: string; colorIndex: number; qty: number; cancelled?: boolean }[];
+  items: { id: string; colorIndex: number; qty: number; cancelled?: boolean; name?: string; image?: string }[];
   status: 'Pending' | 'Processing' | 'Dispatched' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
   address?: string;
   city?: string;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, resolveUploadUrl } from '../lib/api';
 import { products as localProducts, type Product } from '../data/products';
@@ -60,6 +60,8 @@ export default function AdminOrders() {
   const [trackingLink, setTrackingLink] = useState('');
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [products, setProducts] = useState<Product[]>(localProducts);
+  const [productsLoaded, setProductsLoaded] = useState(false);
+  const attemptedIds = useRef<Set<string>>(new Set());
 
   const loadProducts = async () => {
     const merged = new Map<string, Product>();
@@ -70,13 +72,21 @@ export default function AdminOrders() {
       // keep local fallback
     }
     setProducts([...merged.values()]);
+    setProductsLoaded(true);
   };
 
-  const productName = (id: string) => products.find((p) => p.id === id)?.name || id;
+  type ItemSnapshot = { name?: string; image?: string };
 
-  const productImage = (id: string, colorIndex?: number) => {
-    const p = products.find((x) => x.id === id);
-    return p?.variants?.[colorIndex ?? 0]?.images?.[0] || p?.variants?.[0]?.images?.[0] || '';
+  const findProduct = useCallback((id: string) => products.find((p) => p.id === id), [products]);
+
+  // Prefer the snapshot stored on the order (survives product deletion),
+  // then the live product, and never fall back to the raw product ID.
+  const productName = (id: string, snapshot?: ItemSnapshot) =>
+    snapshot?.name || findProduct(id)?.name || (productsLoaded ? 'Product removed' : '…');
+
+  const productImage = (id: string, colorIndex?: number, snapshot?: ItemSnapshot) => {
+    const p = findProduct(id);
+    return p?.variants?.[colorIndex ?? 0]?.images?.[0] || snapshot?.image || p?.variants?.[0]?.images?.[0] || '';
   };
 
   const loadOrders = async () => {
@@ -100,6 +110,24 @@ export default function AdminOrders() {
     loadOrders();
     loadProducts();
   }, []);
+
+  // Item IDs missing from the product list (product deleted, or hidden because
+  // its category was removed) are fetched directly before giving up on a name.
+  useEffect(() => {
+    if (!productsLoaded) return;
+    const missing: string[] = [];
+    orders.forEach((o) => (o.items || []).forEach((it) => {
+      if (it.id && !findProduct(it.id) && !attemptedIds.current.has(it.id)) {
+        attemptedIds.current.add(it.id);
+        missing.push(it.id);
+      }
+    }));
+    if (missing.length === 0) return;
+    Promise.all(missing.map((id) => api.products.getOne(id).catch(() => null))).then((found) => {
+      const valid = found.filter(Boolean) as Product[];
+      if (valid.length > 0) setProducts((prev) => [...prev, ...valid]);
+    });
+  }, [orders, productsLoaded, findProduct]);
 
   const filtered = orders.filter((o) => {
     const matchesSearch = o.orderId.toLowerCase().includes(search.toLowerCase()) || o.name.toLowerCase().includes(search.toLowerCase()) || o.phone.includes(search);
@@ -301,13 +329,13 @@ export default function AdminOrders() {
                     <div className="admin-order-card-detail-section">
                       <span className="admin-order-card-detail-title">Items</span>
                       {order.items?.map((item, i) => {
-                        const img = productImage(item.id, item.colorIndex);
+                        const img = productImage(item.id, item.colorIndex, item);
                         return (
                           <div key={i} className="admin-order-card-item">
                             {img ? (
                               <img
                                 src={resolveUploadUrl(img)}
-                                alt={productName(item.id)}
+                                alt={productName(item.id, item)}
                                 loading="lazy"
                                 decoding="async"
                                 width={400}
@@ -319,7 +347,7 @@ export default function AdminOrders() {
                               <div className="admin-order-card-item-img admin-order-card-item-img-empty">📦</div>
                             )}
                             <div className="admin-order-card-item-info">
-                              <span className="admin-order-card-detail-text">{productName(item.id)} × {item.qty}</span>
+                              <span className="admin-order-card-detail-text">{productName(item.id, item)} × {item.qty}</span>
                               {(item as any).cancelled && <span style={{ fontSize: '0.68rem', background: '#fee2e2', color: '#991b1b', padding: '2px 6px', borderRadius: 10, fontWeight: 700 }}>❌ CANCELLED{(item as any).cancelReason ? `: ${(item as any).cancelReason}` : ''}</span>}
                             </div>
                           </div>

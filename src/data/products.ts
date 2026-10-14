@@ -74,8 +74,8 @@ export const collections: Collection[] = [
   { category: 'Sarees', title: 'Sarees', tagline: 'Kanjivaram, Banarasi & organza — six yards for every moment', image: imgPool(sareeImages, 'coll-silk', 700, 850) },
   { category: 'Jewellery', title: 'Jewellery', tagline: 'Temple kemp, kundan & antique gold', image: imgPool(jewelleryImages, 'coll-ornaments', 700, 850) },
   { category: 'Bags', title: 'Bags', tagline: 'Handwoven clutches, potlis & totes', image: imgPool(bagImages, 'coll-bags', 700, 850) },
-  { category: 'Suits Sets', title: 'Suit Sets', tagline: 'Anarkali & straight sets in handloom', image: imgPool(suitImages, 'coll-suits', 700, 850) },
-  { category: 'Others', title: 'Others', tagline: 'Curated handloom finds', image: imgPool(publicImages, 'coll-others', 700, 850) },
+  { category: 'Suit Sets', title: 'Suit Sets', tagline: 'Anarkali & straight sets in handloom', image: imgPool(suitImages, 'coll-suits', 700, 850) },
+  { category: 'Dupatta', title: 'Dupatta', tagline: 'Handblock prints & festive accents', image: imgPool(publicImages, 'coll-dupatta', 700, 850) },
   { category: 'Gallery', title: 'Gallery', tagline: 'Woven with love', image: imgPool(publicImages, 'coll-gallery', 700, 850) },
 ];
 

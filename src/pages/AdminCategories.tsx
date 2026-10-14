@@ -549,9 +549,9 @@ export default function AdminCategories() {
 
                 <div className="admin-form-group">
                   <label>Link URL</label>
-                  <input value={formLinkUrl} onChange={(e) => setFormLinkUrl(e.target.value)} placeholder="e.g. /gallery?category=Sarees or https://..." />
+                  <input value={formLinkUrl} onChange={(e) => setFormLinkUrl(e.target.value)} placeholder="e.g. /shop?category=Sarees or https://..." />
                   <small style={{ color: 'var(--ink-soft)', fontSize: '0.72rem', marginTop: '0.25rem', display: 'block' }}>
-                    Custom link when clicking this collection. Leave empty for default /gallery?category=...
+                    Custom link when clicking this collection. Leave empty for the default /shop?category=... (the Gallery collection opens /gallery?category=...).
                   </small>
                 </div>
 
@@ -659,9 +659,9 @@ export default function AdminCategories() {
 
                 <div className="admin-form-group">
                   <label>Link URL</label>
-                  <input value={formLinkUrl} onChange={(e) => setFormLinkUrl(e.target.value)} placeholder="e.g. /gallery?category=Sarees or https://..." />
+                  <input value={formLinkUrl} onChange={(e) => setFormLinkUrl(e.target.value)} placeholder="e.g. /shop?category=Sarees or https://..." />
                   <small style={{ color: 'var(--ink-soft)', fontSize: '0.72rem', marginTop: '0.25rem', display: 'block' }}>
-                    Custom link when clicking this collection. Leave empty for default /gallery?category=...
+                    Custom link when clicking this collection. Leave empty for the default /shop?category=... (the Gallery collection opens /gallery?category=...).
                   </small>
                 </div>
 
