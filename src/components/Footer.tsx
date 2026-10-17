@@ -226,7 +226,31 @@ export default function Footer() {
         }}
       >
         <span>© {new Date().getFullYear()} Village Allure — All rights reserved.</span>
-        <span style={{ color: 'var(--gold-soft)', letterSpacing: '0.12em' }}></span>
+        <span style={{ color: '#fff', letterSpacing: '0.12em' }}>
+          Made by{' '}
+          <a
+            href="https://hexabranding.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: '#fff',
+              textDecoration: 'none',
+              fontWeight: 600,
+              borderBottom: '1px solid rgba(255,255,255,0.45)',
+              transition: 'color 0.2s ease, border-color 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--gold-soft)';
+              e.currentTarget.style.borderBottomColor = 'var(--gold-soft)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#fff';
+              e.currentTarget.style.borderBottomColor = 'rgba(255,255,255,0.45)';
+            }}
+          >
+            HEXA BRANDING
+          </a>
+        </span>
       </div>
     </footer>
   );

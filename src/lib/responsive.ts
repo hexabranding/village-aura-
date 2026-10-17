@@ -1,4 +1,20 @@
+import { useEffect, useState } from 'react';
 import { resolveUploadUrl } from './api';
+
+/** True on phone-sized viewports (≤640px). Tracks resize/orientation changes. */
+export function useIsMobile(query = '(max-width: 640px)'): boolean {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(query).matches,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener('change', onChange);
+    setIsMobile(mql.matches);
+    return () => mql.removeEventListener('change', onChange);
+  }, [query]);
+  return isMobile;
+}
 
 /**
  * Build a responsive srcSet for remote banner images that support

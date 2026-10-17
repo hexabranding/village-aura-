@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import type { Product } from '../data/products';
 import { isOutOfStock } from '../data/products';
 import { resolveUploadUrl } from '../lib/api';
+import { useIsMobile } from '../lib/responsive';
 
 interface ProductCardProps {
   product: Product;
@@ -16,6 +17,9 @@ const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg
 
 export default function ProductCard({ product, index = 0, isLiked = false, onToggleLike }: ProductCardProps) {
   const [hovered, setHovered] = useState(false);
+  // On mobile, show products immediately — no scroll-in reveal animation
+  const isMobile = useIsMobile();
+  const reveal = !isMobile;
   const soldOut = isOutOfStock(product);
   const primary = product.variants[0] ?? { images: [], colorName: '', hex: '#ccc' };
   const img0 = resolveUploadUrl(primary.images[0] || '') || PLACEHOLDER;
@@ -23,10 +27,10 @@ export default function ProductCard({ product, index = 0, isLiked = false, onTog
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.6, delay: (index % 4) * 0.08, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+      initial={reveal ? { opacity: 0, y: 28 } : false}
+      whileInView={reveal ? { opacity: 1, y: 0 } : undefined}
+      viewport={reveal ? { once: true, amount: 0.3 } : undefined}
+      transition={reveal ? { duration: 0.6, delay: (index % 4) * 0.08, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } : { duration: 0 }}
     >
       <Link
         to={`/product/${product.id}`}
@@ -161,10 +165,10 @@ export default function ProductCard({ product, index = 0, isLiked = false, onTog
 
             {product.mrp && (
               <motion.span
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: 0.2 }}
+                initial={reveal ? { opacity: 0, x: -10 } : false}
+                whileInView={reveal ? { opacity: 1, x: 0 } : undefined}
+                viewport={reveal ? { once: true } : undefined}
+                transition={reveal ? { duration: 0.4, delay: 0.2 } : { duration: 0 }}
                 className="eyebrow"
                 style={{
                   position: 'absolute',
