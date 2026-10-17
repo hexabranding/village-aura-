@@ -1065,24 +1065,19 @@
 }
 @media (max-width: 640px) {
   .fixed-banner-section {
-    /* Strip-shaped box; image is shown in full (contain) below */
+    /* Box matches the banner image ratio (1920x600 ≈ 16:5) so the whole
+       image fits with object-fit: contain and leaves no empty bands */
     height: auto !important;
-    aspect-ratio: 5 / 2 !important;
-    min-height: 140px !important;
+    aspect-ratio: 16 / 5 !important;
+    min-height: 0 !important;
     max-height: 240px !important;
-    /* Bars left by contain blend with the scrim instead of showing ivory */
-    background: #241b15 !important;
+    background: none !important;
   }
   .fixed-banner-img {
     aspect-ratio: auto !important;
     /* Show the WHOLE banner on mobile — nothing cropped */
     object-fit: contain !important;
     object-position: center !important;
-  }
-  /* Lighter scrim on mobile — the whole image is visible now, so it
-     shouldn't be darkened; bottom stays darker for the carousel dots */
-  .fixed-banner-scrim {
-    background: linear-gradient(180deg, rgba(36,27,21,0.2) 0%, rgba(36,27,21,0.12) 50%, rgba(36,27,21,0.4) 100%) !important;
   }
   .fixed-banner-link {
     display: block !important;
