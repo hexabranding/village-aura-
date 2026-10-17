@@ -12,6 +12,7 @@ import AdCarousel from '../components/AdCarousel';
 import Testimonials from '../components/Testimonials';
 import { products as localProducts, collections } from '../data/products';
 import { api, resolveUploadUrl } from '../lib/api';
+import { buildBannerSrcSet } from '../lib/responsive';
 import type { Product as ProductType } from '../data/products';
 
 const slideFromLeft = {
@@ -280,6 +281,7 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
 
       {/* Product info */}
       <div
+        className="watch-shop-card-info"
         style={{
           position: 'absolute',
           bottom: 0,
@@ -291,6 +293,7 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
         }}
       >
         <div
+          className="watch-shop-card-name"
           style={{
             fontFamily: 'var(--font-body)',
             fontSize: '0.95rem',
@@ -303,6 +306,7 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
           {item.name}
         </div>
         <div
+          className="watch-shop-card-price"
           style={{
             fontFamily: 'var(--font-body)',
             fontSize: '0.85rem',
@@ -315,6 +319,7 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
         </div>
         <Link
           to={`/product/${item.id}`}
+          className="watch-shop-cta"
           onClick={(e) => e.stopPropagation()}
           style={{
             display: 'inline-block',
@@ -725,22 +730,44 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
           const img = banner.image || 'https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop';
           return (
             <div key={idx} style={{ position: 'absolute', inset: 0, opacity: active ? 1 : 0, transition: 'opacity 0.7s ease', pointerEvents: active ? 'auto' : 'none' }}>
-              <img src={resolveUploadUrl(img)} alt="Village Allure promotional banner" loading="lazy" decoding="async" crossOrigin="anonymous" width={1920} height={600} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop'; } }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '1920 / 600' }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(36,27,21,0.35) 0%, rgba(36,27,21,0.25) 100%)' }} />
+              <img
+                className="fixed-banner-img"
+                src={resolveUploadUrl(img)}
+                srcSet={buildBannerSrcSet(img, 1920, 600)}
+                sizes="100vw"
+                alt="Village Allure promotional banner"
+                loading={idx === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                crossOrigin="anonymous"
+                width={1920}
+                height={600}
+                onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src='https://images.pexels.com/photos/27155546/pexels-photo-27155546.jpeg?w=1920&h=600&fit=crop'; } }}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+              <div
+                className="fixed-banner-scrim"
+                style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(36,27,21,0.35) 0%, rgba(36,27,21,0.25) 100%)' }}
+              />
               {(banner as any).offer && (
-                <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 2, background: 'var(--gold)', color: 'var(--ink)', padding: '0.5rem 1.2rem', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', boxShadow: '0 4px 18px rgba(0,0,0,0.25)' }}>
+                <div className="fixed-banner-offer" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 2, background: 'var(--gold)', color: 'var(--ink)', padding: '0.5rem 1.2rem', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', boxShadow: '0 4px 18px rgba(0,0,0,0.25)' }}>
                   {(banner as any).offer}
                 </div>
               )}
-              {banner.link && <Link to={banner.link} style={{ position: 'absolute', inset: 0, zIndex: 1 }} aria-label="Fixed banner link" />}
+              {banner.link && (
+                <Link
+                  to={banner.link}
+                  className="fixed-banner-link"
+                  aria-label="Fixed banner link"
+                />
+              )}
             </div>
           );
         })}
         {fixedBanners.length > 1 && (
           <>
-            <button onClick={() => setFixedIndex((i) => (i - 1 + fixedBanners.length) % fixedBanners.length)} aria-label="Previous banner" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 3, width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.85)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>‹</button>
-            <button onClick={() => setFixedIndex((i) => (i + 1) % fixedBanners.length)} aria-label="Next banner" style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 3, width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.85)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>›</button>
-            <div style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', zIndex: 3, display: 'flex', gap: '0.5rem' }}>
+            <button className="fixed-banner-nav fixed-banner-prev" onClick={() => setFixedIndex((i) => (i - 1 + fixedBanners.length) % fixedBanners.length)} aria-label="Previous banner" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 3, width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.85)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>‹</button>
+            <button className="fixed-banner-nav fixed-banner-next" onClick={() => setFixedIndex((i) => (i + 1) % fixedBanners.length)} aria-label="Next banner" style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 3, width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.85)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>›</button>
+            <div className="fixed-banner-dots" style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', zIndex: 3, display: 'flex', gap: '0.5rem' }}>
               {fixedBanners.map((_, i) => (
                 <button key={i} onClick={() => setFixedIndex(i)} aria-label={`Go to banner ${i + 1}`} style={{ width: fixedIndex === i ? 22 : 8, height: 8, borderRadius: 99, border: 'none', background: fixedIndex === i ? 'var(--gold)' : 'rgba(255,255,255,0.7)', cursor: 'pointer', transition: 'all 0.3s ease', padding: 0 }} />
               ))}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, resolveUploadUrl } from '../lib/api';
+import { buildBannerSrcSet } from '../lib/responsive';
 
 interface Slide {
   image: string;
@@ -38,6 +39,9 @@ const fallbackSlides: Slide[] = [
   },
 ];
 
+/** Responsive image sources for wide banner slides (see lib/responsive). */
+const slideSrcSet = (src: string) => buildBannerSrcSet(src, 14, 5);
+
 export default function AdCarousel() {
   const [current, setCurrent] = useState(0);
   const [slides, setSlides] = useState<Slide[]>(fallbackSlides);
@@ -73,10 +77,10 @@ export default function AdCarousel() {
 
   return (
     <section
+      className="ad-carousel"
       style={{
         position: 'relative',
         overflow: 'hidden',
-        height: 420,
         background: 'var(--ivory-deep)',
       }}
     >
@@ -94,18 +98,22 @@ export default function AdCarousel() {
         >
           {/* Background image */}
           <img
+            className="ad-carousel-img"
             src={resolveUploadUrl(slides[current].image)}
+            srcSet={slideSrcSet(slides[current].image)}
+            sizes="(max-width: 640px) 100vw, (max-width: 1200px) 90vw, 1400px"
             alt={slides[current].title || 'Featured collection banner'}
-            loading="lazy"
+            loading={current === 0 ? 'eager' : 'lazy'}
             decoding="async"
             crossOrigin="anonymous"
             width={1400}
             height={500}
             onError={(e) => { const t = e.target as HTMLImageElement; if (!t.dataset.fallback) { t.dataset.fallback='1'; t.src=fallbackSlides[0].image; } }}
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '14 / 5' }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
           />
           {/* Overlay */}
           <div
+            className="ad-carousel-overlay"
             style={{
               position: 'absolute',
               inset: 0,
@@ -203,6 +211,7 @@ export default function AdCarousel() {
 
       {/* Dots */}
       <div
+        className="ad-carousel-dots"
         style={{
           position: 'absolute',
           bottom: 24,
@@ -233,6 +242,7 @@ export default function AdCarousel() {
 
       {/* Arrow buttons */}
       <button
+        className="ad-carousel-arrow"
         onClick={() => setCurrent((prev) => (prev === 0 ? slides.length - 1 : prev - 1))}
         aria-label="Previous slide"
         style={{
@@ -261,6 +271,7 @@ export default function AdCarousel() {
         ‹
       </button>
       <button
+        className="ad-carousel-arrow"
         onClick={next}
         aria-label="Next slide"
         style={{

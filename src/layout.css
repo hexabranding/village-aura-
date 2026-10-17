@@ -159,6 +159,62 @@
   }
 }
 
+/* ─── Watch & Shop card — responsive overlay & CTA button ─── */
+@media (max-width: 980px) {
+  .watch-shop-card-info {
+    padding: 1.25rem 1rem 1rem !important;
+  }
+  .watch-shop-cta {
+    margin-top: 0.7rem !important;
+    padding: 0.6rem 1.6rem !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.09em !important;
+  }
+}
+@media (max-width: 640px) {
+  .watch-shop-grid {
+    gap: 0.9rem !important;
+  }
+  .watch-shop-card-info {
+    padding: 1rem 0.75rem 0.9rem !important;
+  }
+  /* Long product names shouldn't push the price + button off the card */
+  .watch-shop-card-name {
+    font-size: 0.82rem !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .watch-shop-card-price {
+    font-size: 0.75rem !important;
+    margin-top: 0.2rem !important;
+  }
+  /* Full-width, properly sized touch target inside the narrow card */
+  .watch-shop-cta {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 160px;
+    margin-top: 0.6rem !important;
+    padding: 0.7rem 1rem !important; /* ≥40px tall touch target */
+    font-size: 0.68rem !important;
+    letter-spacing: 0.08em !important;
+    gap: 0.35rem;
+  }
+  .watch-shop-cta:active {
+    transform: scale(0.96);
+  }
+}
+@media (max-width: 380px) {
+  .watch-shop-cta {
+    max-width: 100%;
+    font-size: 0.65rem !important;
+  }
+}
+
 
 
 /* ─── Gallery Grid ─── */
@@ -1009,10 +1065,64 @@
 }
 @media (max-width: 640px) {
   .fixed-banner-section {
+    /* Strip-shaped box; image is shown in full (contain) below */
     height: auto !important;
-    aspect-ratio: 1920 / 600 !important;
-    min-height: 180px !important;
-    max-height: none !important;
+    aspect-ratio: 5 / 2 !important;
+    min-height: 140px !important;
+    max-height: 240px !important;
+    /* Bars left by contain blend with the scrim instead of showing ivory */
+    background: #241b15 !important;
+  }
+  .fixed-banner-img {
+    aspect-ratio: auto !important;
+    /* Show the WHOLE banner on mobile — nothing cropped */
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+  /* Lighter scrim on mobile — the whole image is visible now, so it
+     shouldn't be darkened; bottom stays darker for the carousel dots */
+  .fixed-banner-scrim {
+    background: linear-gradient(180deg, rgba(36,27,21,0.2) 0%, rgba(36,27,21,0.12) 50%, rgba(36,27,21,0.4) 100%) !important;
+  }
+  .fixed-banner-link {
+    display: block !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .fixed-banner-offer {
+    top: 0.8rem !important;
+    right: 0.8rem !important;
+    padding: 0.35rem 0.75rem !important;
+    font-size: 0.66rem !important;
+    letter-spacing: 0.08em !important;
+    pointer-events: none !important;
+    max-width: 55%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .fixed-banner-nav {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.95rem !important;
+  }
+  .fixed-banner-prev {
+    left: 0.5rem !important;
+  }
+  .fixed-banner-next {
+    right: 0.5rem !important;
+  }
+  .fixed-banner-dots {
+    bottom: 0.6rem !important;
+    gap: 0.35rem !important;
+  }
+  /* Invisible enlarged hit area so the 8px dots are tappable on touch */
+  .fixed-banner-dots button {
+    position: relative;
+  }
+  .fixed-banner-dots button::after {
+    content: '';
+    position: absolute;
+    inset: -9px;
   }
   .fixed-banner-bg {
     background-size: contain !important;
@@ -1032,6 +1142,76 @@
 @media (max-width: 560px) {
   .weaver-gallery-wrap {
     max-width: 280px !important;
+  }
+}
+
+/* ─── AdCarousel — responsive heights & mobile image fit ─── */
+.ad-carousel {
+  height: 420px;
+}
+@media (max-width: 900px) {
+  .ad-carousel {
+    height: 360px;
+  }
+}
+@media (max-width: 640px) {
+  .ad-carousel {
+    /* Height follows width so the wide banner keeps its framing
+       (mild center crop) instead of being sliced into a thin strip */
+    height: auto;
+    aspect-ratio: 2 / 1;
+    max-height: 320px;
+    min-height: 180px;
+  }
+  /* Keep the subject of the banner in frame instead of slicing
+     the far left edge of a wide image */
+  .ad-carousel-img {
+    object-position: center !important;
+  }
+  /* Vertical scrim so centered text stays readable over any image */
+  .ad-carousel-overlay {
+    background: linear-gradient(180deg, rgba(36,27,21,0.25) 0%, rgba(36,27,21,0.55) 55%, rgba(36,27,21,0.85) 100%) !important;
+  }
+  .ad-carousel-dots {
+    bottom: 10px !important;
+  }
+  /* Keep all slide content inside the shorter banner height */
+  .ad-carousel-content {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+  .ad-carousel-content .eyebrow {
+    margin-bottom: 0.35rem !important;
+    font-size: 0.62rem !important;
+  }
+  .ad-carousel-content h2 {
+    font-size: clamp(1.25rem, 5.5vw, 1.7rem) !important;
+    margin-bottom: 0.35rem !important;
+  }
+  .ad-carousel-content p {
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+    margin-bottom: 0.75rem !important;
+  }
+  .ad-carousel-content a {
+    padding: 0.6rem 1.3rem !important;
+    font-size: 0.68rem !important;
+  }
+}
+@media (max-width: 480px) {
+  /* Arrows overlap small banners — dots + swipe-sized taps are enough */
+  .ad-carousel-arrow {
+    display: none !important;
+  }
+  .ad-carousel {
+    aspect-ratio: 11 / 6;
+    max-height: 280px;
+  }
+}
+@media (max-width: 360px) {
+  .ad-carousel-content p {
+    display: none !important; /* subtitle can't fit — keep title + CTA crisp */
   }
 }
 
