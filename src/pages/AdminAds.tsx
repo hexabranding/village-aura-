@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, resolveUploadUrl } from '../lib/api';
+import { normalizeLink } from '../lib/links';
 import type { Ad } from '../lib/api';
 
 export default function AdminAds() {
@@ -104,7 +105,7 @@ export default function AdminAds() {
     if (!form.image) { setSaveError('Image is required'); return; }
     setSaving(true); setSaveError(null);
     try {
-      const payload = { ...form, title: form.title.trim() };
+      const payload = { ...form, title: form.title.trim(), link: normalizeLink(form.link, '') };
       if (editing) {
         await api.ads.update(editing.id, payload);
       } else {
@@ -251,7 +252,15 @@ export default function AdminAds() {
               )}
 
               {ad.link && (
-                <div className="admin-ad-card-link">🔗 {ad.link}</div>
+                <a
+                  className="admin-ad-card-link"
+                  href={normalizeLink(ad.link, '/shop')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`Open ${ad.link} in a new tab`}
+                >
+                  🔗 {ad.link}
+                </a>
               )}
             </div>
 
@@ -419,7 +428,27 @@ export default function AdminAds() {
 
                 <div className="admin-form-group">
                   <label>Link URL</label>
-                  <input value={form.link} onChange={(e) => setForm((f) => ({ ...f, link: e.target.value }))} placeholder="/shop?category=Sarees" />
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                    <input
+                      value={form.link}
+                      onChange={(e) => setForm((f) => ({ ...f, link: e.target.value }))}
+                      placeholder="/shop?category=Sarees"
+                      style={{ flex: 1, minWidth: 0 }}
+                    />
+                    {form.link.trim() !== '' && (
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn-outline"
+                        style={{ whiteSpace: 'nowrap', padding: '0.45rem 0.9rem', fontSize: '0.78rem' }}
+                        onClick={() => window.open(normalizeLink(form.link, '/shop'), '_blank', 'noopener,noreferrer')}
+                      >
+                        Open ↗
+                      </button>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginTop: '0.25rem', display: 'block' }}>
+                    Where tapping the ad takes the customer. Use a store path like <b>/shop?category=Sarees</b> or a full web address like <b>https://instagram.com/yourpage</b> — a bare address such as <b>instagram.com/yourpage</b> is saved with https:// automatically, and external links open in a new tab.
+                  </span>
                 </div>
 
                 <div className="admin-form-group">

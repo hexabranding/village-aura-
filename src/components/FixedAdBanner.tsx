@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api, resolveUploadUrl } from '../lib/api';
 import type { Ad } from '../lib/api';
+import AdLink from './AdLink';
 
 /**
  * Fixed advertisement banners — rendered at the top of the home page,
@@ -42,7 +42,7 @@ export default function FixedAdBanner() {
             boxShadow: '0 20px 50px rgba(36,27,21,0.15)',
           }}
         >
-          <Link to={ad.link || '/shop'} style={{ display: 'block' }}>
+          <AdLink to={ad.link} fallback="/shop" style={{ display: 'block' }}>
             <img
               src={resolveUploadUrl(ad.image)}
               alt={ad.title || 'Promotional banner'}
@@ -99,7 +99,7 @@ export default function FixedAdBanner() {
                   )}
                 </div>
             )}
-          </Link>
+          </AdLink>
         </motion.div>
       ))}
     </section>

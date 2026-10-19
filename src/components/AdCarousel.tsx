@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, resolveUploadUrl } from '../lib/api';
 import { buildBannerSrcSet } from '../lib/responsive';
+import { isExternalLink, normalizeLink } from '../lib/links';
+import AdLink from './AdLink';
 
 interface Slide {
   image: string;
@@ -45,6 +48,7 @@ const slideSrcSet = (src: string) => buildBannerSrcSet(src, 14, 5);
 export default function AdCarousel() {
   const [current, setCurrent] = useState(0);
   const [slides, setSlides] = useState<Slide[]>(fallbackSlides);
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.ads.getActive().then((ads) => {
@@ -75,6 +79,24 @@ export default function AdCarousel() {
     return () => clearInterval(timer);
   }, [next]);
 
+  /** The current slide's destination, protocol-repaired (see lib/links). */
+  const slideHref = normalizeLink(slides[current].link, '/shop');
+
+  /**
+   * The whole banner is the click target — not just the "Shop Now" button.
+   * Clicks that land on an inner link or button are ignored so they keep
+   * their own behaviour.
+   */
+  const handleSlideClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('a, button')) return;
+    if (isExternalLink(slideHref)) {
+      window.open(slideHref, '_blank', 'noopener,noreferrer');
+    } else {
+      navigate(slideHref);
+    }
+  };
+
   return (
     <section
       className="ad-carousel"
@@ -91,9 +113,11 @@ export default function AdCarousel() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          onClick={handleSlideClick}
           style={{
             position: 'absolute',
             inset: 0,
+            cursor: 'pointer',
           }}
         >
           {/* Background image */}
@@ -176,8 +200,8 @@ export default function AdCarousel() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
             >
-              <a
-                href={slides[current].link}
+              <AdLink
+                to={slides[current].link}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -203,7 +227,7 @@ export default function AdCarousel() {
                 }}
               >
                 {slides[current].cta} →
-              </a>
+              </AdLink>
             </motion.div>
           </div>
         </motion.div>

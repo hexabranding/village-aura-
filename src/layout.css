@@ -5318,3 +5318,25 @@
     align-items: stretch;
   }
 }
+
+/* --- Advertisement links (clickable) ------------------------------- */
+
+/* The top banner's link layer was an empty <a> with no box, so it had
+   zero size and clicks on the banner hit nothing. It now covers the
+   whole banner; nav buttons / dots keep z-index 3 and stay clickable. */
+.fixed-banner-link {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+}
+
+.admin-ad-card-link {
+  display: inline-block;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-ad-card-link:hover {
+  text-decoration: underline;
+}

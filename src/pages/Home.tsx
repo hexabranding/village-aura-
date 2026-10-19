@@ -9,6 +9,7 @@ import HappyClients from '../components/HappyClients';
 import Instagram from '../components/Instagram';
 import TiltImage from '../components/TiltImage';
 import AdCarousel from '../components/AdCarousel';
+import AdLink from '../components/AdLink';
 import Testimonials from '../components/Testimonials';
 import { products as localProducts, collections } from '../data/products';
 import { api, resolveUploadUrl } from '../lib/api';
@@ -750,10 +751,10 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
                 </div>
               )}
               {banner.link && (
-                <Link
+                <AdLink
                   to={banner.link}
                   className="fixed-banner-link"
-                  aria-label="Fixed banner link"
+                  aria-label={`Open advertisement: ${banner.title || banner.link}`}
                 />
               )}
             </div>
