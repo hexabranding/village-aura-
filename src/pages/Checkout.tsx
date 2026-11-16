@@ -56,8 +56,20 @@ interface PlacedOrder {
 export default function Checkout({ cart, clearCart }: CheckoutProps) {
   const navigate = useNavigate();
   useEffect(() => {
-    const user = localStorage.getItem('reshamUser');
-    if (!user) navigate('/login?redirect=/checkout', { replace: true });
+    const userStr = localStorage.getItem('reshamUser');
+    if (!userStr) {
+      navigate('/login?redirect=/checkout', { replace: true });
+      return;
+    }
+    try {
+      const u = JSON.parse(userStr);
+      setForm((f) => ({
+        ...f,
+        name: f.name || u.name || '',
+        email: f.email || u.email || '',
+        phone: f.phone || u.phone || '',
+      }));
+    } catch (_) {}
   }, [navigate]);
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', city: '', state: 'Delhi', pincode: '' });
@@ -76,7 +88,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const finalizeOrder = useCallback(async (orderItems: { id: string; colorIndex: number; qty: number }[], paymentMethod: string, paymentId = '') => {
+  const finalizeOrder = useCallback(async (orderItems: { id: string; colorIndex: number; qty: number; name?: string; image?: string }[], paymentMethod: string, paymentId = '') => {
     const result = await api.orders.create({
       total,
       name: form.name,
@@ -98,6 +110,17 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
     } else {
       writeUser({ email: form.email, name: form.name, phone: form.phone }, 'update');
     }
+
+    // Persist phone & address back to customer profile in MongoDB
+    api.customers.updateProfile({
+      phone: form.phone,
+      name: form.name,
+      address: form.address,
+      city: form.city,
+      state: form.state,
+      pincode: form.pincode,
+    }).catch(() => {});
+
     const localOrder = {
       orderId: result.orderId,
       total,
@@ -122,9 +145,9 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
       whatsappUrl: result.whatsappUrl || '',
     });
     window.scrollTo(0, 0);
-  }, [total, form, clearCart, items]);
+  }, [total, form, clearCart]);
 
-  const openRazorpay = useCallback(async (orderItems: { id: string; colorIndex: number; qty: number }[]) => {
+  const openRazorpay = useCallback(async (orderItems: { id: string; colorIndex: number; qty: number; name?: string; image?: string }[]) => {
     const razorpayKey = (import.meta as unknown as { env: { VITE_RAZORPAY_KEY_ID?: string } }).env.VITE_RAZORPAY_KEY_ID || '';
     if (!razorpayKey) {
       setError('Payment configuration error. Please contact support.');
@@ -200,7 +223,16 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
           return;
         }
       }
-      const orderItems = cart.map((ci) => ({ id: ci.id, colorIndex: ci.colorIndex, qty: ci.qty }));
+      const orderItems = cart.map((ci) => {
+        const product = getProduct(ci.id);
+        return {
+          id: ci.id,
+          colorIndex: ci.colorIndex,
+          qty: ci.qty,
+          name: product?.name || '',
+          image: product?.variants?.[ci.colorIndex]?.images?.[0] || product?.variants?.[0]?.images?.[0] || '',
+        };
+      });
       await openRazorpay(orderItems);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to place order. Please try again.';

@@ -1,10 +1,11 @@
 import express from 'express';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import Customer from '../models/Customer.js';
 import Notification from '../models/Notification.js';
 import auth from '../middleware/auth.js';
 import { sendOrderConfirmation, sendOrderStatusUpdate, sendPaymentConfirmation } from '../utils/email.js';
-import { sendOrderConfirmationSMS } from '../utils/sms.js';
+import { sendOrderConfirmationSMS, sendOrderStatusSMS } from '../utils/sms.js';
 import { sendOrderWhatsApp, sendOrderStatusWhatsApp } from '../utils/whatsapp.js';
 
 const router = express.Router();
@@ -20,7 +21,9 @@ function generateOrderId() {
 
 router.get('/track/:orderId', async (req, res) => {
   try {
-    const order = await Order.findOne({ orderId: req.params.orderId });
+    const rawId = String(req.params.orderId || '').trim();
+    if (!rawId) return res.status(400).json({ error: 'Order ID is required' });
+    const order = await Order.findOne({ orderId: { $regex: new RegExp(`^${rawId}$`, 'i') } });
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -30,6 +33,11 @@ router.get('/track/:orderId', async (req, res) => {
       tracking: order.tracking,
       estimatedDelivery: order.estimatedDelivery,
       lastUpdated: order.lastUpdated,
+      date: order.date,
+      total: order.total,
+      payment: order.payment,
+      name: order.name,
+      items: order.items || [],
     });
   } catch (error) {
     console.error('Track order error:', error);
@@ -37,9 +45,44 @@ router.get('/track/:orderId', async (req, res) => {
   }
 });
 
-router.get('/user/:phone', async (req, res) => {
+router.get('/user/:identifier', async (req, res) => {
   try {
-    const orders = await Order.find({ phone: req.params.phone }).sort({ createdAt: -1 });
+    const rawIdentifier = decodeURIComponent(req.params.identifier || '').trim();
+    const queryEmail = String(req.query.email || '').trim().toLowerCase();
+    const queryPhone = String(req.query.phone || '').trim();
+
+    const conditions = [];
+    const getDigits = (str) => String(str || '').replace(/\D/g, '');
+
+    if (rawIdentifier.includes('@')) {
+      conditions.push({ email: rawIdentifier.toLowerCase() });
+    } else if (rawIdentifier && rawIdentifier !== 'all') {
+      conditions.push({ phone: rawIdentifier });
+      const digits = getDigits(rawIdentifier);
+      if (digits.length >= 10) {
+        const last10 = digits.slice(-10);
+        conditions.push({ phone: new RegExp(`${last10}$`) });
+      }
+    }
+
+    if (queryEmail) {
+      conditions.push({ email: queryEmail });
+    }
+
+    if (queryPhone) {
+      conditions.push({ phone: queryPhone });
+      const digits = getDigits(queryPhone);
+      if (digits.length >= 10) {
+        const last10 = digits.slice(-10);
+        conditions.push({ phone: new RegExp(`${last10}$`) });
+      }
+    }
+
+    if (conditions.length === 0) {
+      return res.json([]);
+    }
+
+    const orders = await Order.find({ $or: conditions }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     console.error('Get user orders error:', error);
@@ -168,11 +211,12 @@ router.post('/', async (req, res) => {
       // Snapshot name + image so orders never fall back to a raw product ID.
       for (const item of items) {
         const product = productInfo.get(String(item.id));
-        if (!product) continue;
-        if (!item.name) item.name = product.name || '';
-        if (!item.image) {
-          item.image = product.variants?.[item.colorIndex || 0]?.images?.[0]
-            || product.variants?.[0]?.images?.[0] || '';
+        if (product) {
+          if (!item.name) item.name = product.name || '';
+          if (!item.image) {
+            item.image = product.variants?.[item.colorIndex || 0]?.images?.[0]
+              || product.variants?.[0]?.images?.[0] || '';
+          }
         }
       }
     }
@@ -191,6 +235,16 @@ router.post('/', async (req, res) => {
 
     const order = new Order(orderData);
     await order.save();
+
+    // Auto-sync customer's phone if registered account has no phone
+    if (order.email && order.phone) {
+      try {
+        await Customer.updateOne(
+          { email: order.email.toLowerCase().trim(), $or: [{ phone: '' }, { phone: { $exists: false } }] },
+          { $set: { phone: String(order.phone).trim() } }
+        );
+      } catch (_) {}
+    }
 
     sendOrderConfirmation(order).catch((err) => console.error('Email send failed:', err.message));
     sendPaymentConfirmation(order).catch((err) => console.error('Payment email send failed:', err.message));
@@ -226,27 +280,51 @@ router.put('/:id/status', auth, async (req, res) => {
   try {
     const { status, message, estimatedDelivery, notes, trackingLink } = req.body;
 
-    const order = await Order.findById(req.params.id);
+    let order = null;
+    try { order = await Order.findById(req.params.id); } catch (_) {}
+    if (!order) order = await Order.findOne({ orderId: req.params.id });
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Ensure customer's registered email and phone are populated if missing on the order
+    let registeredCustomer = null;
+    if (order.email) {
+      registeredCustomer = await Customer.findOne({ email: order.email.toLowerCase().trim() }).lean();
+    }
+    if (!registeredCustomer && order.phone) {
+      const last10 = String(order.phone).replace(/\D/g, '').slice(-10);
+      if (last10.length === 10) {
+        registeredCustomer = await Customer.findOne({ phone: new RegExp(last10 + '$') }).lean();
+      }
+    }
+    if (registeredCustomer) {
+      if (!order.email && registeredCustomer.email) {
+        order.email = registeredCustomer.email;
+      }
+      if (!order.phone && registeredCustomer.phone) {
+        order.phone = registeredCustomer.phone;
+      }
     }
 
     order.status = status;
     if (notes !== undefined) order.notes = notes;
     if (estimatedDelivery !== undefined) order.estimatedDelivery = estimatedDelivery;
-    if (trackingLink !== undefined) order.trackingLink = trackingLink;
+    if (trackingLink !== undefined) order.trackingLink = typeof trackingLink === 'string' ? trackingLink.trim() : trackingLink;
     order.lastUpdated = new Date().toISOString();
+
     if (status === 'Delivered') {
       order.deliveredAt = new Date();
       const existing = order.returnDeadline ? new Date(order.returnDeadline) : null;
       if (!existing) {
-        const deadline = new Date(order.deliveredAt.getTime() + 7*24*60*60*1000);
+        const deadline = new Date(order.deliveredAt.getTime() + 7 * 24 * 60 * 60 * 1000);
         order.returnDeadline = deadline;
       }
     }
 
-    const trackingMsg = status === 'Dispatched' && trackingLink
-      ? `Your order ${order.orderId} has been dispatched! Track it here: ${trackingLink}`
+    const cleanTrackingLink = order.trackingLink || '';
+    const trackingMsg = status === 'Dispatched' && cleanTrackingLink
+      ? `Your order ${order.orderId} has been dispatched! Track it here: ${cleanTrackingLink}`
       : message || `Status updated to ${status}`;
 
     order.tracking.push({
@@ -258,28 +336,86 @@ router.put('/:id/status', auth, async (req, res) => {
     await order.save();
 
     const statusMessage = message || `Status updated to ${status}`;
-    sendOrderStatusUpdate(order, status, statusMessage).catch(() => {});
-    sendOrderStatusWhatsApp(order, status, statusMessage).catch((err) => console.error('WhatsApp status send failed:', err.message));
+
+    // 1. Send automated email via SMTP directly to customer's registered email
+    let emailResult = { sent: false, to: order.email || '' };
+    try {
+      emailResult = await sendOrderStatusUpdate(order, status, statusMessage);
+    } catch (err) {
+      console.error('Email status update failed:', err.message);
+    }
+
+    // 2. Send automated WhatsApp if Cloud API is configured
+    sendOrderStatusWhatsApp(order, status, statusMessage).catch((err) =>
+      console.error('WhatsApp status send failed:', err.message)
+    );
+
+    // 3. Send automated SMS if MSG91 is configured
+    sendOrderStatusSMS(order, status, cleanTrackingLink).catch((err) =>
+      console.error('SMS status send failed:', err.message)
+    );
 
     if (status === 'Dispatched') {
-      const notifMsg = `Order ${order.orderId} dispatched for ${order.name}. Phone: ${order.phone}${order.email ? ', Email: ' + order.email : ''}. Tracking: ${trackingLink || 'N/A'}`;
+      const notifMsg = `Order ${order.orderId} dispatched for ${order.name}. Phone: ${order.phone}${order.email ? ', Email: ' + order.email : ''}. Tracking: ${cleanTrackingLink || 'N/A'}`;
       await Notification.create({
         type: 'order',
         title: 'Order Dispatched',
         message: notifMsg,
         orderId: order.orderId,
         phone: order.phone,
-      });
+      }).catch(() => {});
 
-      const whatsappMsg = encodeURIComponent(`Hi ${order.name}, your order ${order.orderId} has been dispatched! Track your shipment here: ${trackingLink || 'Tracking link will be updated soon.'}`);
+      // Helper to format phone for WhatsApp wa.me link (Indian numbers: 91XXXXXXXXXX)
+      const cleanCustomerPhone = (raw) => {
+        if (!raw) return '';
+        const digits = String(raw).replace(/\D/g, '');
+        if (digits.length === 10) return `91${digits}`;
+        if (digits.length === 11 && digits.startsWith('0')) return `91${digits.slice(1)}`;
+        if (digits.length === 12 && digits.startsWith('91')) return digits;
+        return digits;
+      };
+
+      const customerPhone = cleanCustomerPhone(order.phone);
+      const customerFirstName = (order.name || '').split(' ')[0] || 'Customer';
+
+      const whatsappText = [
+        `Hi ${customerFirstName},`,
+        '',
+        `Your order *${order.orderId}* from Village Allure has been dispatched! 🚀`,
+        cleanTrackingLink ? `\nTrack your shipment here:\n${cleanTrackingLink}` : '',
+        order.estimatedDelivery ? `\nEstimated Delivery: ${order.estimatedDelivery}` : '',
+        '\nThank you for shopping with Village Allure! We hope you love your purchase.',
+        'If you have any questions, reply to this message.',
+      ].filter(Boolean).join('\n');
+
+      // TARGET CUSTOMER REGISTERED PHONE NUMBER
+      const customerWhatsappUrl = customerPhone
+        ? `https://wa.me/${customerPhone}?text=${encodeURIComponent(whatsappText)}`
+        : '';
+
       const businessNumber = (process.env.WHATSAPP_BUSINESS_NUMBER || '916282655422').replace(/\D/g, '');
-      const whatsappUrl = businessNumber ? `https://wa.me/${businessNumber}?text=${whatsappMsg}` : '';
+      const businessWhatsappUrl = businessNumber
+        ? `https://wa.me/${businessNumber}?text=${encodeURIComponent(whatsappText)}`
+        : '';
 
-      const emailSubject = encodeURIComponent(`Your Order ${order.orderId} has been Dispatched!`);
-      const emailBody = encodeURIComponent(`Hi ${order.name},\n\nYour order ${order.orderId} has been dispatched!\n\nTrack your shipment here: ${trackingLink || 'Tracking link will be updated soon.'}\n\nThank you for shopping with Village Allure!`);
+      const emailSubject = encodeURIComponent(`Your Village Allure Order ${order.orderId} has been Dispatched!`);
+      const emailBody = encodeURIComponent(
+        `Hi ${order.name},\n\nYour order ${order.orderId} has been dispatched!\n\nTrack your shipment here:\n${cleanTrackingLink || 'Tracking link will be updated soon.'}\n\nThank you for shopping with Village Allure!`
+      );
       const emailUrl = order.email ? `mailto:${order.email}?subject=${emailSubject}&body=${emailBody}` : '';
 
-      return res.json({ order, whatsappUrl, emailUrl });
+      return res.json({
+        order,
+        // whatsappUrl points to the CUSTOMER's registered phone number!
+        whatsappUrl: customerWhatsappUrl,
+        customerWhatsappUrl,
+        businessWhatsappUrl,
+        customerPhone,
+        customerEmail: order.email || '',
+        emailSent: Boolean(emailResult?.sent),
+        emailTo: emailResult?.to || order.email || '',
+        emailUrl,
+      });
     }
 
     res.json(order);

@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ZariDivider from '../components/ZariDivider';
 import { api, type Order, type OrderTracking, type Review, type ReturnRequest, resolveUploadUrl } from '../lib/api';
-import { getProduct } from '../lib/productStore';
+import { getProduct, loadProducts, subscribeProducts } from '../lib/productStore';
+import { writeUser } from '../lib/auth';
 
 interface LocalOrder {
   orderId: string;
@@ -13,7 +14,7 @@ interface LocalOrder {
   payment: string;
   date: string;
   status: string;
-  items: { id: string; colorIndex: number; qty: number }[];
+  items: { id: string; colorIndex: number; qty: number; name?: string; image?: string }[];
   tracking?: OrderTracking[];
   estimatedDelivery?: string;
 }
@@ -74,55 +75,108 @@ export default function Orders() {
   const [uploadingReturn, setUploadingReturn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    loadProducts();
+    const unsub = subscribeProducts(() => setTick((t) => t + 1));
+    return unsub;
+  }, []);
+
+  const getProductName = (item: { id: string; name?: string }) => {
+    if (item.name && item.name.trim()) return item.name;
+    const p = getProduct(item.id);
+    if (p?.name) return p.name;
+    return 'Handcrafted Saree';
+  };
+
+  const getProductImage = (item: { id: string; colorIndex?: number; image?: string }) => {
+    if (item.image) return resolveUploadUrl(item.image);
+    const p = getProduct(item.id);
+    const variantImg = p?.variants?.[item.colorIndex || 0]?.images?.[0] || p?.variants?.[0]?.images?.[0];
+    if (variantImg) return resolveUploadUrl(variantImg);
+    return 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200';
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('reshamUser');
+    let currentUser: { email: string; name: string; phone?: string } | null = null;
     if (saved) {
-      const parsed = JSON.parse(saved);
-      setUser(parsed);
-      if (parsed.phone) {
-        setPhoneInput(parsed.phone);
-        fetchApiOrders(parsed.phone);
-      } else {
-        setLoading(false);
-      }
-    } else {
-      setLoading(false);
+      try {
+        currentUser = JSON.parse(saved);
+        setUser(currentUser);
+      } catch (_) {}
     }
     const local = JSON.parse(localStorage.getItem('reshamOrders') || '[]');
     setLocalOrders(local);
-    api.returnSettings.get().then(setReturnSettings).catch(()=>{});
+    api.returnSettings.get().then(setReturnSettings).catch(() => {});
+
+    const phone = currentUser?.phone || '';
+    const email = currentUser?.email || '';
+    if (phone) setPhoneInput(phone);
+
+    if (phone || email) {
+      fetchApiOrders(phone, email);
+    } else {
+      setLoading(false);
+    }
   }, [navigate]);
 
-  useEffect(()=>{
-    if(apiOrders.length===0) return;
-    apiOrders.filter(o=>o.status==='Delivered').forEach(order=>{
-      order.items.forEach(item=>{
-        const key=`${order.orderId}-${item.id}`;
-        if(eligibility[key]) return;
-        api.returns.getEligibility(order.orderId, item.id).then(data=> setEligibility(prev=>({...prev,[key]:data}))).catch(()=>{});
+  useEffect(() => {
+    if (apiOrders.length === 0) return;
+    apiOrders.filter((o) => o.status === 'Delivered').forEach((order) => {
+      order.items.forEach((item) => {
+        const key = `${order.orderId}-${item.id}`;
+        if (eligibility[key]) return;
+        api.returns.getEligibility(order.orderId, item.id).then((data) => setEligibility((prev) => ({ ...prev, [key]: data }))).catch(() => {});
       });
     });
   }, [apiOrders]);
 
-  useEffect(()=>{
+  useEffect(() => {
     const phone = user?.phone || phoneInput;
-    if(!phone || phone.length<10) return;
-    const refresh=()=>{ api.orders.getByPhone(phone).then(setApiOrders).catch(()=>{}); api.returns.getByPhone(phone).then(setReturns).catch(()=>{}); };
+    const email = user?.email || '';
+    if (!phone && !email) return;
+    const refresh = () => {
+      api.orders.getByPhone(phone, email).then((data) => {
+        setApiOrders(data);
+        if (data && data.length > 0 && !phone && data[0].phone) {
+          setPhoneInput(data[0].phone);
+          if (user && !user.phone) {
+            const updated = { ...user, phone: data[0].phone };
+            setUser(updated);
+            writeUser(updated, 'update');
+          }
+        }
+      }).catch(() => {});
+      if (phone) {
+        api.returns.getByPhone(phone).then(setReturns).catch(() => {});
+      }
+    };
     refresh();
-    const id=setInterval(refresh, 5000);
-    const onFocus=()=>{ refresh(); };
+    const id = setInterval(refresh, 5000);
+    const onFocus = () => { refresh(); };
     window.addEventListener('focus', onFocus);
-    return()=>{ clearInterval(id); window.removeEventListener('focus', onFocus); };
-  }, [user?.phone, phoneInput]);
+    return () => { clearInterval(id); window.removeEventListener('focus', onFocus); };
+  }, [user?.phone, user?.email, phoneInput]);
 
-  const fetchApiOrders = async (phone: string) => {
+  const fetchApiOrders = async (phone: string, email?: string) => {
     setSearching(true);
     setLoading(true);
     try {
-      const data = await api.orders.getByPhone(phone);
+      const data = await api.orders.getByPhone(phone, email);
       setApiOrders(data);
-      await fetchReviewsAndReturns(phone);
+      if (data && data.length > 0 && (!phone || phone.length < 10) && data[0].phone) {
+        setPhoneInput(data[0].phone);
+        if (user && !user.phone) {
+          const updated = { ...user, phone: data[0].phone };
+          setUser(updated);
+          writeUser(updated, 'update');
+        }
+        await fetchReviewsAndReturns(data[0].phone);
+      } else if (phone) {
+        await fetchReviewsAndReturns(phone);
+      }
     } catch (err) {
       console.error('Failed to fetch orders:', err);
     } finally {
@@ -211,8 +265,12 @@ export default function Orders() {
   const hasOrderReturn = (orderId: string) => returns.some((r) => r.orderId === orderId);
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (phoneInput.length >= 10) {
-      fetchApiOrders(phoneInput);
+    const q = phoneInput.trim();
+    if (!q) return;
+    if (q.includes('@')) {
+      fetchApiOrders('', q);
+    } else {
+      fetchApiOrders(q);
     }
   };
 
@@ -276,7 +334,7 @@ export default function Orders() {
           >
             My Orders
           </motion.h1>
-          <button onClick={()=>{ const phone=user?.phone||phoneInput; if(phone&&phone.length>=10){ api.orders.getByPhone(phone).then(setApiOrders).catch(()=>{}); api.returns.getByPhone(phone).then(setReturns).catch(()=>{}); } }} style={{ marginTop:'0.5rem', padding:'0.35rem 0.9rem', background:'white', border:'1px solid var(--line)', borderRadius:20, fontSize:'0.72rem', fontWeight:600, cursor:'pointer', color:'var(--ink-soft)', display:'inline-flex', alignItems:'center', gap:'0.3rem' }}>🔄 Refresh</button>
+          <button onClick={()=>{ const phone=user?.phone||phoneInput; const email=user?.email||''; if(phone||email){ fetchApiOrders(phone, email); } }} style={{ marginTop:'0.5rem', padding:'0.35rem 0.9rem', background:'white', border:'1px solid var(--line)', borderRadius:20, fontSize:'0.72rem', fontWeight:600, cursor:'pointer', color:'var(--ink-soft)', display:'inline-flex', alignItems:'center', gap:'0.3rem' }}>🔄 Refresh</button>
           <ZariDivider />
         </div>
 
@@ -309,19 +367,17 @@ export default function Orders() {
           )}
         </AnimatePresence>
 
-        {!user && (
-          <form onSubmit={handleSearch} style={{ marginBottom: '2rem', maxWidth: 400, margin: '0 auto 2rem' }}>
+        {(!user || uniqueOrders.length === 0) && (
+          <form onSubmit={handleSearch} style={{ marginBottom: '2rem', maxWidth: 440, margin: '0 auto 2rem' }}>
             <p style={{ fontSize: '0.85rem', color: 'var(--ink-soft)', marginBottom: '0.75rem', textAlign: 'center' }}>
-              Enter your phone number to find your orders
+              Enter your mobile number or email address to find your orders
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input
-                type="tel"
+                type="text"
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
-                placeholder="10-digit mobile number"
-                pattern="[0-9]{10}"
-                maxLength={10}
+                placeholder="10-digit mobile or email address"
                 required
                 style={inputStyle}
               />
@@ -396,22 +452,28 @@ export default function Orders() {
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
                     {order.items.map((item, idx) => {
-                      const product = getProduct(item.id);
+                      const img = getProductImage(item);
+                      const name = getProductName(item);
                       return (
                         <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                          {product ? (
-                            <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async"
-                              src={resolveUploadUrl(product.variants[item.colorIndex]?.images[0] ?? product.variants[0].images[0])}
-                              alt={product.name}
-                              style={{ width: 40, height: 50, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
-                            />
-                          ) : (
-                            <div style={{ width: 40, height: 50, background: 'var(--ivory-deep)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: 'var(--ink-soft)' }}>
-                              IMG
-                            </div>
-                          )}
+                          <img
+                            onError={(e) => {
+                              const t = e.target as HTMLImageElement;
+                              if (!t.dataset.fallback) {
+                                t.dataset.fallback = '1';
+                                t.src = 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200';
+                              }
+                            }}
+                            width={40}
+                            height={50}
+                            loading="lazy"
+                            decoding="async"
+                            src={img}
+                            alt={name}
+                            style={{ width: 40, height: 50, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
+                          />
                           <div style={{ flex: 1 }}>
-                            <p style={{ fontSize: '0.85rem' }}>{product?.name || item.id}</p>
+                            <p style={{ fontSize: '0.85rem', fontWeight: 500 }}>{name}</p>
                             <p style={{ fontSize: '0.78rem', color: 'var(--ink-soft)' }}>Qty: {item.qty}</p>
                           </div>
                         </div>
@@ -582,25 +644,31 @@ const orderRoadmap = ['Pending','Processing','Dispatched','Shipped','Out for Del
                             <p style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--ink)', marginBottom: '1rem' }}>Order Items</p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                               {order.items.map((item, idx) => {
-                                const product = getProduct(item.id);
+                                const img = getProductImage(item);
+                                const name = getProductName(item);
                                 const reviewed = hasReviewed(order.orderId, item.id);
                                 const returnReq = hasReturnRequest(order.orderId, item.id);
                                 return (
                                   <div key={idx} style={{ background: 'white', borderRadius: 'var(--radius-sm)', padding: '1rem', border: '1px solid var(--line)' }}>
                                     <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '0.75rem' }}>
-                                      {product ? (
-                                        <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async"
-                                          src={resolveUploadUrl(product.variants[item.colorIndex]?.images[0] ?? product.variants[0].images[0])}
-                                          alt={product.name}
-                                          style={{ width: 48, height: 60, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
-                                        />
-                                      ) : (
-                                        <div style={{ width: 48, height: 60, background: 'var(--ivory-deep)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: 'var(--ink-soft)' }}>
-                                          IMG
-                                        </div>
-                                      )}
+                                      <img
+                                        onError={(e) => {
+                                          const t = e.target as HTMLImageElement;
+                                          if (!t.dataset.fallback) {
+                                            t.dataset.fallback = '1';
+                                            t.src = 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200';
+                                          }
+                                        }}
+                                        width={48}
+                                        height={60}
+                                        loading="lazy"
+                                        decoding="async"
+                                        src={img}
+                                        alt={name}
+                                        style={{ width: 48, height: 60, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
+                                      />
                                       <div style={{ flex: 1 }}>
-                                        <p style={{ fontSize: '0.88rem', fontWeight: 500 }}>{product?.name || item.id}</p>
+                                        <p style={{ fontSize: '0.88rem', fontWeight: 500 }}>{name}</p>
                                         <p style={{ fontSize: '0.78rem', color: 'var(--ink-soft)' }}>Qty: {item.qty}</p>
                                       </div>
                                     </div>
@@ -852,7 +920,7 @@ const orderRoadmap = ['Pending','Processing','Dispatched','Shipped','Out for Del
                                           style={{ overflow: 'hidden', marginTop: '0.75rem' }}
                                         >
                                           <div style={{ background: 'white', borderRadius: 'var(--radius)', padding: '1.2rem', border: '1px solid #fecaca', boxShadow: '0 4px 20px rgba(239,68,68,0.08)' }}>
-                                            <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'0.6rem' }}><span style={{ background:'linear-gradient(135deg,#dc2626,#991b1b)', color:'white', width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.8rem', fontWeight:700, boxShadow:'0 2px 8px rgba(220,38,38,0.3)' }}>↩</span><p style={{ fontSize:'0.9rem', fontWeight:700, color:'#991b1b' }}>Return Request — {product?.name?.slice(0,38)}</p></div>
+                                            <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'0.6rem' }}><span style={{ background:'linear-gradient(135deg,#dc2626,#991b1b)', color:'white', width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.8rem', fontWeight:700, boxShadow:'0 2px 8px rgba(220,38,38,0.3)' }}>↩</span><p style={{ fontSize:'0.9rem', fontWeight:700, color:'#991b1b' }}>Return Request — {getProductName(item).slice(0,38)}</p></div>
                                             <div style={{ display:'flex', alignItems:'center', gap:'0.3rem', marginBottom:'0.75rem', background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius:20, padding:'0.4rem 0.6rem' }}>
                                               {['Reason','Evidence','Submit'].map((s,idx)=>(
                                                 <div key={s} style={{ display:'flex', alignItems:'center', gap:'0.3rem', flex:1 }}>
@@ -901,7 +969,7 @@ const orderRoadmap = ['Pending','Processing','Dispatched','Shipped','Out for Del
                                             <div style={{ background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:8, padding:'0.7rem', marginTop:'0.75rem' }}>
                                               <p style={{ fontSize:'0.78rem', fontWeight:700, color:'#166534' }}>Summary</p>
                                               <div style={{ fontSize:'0.75rem', color:'#4b5563', lineHeight:1.6, marginTop:'0.3rem' }}>
-                                                Product: {product?.name}<br/>Qty: {returnQty} • Reason: {returnReason}{returnReason==='Other' && returnOtherReason?` (${returnOtherReason})`:''}<br/>Resolution: {returnResolution}<br/>Photos: {returnImages.length} • Video: {returnVideo?'Yes':'No'}
+                                                Product: {getProductName(item)}<br/>Qty: {returnQty} • Reason: {returnReason}{returnReason==='Other' && returnOtherReason?` (${returnOtherReason})`:''}<br/>Resolution: {returnResolution}<br/>Photos: {returnImages.length} • Video: {returnVideo?'Yes':'No'}
                                               </div>
                                             </div>
                                             <div style={{ display:'flex', gap:'0.5rem', marginTop:'0.9rem', justifyContent:'flex-end' }}>

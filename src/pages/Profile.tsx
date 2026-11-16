@@ -33,17 +33,17 @@ export default function Profile() {
     try {
       const token = localStorage.getItem('reshamCustomerToken');
       if (token) {
-        await api.customers.getProfile();
-        // Profile is synced with backend
+        await api.customers.updateProfile({ name, phone });
       }
-      const updated = { name, email, phone };
+      const updated = { ...user, name, email, phone };
       writeUser(updated, 'update');
       setUser(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch {
-      // Save locally even if backend fails
-      const updated = { name, email, phone };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to update profile on server, saved locally';
+      setError(message);
+      const updated = { ...user, name, email, phone };
       writeUser(updated, 'update');
       setUser(updated);
       setSaved(true);

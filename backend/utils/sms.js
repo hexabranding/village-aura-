@@ -79,3 +79,52 @@ export async function sendOrderConfirmationSMS(order) {
     console.error('Failed to send SMS:', error.message);
   }
 }
+
+export async function sendOrderStatusSMS(order, status, trackingLink = '') {
+  const authKey = process.env.MSG91_AUTH_KEY;
+  const senderId = process.env.MSG91_SENDER_ID || 'VILALL';
+  const templateId = process.env.MSG91_STATUS_TEMPLATE_ID || process.env.MSG91_TEMPLATE_ID;
+
+  if (!authKey || !templateId) {
+    return;
+  }
+
+  const phone = cleanPhone(order.phone);
+  if (!phone || phone.length < 12) {
+    return;
+  }
+
+  const variables = {
+    name: (order.name || '').split(' ')[0] || 'Customer',
+    firstName: (order.name || '').split(' ')[0] || 'Customer',
+    orderId: order.orderId,
+    order_id: order.orderId,
+    status,
+    trackingLink: trackingLink || '',
+    phone: order.phone,
+  };
+
+  try {
+    const response = await fetch(MSG91_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        authkey: authKey,
+      },
+      body: JSON.stringify({
+        flow_id: templateId,
+        recipients: [{ mobiles: phone, ...variables }],
+        sender: senderId,
+      }),
+    });
+
+    const data = await response.json();
+    if (response.ok && (data.type === 'success' || data.status === 'success' || !data.type)) {
+      console.log(`Status SMS sent to ${order.phone} for order ${order.orderId} - ${status}`);
+    } else {
+      console.error('MSG91 status SMS error:', JSON.stringify(data));
+    }
+  } catch (error) {
+    console.error('Failed to send status SMS:', error.message);
+  }
+}

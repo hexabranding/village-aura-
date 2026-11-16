@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { api } from '../lib/api';
+import { api, resolveUploadUrl } from '../lib/api';
 import type { OrderTracking } from '../lib/api';
 
 const statusColors: Record<string, string> = {
@@ -31,6 +31,11 @@ export default function OrderTrackingPage() {
     tracking: OrderTracking[];
     estimatedDelivery: string;
     lastUpdated: string;
+    date?: string;
+    total?: number;
+    payment?: string;
+    name?: string;
+    items?: { id: string; name?: string; image?: string; colorIndex?: number; qty?: number }[];
   } | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -208,6 +213,50 @@ export default function OrderTrackingPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Booked Products */}
+              {result.items && result.items.length > 0 && (
+                <div style={{ padding: '1.25rem 2rem', borderTop: '1px solid var(--line)', background: 'var(--ivory-deep)' }}>
+                  <p style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ink)', marginBottom: '0.75rem' }}>
+                    Booked Products ({result.items.length})
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {result.items.map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'white', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--line)' }}>
+                        <img
+                          onError={(e) => {
+                            const t = e.target as HTMLImageElement;
+                            if (!t.dataset.fallback) {
+                              t.dataset.fallback = '1';
+                              t.src = 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200';
+                            }
+                          }}
+                          width={42}
+                          height={52}
+                          loading="lazy"
+                          decoding="async"
+                          src={item.image ? resolveUploadUrl(item.image) : 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200'}
+                          alt={item.name || 'Saree'}
+                          style={{ width: 42, height: 52, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: '0.85rem', fontWeight: 600, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {item.name || 'Handcrafted Saree'}
+                          </p>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--ink-soft)', margin: '0.2rem 0 0' }}>
+                            Qty: {item.qty || 1}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {result.total !== undefined && (
+                    <div style={{ marginTop: '0.75rem', textAlign: 'right', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
+                      Total Amount: <strong style={{ color: 'var(--maroon)' }}>₹{result.total.toLocaleString('en-IN')}</strong>
+                    </div>
+                  )}
                 </div>
               )}
 

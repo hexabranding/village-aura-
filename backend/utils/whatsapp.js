@@ -229,6 +229,24 @@ export async function sendOrderStatusWhatsApp(order, status, message) {
     message ? `Note: ${message}` : null,
   ].filter((line) => line !== null).join('\n');
 
-  // Business only - customer already gets status email + the dispatch wa.me link from the admin panel.
-  return deliver(order, businessMessage, '', params);
+  const customerFirstName = (order.name || '').split(' ')[0] || 'Customer';
+  const customerMessage = status === 'Dispatched' ? [
+    `Hi ${customerFirstName},`,
+    '',
+    `Your order ${order.orderId} from Village Allure has been dispatched! 🚀`,
+    order.trackingLink ? `\nTrack your shipment here:\n${order.trackingLink}` : '',
+    order.estimatedDelivery ? `\nEstimated Delivery: ${order.estimatedDelivery}` : '',
+    message ? `\nNote: ${message}` : '',
+    '',
+    'Thank you for shopping with Village Allure! We hope you love your purchase.',
+  ].filter(Boolean).join('\n') : [
+    `Hi ${customerFirstName},`,
+    '',
+    `Your order ${order.orderId} status has been updated to: ${status}`,
+    message ? `\n${message}` : '',
+    '',
+    'Thank you for shopping with Village Allure!',
+  ].filter(Boolean).join('\n');
+
+  return deliver(order, businessMessage, customerMessage, params);
 }

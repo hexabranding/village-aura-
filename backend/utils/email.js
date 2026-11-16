@@ -142,6 +142,7 @@ function statusUpdateHtml(order, status, message) {
     'Cancelled': '#ef4444',
   };
   const color = statusColors[status] || '#6b7280';
+  const isDispatched = status === 'Dispatched';
 
   return `
   <!DOCTYPE html>
@@ -151,33 +152,64 @@ function statusUpdateHtml(order, status, message) {
     <div style="max-width:600px;margin:20px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
       <div style="background:linear-gradient(135deg,#6b1e23,#8b3a42);padding:32px 24px;text-align:center;">
         <h1 style="color:#ffffff;margin:0;font-size:24px;letter-spacing:1px;">${SITE_NAME}</h1>
-        <p style="color:#f0d0d3;margin:8px 0 0;font-size:14px;">Order Update</p>
+        <p style="color:#f0d0d3;margin:8px 0 0;font-size:14px;">${isDispatched ? 'Order Dispatched' : 'Order Update'}</p>
       </div>
       <div style="padding:32px 24px;">
         <div style="text-align:center;margin-bottom:24px;">
           <div style="display:inline-block;background:${color};color:white;padding:6px 20px;border-radius:20px;font-size:14px;font-weight:600;">${status}</div>
           <h2 style="color:#333;margin:16px 0 8px;">Order ${order.orderId}</h2>
-          <p style="color:#666;margin:0;">Hi ${order.name.split(' ')[0]}, your order status has been updated.</p>
+          <p style="color:#666;margin:0;">Hi ${((order.name || '').split(' ')[0]) || 'Customer'}, ${isDispatched ? 'your package has been dispatched and is on its way!' : 'your order status has been updated.'}</p>
         </div>
 
         <div style="background:#f9fafb;border-radius:8px;padding:16px;margin-bottom:20px;">
           <p style="color:#333;margin:0;font-size:14px;line-height:1.6;">${message || `Your order has been ${status.toLowerCase()}.`}</p>
         </div>
 
-        ${status === 'Dispatched' && order.trackingLink ? `
-        <div style="text-align:center;margin-bottom:20px;">
-          <a href="${order.trackingLink}" style="display:inline-block;background:#6b1e23;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;">Track Your Order</a>
+        ${isDispatched ? `
+        <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:20px;margin-bottom:20px;text-align:center;">
+          <h3 style="color:#5b21b6;margin:0 0 10px;font-size:16px;">Track Your Shipment 🚚</h3>
+          <p style="color:#4b5563;margin:0 0 16px;font-size:14px;line-height:1.5;">
+            Your package has been dispatched. You can track real-time shipping updates using the link below:
+            ${order.estimatedDelivery ? `<br><strong style="display:inline-block;margin-top:6px;color:#6b1e23;">Estimated Delivery: ${order.estimatedDelivery}</strong>` : ''}
+          </p>
+          ${order.trackingLink ? `
+          <div style="margin:16px 0;">
+            <a href="${order.trackingLink}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#6b1e23;color:#ffffff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;box-shadow:0 2px 6px rgba(107,30,35,0.25);">
+              Track Your Shipment &rarr;
+            </a>
+          </div>
+          <p style="color:#6b7280;font-size:12px;margin:12px 0 0;word-break:break-all;">
+            Or visit the tracking URL directly:<br>
+            <a href="${order.trackingLink}" target="_blank" rel="noopener noreferrer" style="color:#6b1e23;text-decoration:underline;">${order.trackingLink}</a>
+          </p>
+          ` : `
+          <p style="color:#6b7280;font-size:13px;margin:8px 0 0;">
+            Tracking link will be updated as soon as the courier scans the package.
+          </p>
+          `}
         </div>` : ''}
 
-        <div style="background:#f9fafb;border-radius:8px;padding:16px;">
+        <div style="background:#f9fafb;border-radius:8px;padding:16px;margin-bottom:20px;">
           <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:4px 0;color:#666;font-size:14px;">Order ID</td><td style="padding:4px 0;text-align:right;font-weight:600;">${order.orderId}</td></tr>
+            <tr><td style="padding:4px 0;color:#666;font-size:14px;">Order ID</td><td style="padding:4px 0;text-align:right;font-weight:600;color:#6b1e23;">${order.orderId}</td></tr>
             <tr><td style="padding:4px 0;color:#666;font-size:14px;">Status</td><td style="padding:4px 0;text-align:right;color:${color};font-weight:600;">${status}</td></tr>
+            ${order.estimatedDelivery ? `<tr><td style="padding:4px 0;color:#666;font-size:14px;">Est. Delivery</td><td style="padding:4px 0;text-align:right;color:#333;">${order.estimatedDelivery}</td></tr>` : ''}
+            <tr><td style="padding:4px 0;color:#666;font-size:14px;">Total Amount</td><td style="padding:4px 0;text-align:right;font-weight:600;color:#333;">&#8377;${Number(order.total || 0).toLocaleString('en-IN')}</td></tr>
           </table>
         </div>
 
+        <div style="background:#f9fafb;border-radius:8px;padding:16px;margin-bottom:20px;">
+          <h3 style="color:#333;margin:0 0 8px;font-size:14px;">Delivery Address</h3>
+          <p style="color:#666;margin:0;font-size:13px;line-height:1.6;">
+            ${order.name}<br>
+            ${order.address || ''}<br>
+            ${[order.city, order.state, order.pincode].filter(Boolean).join(', ')}<br>
+            Phone: ${order.phone}
+          </p>
+        </div>
+
         <p style="color:#999;text-align:center;font-size:12px;margin:24px 0 0;">
-          Questions? Reply to this email or contact us at ${fromAddress()}
+          Questions? Reply directly to this email or reach us at ${fromAddress()}
         </p>
       </div>
       <div style="background:#f9fafb;padding:16px 24px;text-align:center;border-top:1px solid #eee;">
@@ -347,24 +379,34 @@ export async function sendPaymentConfirmation(order) {
 }
 
 export async function sendOrderStatusUpdate(order, status, message) {
-  const to = recipientFor(order);
+  const { to, bcc } = recipientsFor(order);
   if (!to) {
     console.log('No recipient available for status update email - set SMTP_USER or ORDER_NOTIFY_EMAIL');
-    return;
+    return { sent: false, reason: 'No recipient email available' };
   }
 
   const transport = getTransporter();
-  if (!transport) return;
+  if (!transport) {
+    return { sent: false, reason: 'SMTP transport not initialized' };
+  }
+
+  const isDispatched = status === 'Dispatched';
+  const subject = isDispatched
+    ? `Your Village Allure Order ${order.orderId} has been Dispatched! 📦`
+    : `Order ${order.orderId} - ${status}`;
 
   try {
     await transport.sendMail({
       from: `"${SITE_NAME}" <${fromAddress()}>`,
       to,
-      subject: `Order ${order.orderId} - ${status}`,
+      ...(bcc ? { bcc } : {}),
+      subject,
       html: statusUpdateHtml(order, status, message),
     });
-    console.log(`Status update email sent to ${to} for order ${order.orderId} - ${status}`);
+    console.log(`Status update email sent to ${to}${bcc ? ` (bcc ${bcc})` : ''} for order ${order.orderId} - ${status}`);
+    return { sent: true, to };
   } catch (error) {
     console.error('Failed to send status update email:', error.message);
+    return { sent: false, error: error.message };
   }
 }

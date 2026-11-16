@@ -7,6 +7,7 @@ import ZariDivider from '../components/ZariDivider';
 export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -21,7 +22,7 @@ export default function Signup() {
     setError('');
     setLoading(true);
     try {
-      await api.customers.register({ name, email, password });
+      await api.customers.register({ name, email, phone: phone.trim(), password });
       navigate(redirect || '/');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create account';
@@ -136,6 +137,27 @@ export default function Signup() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              style={inputStyle}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: -14 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.52 }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}
+          >
+            <label className="eyebrow" htmlFor="signup-phone" style={{ color: 'var(--ink-soft)', fontSize: '0.68rem' }}>
+              Mobile Number (optional)
+            </label>
+            <input
+              id="signup-phone"
+              type="tel"
+              placeholder="10-digit mobile number"
+              pattern="[0-9]{10}"
+              maxLength={10}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               style={inputStyle}
             />
           </motion.div>

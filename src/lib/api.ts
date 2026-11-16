@@ -302,15 +302,29 @@ export const api = {
       const res = await fetch(`${API_BASE}/orders/${id}`, { headers: headers() });
       return handleResponse(res);
     },
-    getByPhone: async (phone: string): Promise<Order[]> => {
-      const res = await fetch(`${API_BASE}/orders/user/${phone}?t=${Date.now()}`, { cache: 'no-store' as any });
+    getByPhone: async (phone: string, email?: string): Promise<Order[]> => {
+      const p = encodeURIComponent((phone || email || '').trim());
+      const q = email ? `&email=${encodeURIComponent(email.trim())}` : '';
+      const res = await fetch(`${API_BASE}/orders/user/${p}?t=${Date.now()}${q}`, { cache: 'no-store' as any });
       return handleResponse(res);
     },
     track: async (orderId: string) => {
-      const res = await fetch(`${API_BASE}/orders/track/${orderId}`);
+      const res = await fetch(`${API_BASE}/orders/track/${encodeURIComponent(orderId.trim())}`);
       return handleResponse(res);
     },
-    create: async (order: { total: number; name: string; phone: string; email?: string; payment: string; paymentId?: string; items: { id: string; colorIndex: number; qty: number }[]; address?: string; city?: string; state?: string; pincode?: string }) => {
+    create: async (order: {
+      total: number;
+      name: string;
+      phone: string;
+      email?: string;
+      payment: string;
+      paymentId?: string;
+      items: { id: string; colorIndex: number; qty: number; name?: string; image?: string }[];
+      address?: string;
+      city?: string;
+      state?: string;
+      pincode?: string;
+    }) => {
       const res = await fetch(`${API_BASE}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -761,6 +775,18 @@ export const api = {
       const token = localStorage.getItem('reshamCustomerToken');
       const res = await fetch(`${API_BASE}/customers/profile`, {
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      return handleResponse(res);
+    },
+    updateProfile: async (updates: Partial<{ name: string; phone: string; address: string; city: string; state: string; pincode: string }>) => {
+      const token = localStorage.getItem('reshamCustomerToken');
+      const res = await fetch(`${API_BASE}/customers/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(updates),
       });
       return handleResponse(res);
     },
