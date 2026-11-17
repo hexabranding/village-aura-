@@ -397,6 +397,12 @@ router.put('/:id/status', auth, async (req, res) => {
       const businessWhatsappUrl = businessNumber
         ? `https://wa.me/${businessNumber}?text=${encodeURIComponent(whatsappText)}`
         : '';
+      const whatsappBusinessIntentUrl = customerPhone
+        ? `whatsapp://send?phone=${customerPhone}&text=${encodeURIComponent(whatsappText)}`
+        : '';
+      const whatsappWebUrl = customerPhone
+        ? `https://web.whatsapp.com/send?phone=${customerPhone}&text=${encodeURIComponent(whatsappText)}`
+        : '';
 
       const emailSubject = encodeURIComponent(`Your Village Allure Order ${order.orderId} has been Dispatched!`);
       const emailBody = encodeURIComponent(
@@ -406,10 +412,13 @@ router.put('/:id/status', auth, async (req, res) => {
 
       return res.json({
         order,
-        // whatsappUrl points to the CUSTOMER's registered phone number!
         whatsappUrl: customerWhatsappUrl,
         customerWhatsappUrl,
         businessWhatsappUrl,
+        whatsappBusinessIntentUrl,
+        whatsappWebUrl,
+        whatsappText,
+        businessNumber,
         customerPhone,
         customerEmail: order.email || '',
         emailSent: Boolean(emailResult?.sent),

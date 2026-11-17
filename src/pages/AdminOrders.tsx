@@ -67,9 +67,13 @@ export default function AdminOrders() {
     customerPhone: string;
     customerEmail: string;
     whatsappUrl: string;
+    whatsappBusinessUrl?: string;
+    businessWhatsappUrl?: string;
+    whatsappText?: string;
     emailSent: boolean;
     trackingLink: string;
   } | null>(null);
+  const [copiedMessage, setCopiedMessage] = useState(false);
   const attemptedIds = useRef<Set<string>>(new Set());
 
   const loadProducts = async () => {
@@ -174,6 +178,7 @@ export default function AdminOrders() {
       if (newStatus === 'Dispatched' && result) {
         const orderObj = result.order || orders.find((o) => o.id === statusModal.orderId || o.orderId === statusModal.orderId);
         const customerWhatsApp = result.customerWhatsappUrl || result.whatsappUrl;
+        const businessWhatsApp = result.businessWhatsappUrl || `https://wa.me/916282655422?text=${encodeURIComponent(result.whatsappText || '')}`;
 
         setDispatchAlert({
           orderId: orderObj?.orderId || statusModal.orderId,
@@ -181,16 +186,12 @@ export default function AdminOrders() {
           customerPhone: result.customerPhone || orderObj?.phone || '',
           customerEmail: result.customerEmail || orderObj?.email || '',
           whatsappUrl: customerWhatsApp || '',
+          whatsappBusinessUrl: result.whatsappBusinessIntentUrl || (customerWhatsApp ? customerWhatsApp.replace('https://wa.me/', 'whatsapp://send?phone=') : ''),
+          businessWhatsappUrl: businessWhatsApp,
+          whatsappText: result.whatsappText || '',
           emailSent: Boolean(result.emailSent),
           trackingLink: trackingLink || orderObj?.trackingLink || '',
         });
-
-        // Automatically open WhatsApp to the customer's registered phone
-        if (customerWhatsApp) {
-          try {
-            window.open(customerWhatsApp, '_blank');
-          } catch (_) {}
-        }
       }
     } catch (error) {
       console.error('Failed to update order status:', error);
@@ -552,17 +553,20 @@ export default function AdminOrders() {
                 </div>
 
                 {newStatus === 'Dispatched' && (
-                  <div className="admin-form-group" style={{ background: '#e0f2fe', border: '1px solid #7dd3fc', borderRadius: 8, padding: '0.8rem' }}>
-                    <label style={{ fontWeight: 700, marginBottom: '0.4rem', display: 'block' }}>📦 Tracking Link</label>
+                  <div className="admin-form-group" style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8, padding: '0.85rem' }}>
+                    <label style={{ fontWeight: 700, marginBottom: '0.4rem', display: 'block', color: '#166534' }}>
+                      📦 Tracking Link
+                    </label>
                     <input
                       value={trackingLink}
                       onChange={(e) => setTrackingLink(e.target.value)}
                       placeholder="e.g. https://www.dtdc.in/trackshipment..."
                       style={{ width: '100%' }}
                     />
-                    <p style={{ fontSize: '0.75rem', color: '#0369a1', marginTop: '0.4rem', marginBottom: 0 }}>
-                      ℹ️ This tracking link will be delivered directly to the customer's registered WhatsApp number and registered email address.
-                    </p>
+                    <div style={{ fontSize: '0.75rem', color: '#15803d', marginTop: '0.4rem', lineHeight: 1.5 }}>
+                      <div>• Store Business WhatsApp: <strong>+91 6282655422</strong></div>
+                      <div>• Dispatched tracking link is emailed automatically to customer.</div>
+                    </div>
                   </div>
                 )}
 
@@ -610,9 +614,14 @@ export default function AdminOrders() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ fontSize: '1.4rem' }}>🚀</span>
-                <h4 style={{ margin: 0, color: '#065f46', fontSize: '1rem', fontWeight: 700 }}>
-                  Order Dispatched Successfully!
-                </h4>
+                <div>
+                  <h4 style={{ margin: 0, color: '#065f46', fontSize: '1rem', fontWeight: 700 }}>
+                    Order Dispatched Successfully!
+                  </h4>
+                  <div style={{ fontSize: '0.72rem', color: '#166534', marginTop: '2px' }}>
+                    Business Sender Number: <strong>+91 6282655422</strong>
+                  </div>
+                </div>
               </div>
               <button
                 onClick={() => setDispatchAlert(null)}
@@ -624,20 +633,20 @@ export default function AdminOrders() {
 
             <div style={{ fontSize: '0.82rem', color: '#374151', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               <div>
-                <strong>Order:</strong> <span style={{ color: '#6b1e23', fontWeight: 600 }}>{dispatchAlert.orderId}</span> ({dispatchAlert.customerName})
+                <strong>Order ID:</strong> <span style={{ color: '#6b1e23', fontWeight: 600 }}>{dispatchAlert.orderId}</span> ({dispatchAlert.customerName})
               </div>
               <div>
-                <strong>Email:</strong>{' '}
+                <strong>Customer Email:</strong>{' '}
                 {dispatchAlert.customerEmail ? (
                   <span style={{ color: dispatchAlert.emailSent ? '#059669' : '#1e40af', fontWeight: 600 }}>
-                    {dispatchAlert.customerEmail} {dispatchAlert.emailSent ? '(✅ Sent to customer)' : '(Dispatched)'}
+                    {dispatchAlert.customerEmail} {dispatchAlert.emailSent ? '(✅ Sent directly to email)' : '(Dispatched)'}
                   </span>
                 ) : (
                   <span style={{ color: '#9ca3af' }}>No customer email</span>
                 )}
               </div>
               <div>
-                <strong>Customer WhatsApp:</strong>{' '}
+                <strong>Customer Mobile:</strong>{' '}
                 <span style={{ color: '#059669', fontWeight: 600 }}>
                   +{dispatchAlert.customerPhone}
                 </span>
@@ -657,30 +666,82 @@ export default function AdminOrders() {
               )}
             </div>
 
-            {dispatchAlert.whatsappUrl && (
-              <div style={{ marginTop: '0.85rem', display: 'flex', gap: '0.5rem' }}>
-                <a
-                  href={dispatchAlert.whatsappUrl}
-                  target="_blank"
-                  rel="noreferrer"
+            <div style={{ marginTop: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                {dispatchAlert.whatsappUrl && (
+                  <a
+                    href={dispatchAlert.whatsappBusinessUrl || dispatchAlert.whatsappUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      background: '#25D366',
+                      color: 'white',
+                      fontWeight: 700,
+                      padding: '0.45rem 0.8rem',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      fontSize: '0.78rem',
+                      boxShadow: '0 2px 6px rgba(37,211,102,0.3)',
+                    }}
+                    title="Send tracking directly to customer WhatsApp"
+                  >
+                    💬 WhatsApp to Customer
+                  </a>
+                )}
+                {dispatchAlert.businessWhatsappUrl && (
+                  <a
+                    href={dispatchAlert.businessWhatsappUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      background: '#075E54',
+                      color: 'white',
+                      fontWeight: 700,
+                      padding: '0.45rem 0.8rem',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      fontSize: '0.78rem',
+                    }}
+                    title="Send dispatch message to business number 6282655422"
+                  >
+                    🏢 To Business (6282655422)
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const txt = dispatchAlert.whatsappText || `Hi ${dispatchAlert.customerName}, your order ${dispatchAlert.orderId} from Village Allure has been dispatched! Track your shipment here: ${dispatchAlert.trackingLink}`;
+                    navigator.clipboard.writeText(txt);
+                    setCopiedMessage(true);
+                    setTimeout(() => setCopiedMessage(false), 2500);
+                  }}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '0.4rem',
-                    background: '#25D366',
-                    color: 'white',
-                    fontWeight: 700,
-                    padding: '0.5rem 1rem',
+                    gap: '0.3rem',
+                    background: copiedMessage ? '#059669' : '#f3f4f6',
+                    color: copiedMessage ? 'white' : '#374151',
+                    border: '1px solid #d1d5db',
+                    fontWeight: 600,
+                    padding: '0.45rem 0.8rem',
                     borderRadius: '8px',
-                    textDecoration: 'none',
-                    fontSize: '0.82rem',
-                    boxShadow: '0 2px 6px rgba(37,211,102,0.3)',
+                    fontSize: '0.78rem',
+                    cursor: 'pointer',
                   }}
                 >
-                  💬 Open Customer WhatsApp
-                </a>
+                  {copiedMessage ? '✅ Copied!' : '📋 Copy Text'}
+                </button>
               </div>
-            )}
+              <div style={{ fontSize: '0.7rem', color: '#6b7280', lineHeight: 1.4 }}>
+                ℹ️ To ensure messages come from <strong>+91 6282655422</strong>, use WhatsApp Business app or WhatsApp Web linked to your business SIM (6282655422).
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
