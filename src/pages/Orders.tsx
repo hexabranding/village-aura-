@@ -468,7 +468,7 @@ export default function Orders() {
                             height={50}
                             loading="lazy"
                             decoding="async"
-                            src={img}
+                            src={img || 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200'}
                             alt={name}
                             style={{ width: 40, height: 50, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
                           />
@@ -663,7 +663,7 @@ const orderRoadmap = ['Pending','Processing','Dispatched','Shipped','Out for Del
                                         height={60}
                                         loading="lazy"
                                         decoding="async"
-                                        src={img}
+                                        src={img || 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200'}
                                         alt={name}
                                         style={{ width: 48, height: 60, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
                                       />

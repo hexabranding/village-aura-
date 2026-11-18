@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { PLACEHOLDER_IMG } from '../lib/api';
 
 interface TiltImageProps {
   src: string;
@@ -65,7 +66,7 @@ export default function TiltImage({ src, alt, style, expanded = false, onHoverCh
       }}
     >
       <motion.img
-        src={src}
+        src={src || PLACEHOLDER_IMG}
         alt={alt}
         loading="eager"
         fetchPriority="high"
