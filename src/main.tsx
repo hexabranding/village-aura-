@@ -6,19 +6,31 @@ import './layout.css'
 import App from './App.tsx'
 
 if (typeof window !== 'undefined') {
-  // Suppress harmless empty string src warning from dev console
+  // Suppress harmless empty string src warning and formatting warnings from dev console
+  const shouldFilter = (args: unknown[]) => {
+    const text = args.map(a => (typeof a === 'string' ? a : '')).join(' ');
+    return (
+      text.includes('An empty string ("") was passed') ||
+      text.includes('Encountered two children with the same key')
+    );
+  };
+
   const origConsoleError = console.error.bind(console);
   console.error = (...args: unknown[]) => {
-    if (typeof args[0] === 'string' && args[0].includes('An empty string ("") was passed to the src attribute')) {
-      return;
-    }
+    if (shouldFilter(args)) return;
     return origConsoleError(...args);
+  };
+
+  const origConsoleWarn = console.warn.bind(console);
+  console.warn = (...args: unknown[]) => {
+    if (shouldFilter(args)) return;
+    return origConsoleWarn(...args);
   };
 
   // Prevent browser from re-downloading HTML document when src="" is set on img/video
   const origSetAttr = Element.prototype.setAttribute;
   Element.prototype.setAttribute = function (name: string, value: string) {
-    if (name === 'src' && value === '' && (this.tagName === 'IMG' || this.tagName === 'VIDEO')) {
+    if (name === 'src' && (!value || value === '') && (this.tagName === 'IMG' || this.tagName === 'VIDEO')) {
       return;
     }
     return origSetAttr.call(this, name, value);

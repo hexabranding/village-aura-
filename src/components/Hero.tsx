@@ -9,21 +9,21 @@ const heroSlides = [
     headline: ['Six yards,', 'one lifetime of moments.'],
     cta: { label: 'Shop the Weave', to: '/shop' },
     ctaSecondary: { label: 'Sarees', to: '/shop?category=Sarees' },
-    image: '',
+    image: 'https://images.pexels.com/photos/19567892/pexels-photo-19567892.jpeg?w=1920&h=1080&fit=crop',
   },
   {
     eyebrow: 'New Arrivals — Just Off the Loom',
     headline: ['Fresh weaves,', 'crafted this season.'],
     cta: { label: 'New Arrivals', to: '/shop' },
     ctaSecondary: { label: 'Jewellery', to: '/shop?category=Jewellery' },
-    image: '',
+    image: 'https://images.pexels.com/photos/27103969/pexels-photo-27103969.jpeg?w=1920&h=1080&fit=crop',
   },
   {
     eyebrow: 'The Wedding Edit — Banarasi Heritage',
     headline: ['Woven for the', 'day you remember.'],
     cta: { label: 'Explore Suit Sets', to: '/shop?category=Suit%20Sets' },
     ctaSecondary: { label: 'All Collections', to: '/shop' },
-    image: '',
+    image: 'https://images.pexels.com/photos/30677843/pexels-photo-30677843.jpeg?w=1920&h=1080&fit=crop',
   },
 ];
 
@@ -133,7 +133,7 @@ export default function Hero() {
         >
           <img
             src={resolveUploadUrl(slide?.image, heroSlides[0].image)}
-            alt={`${slide.eyebrow} — ${slide.headline.join(' ')}`}
+            alt={`${slide.eyebrow} — ${Array.isArray(slide.headline) ? slide.headline.join(' ') : slide.headline}`}
             loading="eager"
             fetchPriority="high"
             decoding="async"

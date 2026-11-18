@@ -6,8 +6,9 @@ export const API_ORIGIN = API_BASE.startsWith('/') ? '' : API_BASE.replace(/\/ap
 
 export const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='500' viewBox='0 0 400 500'%3E%3Crect width='400' height='500' fill='%23f5f0ea'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23b7a48a'%3ENo Image%3C/text%3E%3C/svg%3E";
 
-export const resolveUploadUrl = (url?: string | null, fallback: string = PLACEHOLDER_IMG): string => {
-  if (!url || typeof url !== 'string' || !url.trim()) return fallback;
+export const resolveUploadUrl = (url?: string | null, fallback?: string | null): string => {
+  const safeFallback = (fallback && typeof fallback === 'string' && fallback.trim()) ? fallback.trim() : PLACEHOLDER_IMG;
+  if (!url || typeof url !== 'string' || !url.trim()) return safeFallback;
   const trimmed = url.trim();
   if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) return trimmed;
 

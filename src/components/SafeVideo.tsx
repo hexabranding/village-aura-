@@ -21,8 +21,8 @@ interface SafeVideoProps {
 }
 
 export default function SafeVideo({ src, poster, alt, style, className, muted = true, loop, controls, playsInline = true, preload = 'metadata', fallbackPoster }: SafeVideoProps) {
-  const resolvedSrc = src && src.trim() ? resolveUploadUrl(src, '') : undefined;
-  const resolvedPoster = poster && poster.trim() ? resolveUploadUrl(poster, '') : undefined;
+  const resolvedSrc = src && src.trim() ? resolveUploadUrl(src) : undefined;
+  const resolvedPoster = poster && poster.trim() ? resolveUploadUrl(poster) : undefined;
   const [hasError, setHasError] = useState(false);
   const [inView, setInView] = useState(false);
   const ref = useRef<HTMLVideoElement>(null);
