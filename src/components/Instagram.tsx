@@ -119,7 +119,7 @@ export default function Instagram() {
             const CardInner = (
               <>
                 <img
-                  src={resolveUploadUrl(post.src)}
+                  src={resolveUploadUrl(post?.src, publicImages[0])}
                   alt={post.label}
                   loading="lazy"
                   decoding="async"

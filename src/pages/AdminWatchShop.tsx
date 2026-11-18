@@ -207,7 +207,7 @@ export default function AdminWatchShop() {
             transition={{ delay: index * 0.05 }}
             className={`admin-ad-card ${!item.active ? 'inactive' : ''}`}
           >
-            {item.poster ? (
+            {item.poster && item.poster.trim() ? (
               <div className="admin-ad-card-image">
                 <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(item.poster)} alt={item.name} />
                 <div className="admin-tag video" style={{ position: 'absolute', top: 8, right: 8 }}>🎬 Video</div>
@@ -343,7 +343,7 @@ export default function AdminWatchShop() {
                       {uploading ? 'Uploading...' : 'Upload'}
                     </button>
                   </div>
-                  {form.poster && (
+                  {form.poster && form.poster.trim() && (
                     <div style={{ marginTop: '0.75rem' }}>
                       <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(form.poster)} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                     </div>

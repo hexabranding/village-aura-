@@ -21,15 +21,15 @@ interface SafeVideoProps {
 }
 
 export default function SafeVideo({ src, poster, alt, style, className, muted = true, loop, controls, playsInline = true, preload = 'metadata', fallbackPoster }: SafeVideoProps) {
-  const resolvedSrc = resolveUploadUrl(src || '');
-  const resolvedPoster = poster ? resolveUploadUrl(poster) : undefined;
+  const resolvedSrc = src && src.trim() ? resolveUploadUrl(src, '') : undefined;
+  const resolvedPoster = poster && poster.trim() ? resolveUploadUrl(poster, '') : undefined;
   const [hasError, setHasError] = useState(false);
   const [inView, setInView] = useState(false);
   const ref = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const unreliable = isUnreliableVideo(src) || isUnreliableVideo(resolvedSrc);
-  const shouldRenderVideo = !hasError && !unreliable && resolvedSrc && inView;
+  const unreliable = isUnreliableVideo(src) || isUnreliableVideo(resolvedSrc || '');
+  const shouldRenderVideo = !hasError && !unreliable && Boolean(resolvedSrc) && inView;
 
   useEffect(() => {
     if (unreliable) return;
@@ -75,8 +75,8 @@ export default function SafeVideo({ src, poster, alt, style, className, muted = 
       {shouldRenderVideo ? (
         <video
           ref={ref}
-          src={resolvedSrc}
-          poster={resolvedPoster}
+          src={resolvedSrc || undefined}
+          poster={resolvedPoster || undefined}
           muted={muted}
           loop={loop}
           controls={controls}

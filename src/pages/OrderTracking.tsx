@@ -237,7 +237,7 @@ export default function OrderTrackingPage() {
                           height={52}
                           loading="lazy"
                           decoding="async"
-                          src={item.image ? resolveUploadUrl(item.image) : 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200'}
+                          src={item.image && item.image.trim() ? resolveUploadUrl(item.image) : 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200'}
                           alt={item.name || 'Saree'}
                           style={{ width: 42, height: 52, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
                         />

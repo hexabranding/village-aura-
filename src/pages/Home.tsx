@@ -187,11 +187,11 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
         transformOrigin: 'center center',
       }}
     >
-      {hasVideo && inView ? (
+      {hasVideo && inView && item.video ? (
         <video
           ref={videoRef}
-          src={resolveUploadUrl(item.video)}
-          poster={resolveUploadUrl(item.poster)}
+          src={resolveUploadUrl(item.video, '') || undefined}
+          poster={item.poster ? resolveUploadUrl(item.poster) : fallbackWatchShopItems[0].poster}
           muted
           playsInline
           loop
@@ -212,7 +212,7 @@ function WatchShopCard({ item, index }: { item: WatchShopItem; index: number }) 
 
       {/* Poster image (visible when not hovered) */}
       <img
-        src={resolveUploadUrl(item.poster)}
+        src={resolveUploadUrl(item.poster) || fallbackWatchShopItems[0].poster}
         alt={item.name}
         loading="lazy"
         decoding="async"

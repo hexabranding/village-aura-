@@ -603,7 +603,7 @@ export default function AdminProducts() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                   <div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                      {detailProduct.variants.flatMap((v) => v.images).slice(0, 6).map((img, i) => (
+                      {detailProduct.variants.flatMap((v) => v.images).filter(img => Boolean(img && img.trim())).slice(0, 6).map((img, i) => (
                         <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" key={i} src={resolveUploadUrl(img)} alt="Village Allure image" style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--line)' }} />
                       ))}
                       {detailProduct.variants.flatMap((v) => v.images).length === 0 && <div style={{ gridColumn: '1 / -1', height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ivory-deep)', borderRadius: 12, color: 'var(--ink-soft)', border: '1px dashed var(--line)' }}>No images</div>}
@@ -1014,7 +1014,7 @@ export default function AdminProducts() {
 
                         {variant.images.length > 0 && (
                           <div className="admin-image-preview-grid">
-                            {variant.images.map((img, imgIndex) => (
+                            {variant.images.filter(img => Boolean(img && img.trim())).map((img, imgIndex) => (
                               <div key={imgIndex} className="admin-image-preview-item">
                                 <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(img)} alt={`Preview ${imgIndex + 1}`} />
                                 <button

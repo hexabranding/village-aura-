@@ -123,7 +123,7 @@ export default function AdCarousel() {
           {/* Background image */}
           <img
             className="ad-carousel-img"
-            src={resolveUploadUrl(slides[current].image)}
+            src={resolveUploadUrl(slides[current]?.image, fallbackSlides[0].image)}
             srcSet={slideSrcSet(slides[current].image)}
             sizes="(max-width: 640px) 100vw, (max-width: 1200px) 90vw, 1400px"
             alt={slides[current].title || 'Featured collection banner'}

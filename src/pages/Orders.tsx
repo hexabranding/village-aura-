@@ -91,10 +91,10 @@ export default function Orders() {
   };
 
   const getProductImage = (item: { id: string; colorIndex?: number; image?: string }) => {
-    if (item.image) return resolveUploadUrl(item.image);
+    if (item.image && item.image.trim()) return resolveUploadUrl(item.image);
     const p = getProduct(item.id);
     const variantImg = p?.variants?.[item.colorIndex || 0]?.images?.[0] || p?.variants?.[0]?.images?.[0];
-    if (variantImg) return resolveUploadUrl(variantImg);
+    if (variantImg && variantImg.trim()) return resolveUploadUrl(variantImg);
     return 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200';
   };
 

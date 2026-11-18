@@ -3,14 +3,18 @@ import { writeUser, clearUser } from './auth';
 
 export const API_BASE = (import.meta as unknown as { env: { DEV: boolean; VITE_API_BASE?: string } }).env.DEV ? '/api' : ((import.meta as unknown as { env: { VITE_API_BASE?: string } }).env.VITE_API_BASE || 'https://api.villageallure.com/api');
 export const API_ORIGIN = API_BASE.startsWith('/') ? '' : API_BASE.replace(/\/api\/?$/, '');
-export const resolveUploadUrl = (url: string) => {
-  if (!url) return url;
-  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+
+export const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='500' viewBox='0 0 400 500'%3E%3Crect width='400' height='500' fill='%23f5f0ea'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23b7a48a'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+export const resolveUploadUrl = (url?: string | null, fallback: string = PLACEHOLDER_IMG): string => {
+  if (!url || typeof url !== 'string' || !url.trim()) return fallback;
+  const trimmed = url.trim();
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) return trimmed;
 
   // Intercept any Cloudinary URLs (full URL or protocol-relative/host-only)
-  if (url.includes('cloudinary.com') || url.includes('village-allure/')) {
-    const match = url.match(/(?:village-allure\/|image\/upload\/[^/]+\/)([^?#]+)/);
-    const filename = match ? match[1] : url.split('/').pop()?.split('?')[0];
+  if (trimmed.includes('cloudinary.com') || trimmed.includes('village-allure/')) {
+    const match = trimmed.match(/(?:village-allure\/|image\/upload\/[^/]+\/)([^?#]+)/);
+    const filename = match ? match[1] : trimmed.split('/').pop()?.split('?')[0];
     if (filename) {
       const cleanName = filename.replace(/^[\/\\]+/, '');
       return API_ORIGIN ? `${API_ORIGIN}/api/upload/images/${cleanName}` : `/api/upload/images/${cleanName}`;
@@ -18,27 +22,27 @@ export const resolveUploadUrl = (url: string) => {
   }
 
   // If external non-cloudinary URL (e.g. pexels, unsplash), return as-is
-  if (/^https?:\/\//i.test(url)) return url;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
 
   // Static site assets in public/images/
-  if (url.startsWith('/images/') || url.startsWith('images/')) {
-    return url.startsWith('/') ? url : `/${url}`;
+  if (trimmed.startsWith('/images/') || trimmed.startsWith('images/')) {
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   }
 
   // Already prefixed with /api/upload or uploads/
-  if (url.startsWith('/api/upload') || url.startsWith('/uploads/') || url.startsWith('uploads/')) {
-    const p = url.startsWith('/') ? url : `/${url}`;
+  if (trimmed.startsWith('/api/upload') || trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/')) {
+    const p = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
     return API_ORIGIN ? `${API_ORIGIN}${p}` : p;
   }
 
   // Bare filenames (e.g. 1791278565690-380447548...jpg or file with image/video extension)
-  const clean = url.replace(/^\/+/, '');
+  const clean = trimmed.replace(/^\/+/, '');
   if (/\.(jpg|jpeg|png|webp|gif|svg|mp4|mov|webm)$/i.test(clean) || /^\d{10,}-/.test(clean)) {
     return API_ORIGIN ? `${API_ORIGIN}/api/upload/images/${clean}` : `/api/upload/images/${clean}`;
   }
 
-  if (url.startsWith('/')) return API_ORIGIN ? `${API_ORIGIN}${url}` : url;
-  return API_ORIGIN ? `${API_ORIGIN}/${url}` : `/${url}`;
+  if (trimmed.startsWith('/')) return API_ORIGIN ? `${API_ORIGIN}${trimmed}` : trimmed;
+  return API_ORIGIN ? `${API_ORIGIN}/${trimmed}` : `/${trimmed}`;
 };
 
 const getToken = () => localStorage.getItem('reshamAdminToken');

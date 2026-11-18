@@ -382,12 +382,13 @@ export default function AdminOrders() {
                     <div className="admin-order-card-detail-section">
                       <span className="admin-order-card-detail-title">Items</span>
                       {order.items?.map((item, i) => {
-                        const img = productImage(item.id, item.colorIndex, item);
+                        const rawImg = productImage(item.id, item.colorIndex, item);
+                        const hasImg = Boolean(rawImg && rawImg.trim());
                         return (
                           <div key={i} className="admin-order-card-item">
-                            {img ? (
+                            {hasImg ? (
                               <img
-                                src={resolveUploadUrl(img)}
+                                src={resolveUploadUrl(rawImg)}
                                 alt={productName(item.id, item)}
                                 loading="lazy"
                                 decoding="async"

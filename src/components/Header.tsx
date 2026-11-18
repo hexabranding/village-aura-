@@ -583,7 +583,7 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                         >
                           <Link to={`/product/${p.id}`} onClick={() => setLikedOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
                             <img
-                              src={resolveUploadUrl(p.variants[0].images[0])}
+                              src={resolveUploadUrl(p.variants?.[0]?.images?.[0], 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200')}
                               alt={p.name}
                               loading="lazy"
                               decoding="async"

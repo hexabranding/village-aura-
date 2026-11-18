@@ -44,7 +44,7 @@ export default function FixedAdBanner() {
         >
           <AdLink to={ad.link} fallback="/shop" style={{ display: 'block' }}>
             <img
-              src={resolveUploadUrl(ad.image)}
+              src={resolveUploadUrl(ad.image, 'https://images.pexels.com/photos/30677843/pexels-photo-30677843.jpeg?w=1400&h=500&fit=crop')}
               alt={ad.title || 'Promotional banner'}
               loading="lazy"
               decoding="async"

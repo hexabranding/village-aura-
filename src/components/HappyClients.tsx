@@ -79,7 +79,7 @@ function ClientCard({ client, index }: { client: Client; index: number }) {
       }}
     >
       <img
-        src={resolveUploadUrl(client.image)}
+        src={resolveUploadUrl(client?.image, clients[0].image)}
         alt={client.name}
         loading="lazy"
         decoding="async"

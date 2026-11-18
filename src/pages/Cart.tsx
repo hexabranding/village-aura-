@@ -91,7 +91,7 @@ export default function Cart({ cart, updateQty, removeFromCart }: CartProps) {
                 >
                   <Link to={`/product/${product!.id}`} style={{ flexShrink: 0 }}>
                     <img
-                      src={resolveUploadUrl(product!.variants[ci.colorIndex]?.images[0] ?? product!.variants[0].images[0])}
+                      src={resolveUploadUrl(product!.variants[ci.colorIndex]?.images[0] ?? product!.variants[0]?.images[0], 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200')}
                       alt={product!.name}
                       loading="lazy"
                       decoding="async"

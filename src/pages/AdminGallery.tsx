@@ -155,7 +155,7 @@ export default function AdminGallery() {
             transition={{ delay: index * 0.05 }}
             className={`admin-ad-card ${!img.active ? 'inactive' : ''}`}
           >
-            {img.image ? (
+            {img.image && img.image.trim() ? (
               <div className="admin-ad-card-image">
                 <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(img.image)} alt={img.title} />
                 {!img.active && <div className="admin-ad-card-overlay">Inactive</div>}
@@ -272,7 +272,7 @@ export default function AdminGallery() {
                       {uploading ? 'Uploading...' : 'Upload'}
                     </button>
                   </div>
-                  {form.image && (
+                  {form.image && form.image.trim() && (
                     <div style={{ marginTop: '0.75rem' }}>
                       <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(form.image)} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                     </div>

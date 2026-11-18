@@ -160,8 +160,8 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
     );
   }
 
-  const variant = product.variants[variantIndex];
-  const currentImageSrc = resolveUploadUrl(variant.images[imageIndex] || '');
+  const variant = product.variants[variantIndex] || product.variants[0];
+  const currentImageSrc = resolveUploadUrl(variant?.images?.[imageIndex] || variant?.images?.[0] || '');
   const soldOut = isOutOfStock(product);
   const qtyLeft = getQuantity(product);
 
@@ -314,9 +314,9 @@ export default function Product({ onAddToBag, likedProducts, onToggleLike }: Pro
 
           {/* Thumbnail rail */}
           <div className="thumb-rail gallery-thumbs" style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-            {variant.images.map((src, i) => (
+            {(variant.images || []).filter(Boolean).map((src, i) => (
               <motion.img
-                key={src}
+                key={`${src}-${i}`}
                 src={resolveUploadUrl(src)}
                 alt={`${product.name} thumbnail ${i + 1}`}
                 loading="lazy"

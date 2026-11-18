@@ -121,7 +121,7 @@ export default function Collections({ collections }: CollectionsProps) {
                 className="collection-card"
               >
                 <motion.img
-                  src={resolveUploadUrl(randImages[c.category] || c.image)}
+                  src={resolveUploadUrl(randImages[c.category] || c.image, publicImages[0])}
                   alt={c.title}
                   loading="lazy"
                   decoding="async"

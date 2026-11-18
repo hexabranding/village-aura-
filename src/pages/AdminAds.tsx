@@ -217,7 +217,7 @@ export default function AdminAds() {
             transition={{ delay: index * 0.05 }}
             className={`admin-ad-card ${!ad.active ? 'inactive' : ''}`}
           >
-            {ad.image ? (
+            {ad.image && ad.image.trim() ? (
               <div className="admin-ad-card-image">
                 <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(ad.image)} alt={ad.title} />
                 {!ad.active && <div className="admin-ad-card-overlay">Inactive</div>}
@@ -408,7 +408,7 @@ export default function AdminAds() {
                       )}
                     </button>
                   </div>
-                  {form.image && (
+                  {form.image && form.image.trim() && (
                     <div style={{ marginTop: '0.75rem', textAlign: 'center', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--line)' }}>
                       <img onError={(e)=>{const t=e.target as HTMLImageElement; if(!t.dataset.fallback){t.dataset.fallback='1'; t.style.display='none';}}} width={400} height={400} loading="lazy" decoding="async" src={resolveUploadUrl(form.image)} alt="Preview — optimized cover" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
                       <div style={{ fontSize: '0.7rem', color: 'var(--ink-soft)', padding: '0.4rem', background: 'var(--ivory-deep)' }}>Optimized preview — covers banner (all sizes fit)</div>

@@ -132,7 +132,7 @@ export default function Hero() {
           style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
         >
           <img
-            src={resolveUploadUrl(slide.image)}
+            src={resolveUploadUrl(slide?.image, heroSlides[0].image)}
             alt={`${slide.eyebrow} — ${slide.headline.join(' ')}`}
             loading="eager"
             fetchPriority="high"

@@ -436,7 +436,7 @@ export default function Checkout({ cart, clearCart }: CheckoutProps) {
             {items.map(({ ci, product, soldOut }) => (
               <div key={`${ci.id}-${ci.colorIndex}`} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 <img
-                  src={resolveUploadUrl(product!.variants[ci.colorIndex]?.images[0] ?? product!.variants[0].images[0])}
+                  src={resolveUploadUrl(product!.variants[ci.colorIndex]?.images[0] ?? product!.variants[0]?.images[0], 'https://images.pexels.com/photos/5585346/pexels-photo-5585346.jpeg?w=200')}
                   alt={product!.name}
                   loading="lazy"
                   decoding="async"
