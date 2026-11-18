@@ -11,6 +11,7 @@ import { v2 as cloudinary } from 'cloudinary';
 let configuredCache = null;
 
 export function cloudinaryConfigured() {
+  if (process.env.CLOUDINARY_ENABLED === 'false') return false;
   if (configuredCache === null) {
     configuredCache = Boolean(
       process.env.CLOUDINARY_CLOUD_NAME &&

@@ -101,11 +101,60 @@ const setFileHeaders = (res, contentType) => {
   res.setHeader('Cache-Control', 'public, max-age=2592000');
 };
 
+// Smart lookup for uploaded files on local disk (exact match, extension fallback, case-insensitivity)
+const resolveDiskFile = (filename) => {
+  if (!filename) return null;
+  const directPath = path.join(uploadDir, filename);
+  if (fs.existsSync(directPath)) return directPath;
+
+  const parsed = path.parse(filename);
+  const altExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4', '.mov', '.webm', '.JPG', '.JPEG', '.PNG'];
+  for (const ext of altExts) {
+    const candidate = path.join(uploadDir, parsed.name + ext);
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  // Case-insensitive / name match fallback
+  try {
+    const targetLower = filename.toLowerCase();
+    const parsedNameLower = parsed.name.toLowerCase();
+    const files = fs.readdirSync(uploadDir);
+    for (const f of files) {
+      if (f.toLowerCase() === targetLower) return path.join(uploadDir, f);
+    }
+    for (const f of files) {
+      const fParsed = path.parse(f);
+      if (fParsed.name.toLowerCase() === parsedNameLower) {
+        return path.join(uploadDir, f);
+      }
+    }
+  } catch (err) {
+    console.warn('Error reading uploadDir for fallback match:', err.message);
+  }
+  return null;
+};
+
 app.get('/api/upload/images/:filename', async (req, res) => {
   const filename = path.basename(decodeURIComponent(req.params.filename));
   try {
-    // 1) Current storage: MongoDB GridFS
-    const gfsFile = await findGridFSFile(filename);
+    // 1) Fast local disk lookup (all uploaded and legacy media)
+    const diskPath = resolveDiskFile(filename);
+    if (diskPath) {
+      const ext = path.extname(diskPath).toLowerCase();
+      setFileHeaders(res, MIME_TYPES[ext]);
+      return res.sendFile(diskPath);
+    }
+
+    // 2) MongoDB GridFS storage
+    let gfsFile = await findGridFSFile(filename);
+    if (!gfsFile) {
+      const parsed = path.parse(filename);
+      const altExts = ['.jpg', '.jpeg', '.png', '.webp'];
+      for (const ext of altExts) {
+        gfsFile = await findGridFSFile(parsed.name + ext);
+        if (gfsFile) break;
+      }
+    }
     if (gfsFile) {
       const size = gfsFile.length;
       setFileHeaders(res, gfsFile.contentType);
@@ -122,7 +171,7 @@ app.get('/api/upload/images/:filename', async (req, res) => {
       } else {
         res.setHeader('Content-Length', size);
       }
-      const stream = openGridFSStream(filename, range || undefined);
+      const stream = openGridFSStream(gfsFile.filename, range || undefined);
       stream.on('error', (err) => {
         console.error('GridFS stream error:', err.message);
         res.destroy();
@@ -130,27 +179,20 @@ app.get('/api/upload/images/:filename', async (req, res) => {
       return stream.pipe(res);
     }
 
-    // 2) Legacy images stored as a single MongoDB document
-    const image = await Image.findOne({ filename });
+    // 3) Legacy images stored as a single MongoDB document
+    let image = await Image.findOne({ filename });
+    if (!image) {
+      const parsed = path.parse(filename);
+      const altExts = ['.jpg', '.jpeg', '.png', '.webp'];
+      for (const ext of altExts) {
+        image = await Image.findOne({ filename: parsed.name + ext });
+        if (image) break;
+      }
+    }
     if (image) {
       setFileHeaders(res, image.contentType);
       res.setHeader('Content-Length', image.size);
       return res.send(image.data);
-    }
-
-    // 3) Oldest uploads saved on local disk (kept so old links never break)
-    const diskPath = path.join(uploadDir, filename);
-    if (fs.existsSync(diskPath)) {
-      const ext = path.extname(filename).toLowerCase();
-      setFileHeaders(res, MIME_TYPES[ext]);
-      return res.sendFile(diskPath);
-    }
-
-    // 4) Migrated legacy image — redirect to Cloudinary
-    const migrated = cloudinaryMapping[filename];
-    if (migrated?.secure_url) {
-      res.setHeader('Cache-Control', 'public, max-age=2592000');
-      return res.redirect(302, migrated.secure_url);
     }
 
     return res.status(404).json({ error: 'Image not found', filename });

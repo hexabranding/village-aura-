@@ -203,8 +203,8 @@ export default function Shop({ likedProducts, onToggleLike }: ShopProps) {
             <button className={`filter-opt ${!activeSub ? 'active' : ''}`} onClick={() => { setSub(null); onApply?.(); }}>
               All {activeCategory}
             </button>
-            {subcats.map((sub) => (
-              <button key={sub} className={`filter-opt ${activeSub === sub ? 'active' : ''}`} onClick={() => { setSub(sub); onApply?.(); }}>
+            {subcats.map((sub, sIdx) => (
+              <button key={`${sub}-${sIdx}`} className={`filter-opt ${activeSub === sub ? 'active' : ''}`} onClick={() => { setSub(sub); onApply?.(); }}>
                 {sub}
               </button>
             ))}

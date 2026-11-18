@@ -948,7 +948,7 @@ export default function Home({ likedProducts, onToggleLike }: HomeProps) {
             },
           ]).map((edit: any, i: number) => (
             <motion.div
-              key={edit.category}
+              key={edit.id || edit._id || `${edit.category}-${i}`}
               initial={{ opacity: 0, y: 30, scale: 0.97 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.3 }}

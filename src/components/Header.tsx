@@ -158,9 +158,9 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
         {/* Right — nav + user + cart */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
           <div className="nav-links" style={{ display: 'flex', gap: '1.35rem', alignItems: 'center' }}>
-            {navLinks.map((link) => (
+            {navLinks.map((link, idx) => (
               <div
-                key={link.label}
+                key={`${link.label}-${idx}`}
                 onMouseEnter={() => setHoveredNav(link.label)}
                 onMouseLeave={() => setHoveredNav(null)}
                 style={{ position: 'relative' }}
@@ -230,9 +230,9 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                             zIndex: 70,
                           }}
                         >
-                        {link.subs.map((sub) => (
+                        {link.subs.map((sub, sIdx) => (
                           <Link
-                            key={sub}
+                            key={`${link.label}-${sub}-${sIdx}`}
                             to={`${link.to.split('&')[0]}&sub=${encodeURIComponent(sub)}`}
                             className="eyebrow"
                             style={{
@@ -685,8 +685,8 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
               className="container"
               style={{ display: 'flex', flexDirection: 'column', padding: '1.25rem 1.5rem', gap: '1rem', alignItems: 'center', textAlign: 'center' }}
             >
-              {navLinks.map((link) => (
-                <div key={link.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', textAlign: 'center', width: '100%' }}>
+              {navLinks.map((link, idx) => (
+                <div key={`${link.label}-${idx}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', textAlign: 'center', width: '100%' }}>
                   {link.subs && link.subs.length > 0 ? (
                     <>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}>
@@ -715,9 +715,9 @@ export default function Header({ cartCount, likedCount, likedProducts, onToggleL
                             transition={{ duration: 0.2 }}
                             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem', overflow: 'hidden' }}
                           >
-                            {link.subs.map((sub) => (
+                            {link.subs.map((sub, sIdx) => (
                               <Link
-                                key={sub}
+                                key={`${link.label}-${sub}-${sIdx}`}
                                 to={`${link.to.split('&')[0]}&sub=${encodeURIComponent(sub)}`}
                                 onClick={() => setMenuOpen(false)}
                                 style={{ fontSize: '0.75rem', color: 'var(--ink-soft)', letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: 'center' }}

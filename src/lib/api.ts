@@ -5,12 +5,38 @@ export const API_BASE = (import.meta as unknown as { env: { DEV: boolean; VITE_A
 export const API_ORIGIN = API_BASE.startsWith('/') ? '' : API_BASE.replace(/\/api\/?$/, '');
 export const resolveUploadUrl = (url: string) => {
   if (!url) return url;
-  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
-  if (url.startsWith('/images/') || url.startsWith('images/')) return url;
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+
+  // Intercept any Cloudinary URLs (full URL or protocol-relative/host-only)
+  if (url.includes('cloudinary.com') || url.includes('village-allure/')) {
+    const match = url.match(/(?:village-allure\/|image\/upload\/[^/]+\/)([^?#]+)/);
+    const filename = match ? match[1] : url.split('/').pop()?.split('?')[0];
+    if (filename) {
+      const cleanName = filename.replace(/^[\/\\]+/, '');
+      return API_ORIGIN ? `${API_ORIGIN}/api/upload/images/${cleanName}` : `/api/upload/images/${cleanName}`;
+    }
+  }
+
+  // If external non-cloudinary URL (e.g. pexels, unsplash), return as-is
+  if (/^https?:\/\//i.test(url)) return url;
+
+  // Static site assets in public/images/
+  if (url.startsWith('/images/') || url.startsWith('images/')) {
+    return url.startsWith('/') ? url : `/${url}`;
+  }
+
+  // Already prefixed with /api/upload or uploads/
   if (url.startsWith('/api/upload') || url.startsWith('/uploads/') || url.startsWith('uploads/')) {
     const p = url.startsWith('/') ? url : `/${url}`;
     return API_ORIGIN ? `${API_ORIGIN}${p}` : p;
   }
+
+  // Bare filenames (e.g. 1791278565690-380447548...jpg or file with image/video extension)
+  const clean = url.replace(/^\/+/, '');
+  if (/\.(jpg|jpeg|png|webp|gif|svg|mp4|mov|webm)$/i.test(clean) || /^\d{10,}-/.test(clean)) {
+    return API_ORIGIN ? `${API_ORIGIN}/api/upload/images/${clean}` : `/api/upload/images/${clean}`;
+  }
+
   if (url.startsWith('/')) return API_ORIGIN ? `${API_ORIGIN}${url}` : url;
   return API_ORIGIN ? `${API_ORIGIN}/${url}` : `/${url}`;
 };

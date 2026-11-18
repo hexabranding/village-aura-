@@ -69,9 +69,14 @@ function handleUpload(limit, maxFileSize) {
   };
 }
 
-// Stores a buffered file in MongoDB (GridFS) and returns its public URL.
+// Stores a buffered file in MongoDB (GridFS) and writes a local disk copy.
 async function saveFileToMongo(file) {
   const filename = sanitizeFilename(file.originalname);
+  try {
+    fs.writeFileSync(path.join(uploadDir, filename), file.buffer);
+  } catch (err) {
+    console.warn('Failed to save local disk copy of upload:', err.message);
+  }
   const existing = await findGridFSFile(filename);
   if (existing) return `/api/upload/images/${filename}`;
   await saveToGridFS(filename, file.buffer, file.mimetype);
